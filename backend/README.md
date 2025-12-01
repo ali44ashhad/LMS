@@ -5,10 +5,8 @@ Complete backend API for the Learning Management System (LMS).
 ## Features
 
 - 🔐 JWT Authentication & Authorization
-- 👥 Role-based Access Control (Student, Teacher, Admin)
+- 👥 Role-based Access Control (Student, Admin)
 - 📚 Course Management
-- 📝 Assignment System
-- 📊 Quiz System with Auto-grading
 - 🎓 Enrollment & Progress Tracking
 - 📈 Grades Management
 - 👨‍💼 Admin Panel APIs
@@ -23,7 +21,7 @@ Complete backend API for the Learning Management System (LMS).
 ## Prerequisites
 
 - Node.js (v16 or higher)
-- MongoDB (local or MongoDB Atlas)
+- MongoDB Atlas account (or local MongoDB)
 
 ## Installation
 
@@ -45,27 +43,18 @@ cp .env.example .env
 4. Update `.env` file with your configuration:
 ```
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/lms
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/lms
 JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
 JWT_EXPIRE=7d
 NODE_ENV=development
 ```
 
-5. Start MongoDB (if running locally):
-```bash
-# Windows
-net start MongoDB
-
-# Mac/Linux
-sudo systemctl start mongod
-```
-
-6. Seed the database with sample data:
+5. Seed the database with sample data:
 ```bash
 npm run seed
 ```
 
-7. Start the server:
+6. Start the server:
 ```bash
 # Development mode with nodemon
 npm run dev
@@ -84,10 +73,6 @@ After running the seed script:
 - Email: admin@lms.com
 - Password: Admin@123
 
-**Teacher:**
-- Email: sarah@lms.com
-- Password: Teacher@123
-
 **Student:**
 - Email: john@lms.com
 - Password: Student@123
@@ -102,38 +87,22 @@ After running the seed script:
 ### Users
 - `GET /api/users/profile` - Get user profile
 - `PUT /api/users/profile` - Update user profile
-- `GET /api/users` - Get all users (Admin only)
 
 ### Courses
 - `GET /api/courses` - Get all published courses
 - `GET /api/courses/:id` - Get single course
-- `POST /api/courses` - Create course (Teacher/Admin)
-- `PUT /api/courses/:id` - Update course (Teacher/Admin)
+- `POST /api/courses` - Create course (Admin)
+- `PUT /api/courses/:id` - Update course (Admin)
 - `DELETE /api/courses/:id` - Delete course (Admin)
-- `GET /api/courses/my/enrolled` - Get enrolled courses
 
 ### Enrollments
 - `POST /api/enrollments` - Enroll in course
 - `GET /api/enrollments/my` - Get my enrollments
 - `PUT /api/enrollments/:id/progress` - Update progress
 
-### Assignments
-- `GET /api/assignments` - Get all assignments
-- `GET /api/assignments/:id` - Get single assignment
-- `POST /api/assignments` - Create assignment (Teacher/Admin)
-- `POST /api/assignments/:id/submit` - Submit assignment
-- `PUT /api/assignments/:assignmentId/submissions/:submissionId/grade` - Grade submission (Teacher/Admin)
-
-### Quizzes
-- `GET /api/quizzes` - Get all quizzes
-- `GET /api/quizzes/:id` - Get single quiz
-- `POST /api/quizzes` - Create quiz (Teacher/Admin)
-- `POST /api/quizzes/:id/start` - Start quiz attempt
-- `POST /api/quizzes/:id/submit` - Submit quiz attempt
-
 ### Grades
 - `GET /api/grades/my` - Get my grades
-- `GET /api/grades/course/:courseId` - Get course grades (Teacher/Admin)
+- `GET /api/grades/course/:courseId` - Get course grades (Admin)
 
 ### Admin
 - `GET /api/admin/stats` - Get dashboard statistics
@@ -172,9 +141,8 @@ Authorization: Bearer <your_jwt_token>
 
 ## User Roles
 
-1. **Student**: Can enroll in courses, submit assignments, take quizzes
-2. **Teacher**: Can create/manage courses, assignments, and quizzes; grade submissions
-3. **Admin**: Full access to all resources, user management, and analytics
+1. **Student**: Can enroll in courses, track progress, view grades
+2. **Admin**: Full access to all resources, user management, and analytics
 
 ## Project Structure
 
@@ -186,16 +154,12 @@ backend/
 │   ├── User.model.js      # User schema
 │   ├── Course.model.js    # Course schema
 │   ├── Enrollment.model.js # Enrollment schema
-│   ├── Assignment.model.js # Assignment schema
-│   ├── Quiz.model.js      # Quiz schema
 │   └── Grade.model.js     # Grade schema
 ├── routes/
 │   ├── auth.routes.js     # Authentication routes
 │   ├── user.routes.js     # User routes
 │   ├── course.routes.js   # Course routes
 │   ├── enrollment.routes.js # Enrollment routes
-│   ├── assignment.routes.js # Assignment routes
-│   ├── quiz.routes.js     # Quiz routes
 │   ├── grade.routes.js    # Grade routes
 │   └── admin.routes.js    # Admin routes
 ├── middleware/
@@ -213,7 +177,7 @@ backend/
 | Variable | Description | Default |
 |----------|-------------|---------|
 | PORT | Server port | 5000 |
-| MONGODB_URI | MongoDB connection string | mongodb://localhost:27017/lms |
+| MONGODB_URI | MongoDB connection string | - |
 | JWT_SECRET | Secret key for JWT | - |
 | JWT_EXPIRE | JWT expiration time | 7d |
 | NODE_ENV | Environment mode | development |

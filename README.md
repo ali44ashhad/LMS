@@ -1,23 +1,15 @@
 # Learning Management System (LMS)
 
-A complete full-stack Learning Management System with authentication, course management, assignments, quizzes, and an admin panel.
+A modern full-stack Learning Management System with sci-fi themed UI, authentication, course management, and admin panel.
 
 ## 🌟 Features
 
 ### For Students
 - 📚 Browse and enroll in courses
-- 📝 Submit assignments
-- 🧠 Take quizzes with auto-grading
 - 📊 Track learning progress
-- 🏆 View grades and performance
-- 📅 Calendar view for deadlines
-
-### For Teachers
-- ➕ Create and manage courses
-- 📋 Create assignments and quizzes
-- ✅ Grade student submissions
-- 👥 View enrolled students
-- 📈 Track student performance
+- 🎯 View course modules and lessons
+- 📅 Monitor course completion
+- 👤 Profile management
 
 ### For Admins
 - 👨‍💼 Complete admin dashboard
@@ -31,7 +23,8 @@ A complete full-stack Learning Management System with authentication, course man
 ### Frontend
 - React 19.2
 - Tailwind CSS 4.1
-- Vite
+- Vite 7.2
+- Custom SAIBA-45 font (sci-fi theme)
 - Modern ES6+ JavaScript
 
 ### Backend
@@ -43,7 +36,7 @@ A complete full-stack Learning Management System with authentication, course man
 ## 📋 Prerequisites
 
 - Node.js (v16 or higher)
-- MongoDB (local or MongoDB Atlas)
+- MongoDB Atlas account (or local MongoDB)
 - npm or yarn
 
 ## 🚀 Installation & Setup
@@ -65,8 +58,8 @@ npm install
 # Create .env file
 cp .env.example .env
 
-# Edit .env file with your MongoDB URI and other settings
-# Default MongoDB URI: mongodb://localhost:27017/lms
+# Edit .env file with your MongoDB Atlas URI
+# MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/lms
 
 # Seed the database with sample data
 npm run seed
@@ -86,11 +79,14 @@ cd lms
 # Install dependencies
 npm install
 
+# Create .env file
+echo "VITE_API_URL=http://localhost:5000/api" > .env
+
 # Start the development server
 npm run dev
 ```
 
-Frontend will run on `http://localhost:5173`
+Frontend will run on `http://localhost:5174`
 
 ## 🔐 Default Login Credentials
 
@@ -99,10 +95,6 @@ After running the seed script, you can login with:
 **Admin Account:**
 - Email: `admin@lms.com`
 - Password: `Admin@123`
-
-**Teacher Account:**
-- Email: `sarah@lms.com`
-- Password: `Teacher@123`
 
 **Student Account:**
 - Email: `john@lms.com`
@@ -118,16 +110,12 @@ lms/
 │   ├── models/               # Mongoose models
 │   │   ├── User.model.js
 │   │   ├── Course.model.js
-│   │   ├── Assignment.model.js
-│   │   ├── Quiz.model.js
 │   │   ├── Enrollment.model.js
 │   │   └── Grade.model.js
 │   ├── routes/               # API routes
 │   │   ├── auth.routes.js
 │   │   ├── user.routes.js
 │   │   ├── course.routes.js
-│   │   ├── assignment.routes.js
-│   │   ├── quiz.routes.js
 │   │   ├── enrollment.routes.js
 │   │   ├── grade.routes.js
 │   │   └── admin.routes.js
@@ -140,24 +128,26 @@ lms/
 │   └── package.json
 │
 ├── lms/                       # Frontend React App
+│   ├── public/
+│   │   └── fonts/           # SAIBA-45 custom font
 │   ├── src/
-│   │   ├── components/       # React components
-│   │   │   ├── common/
-│   │   │   ├── courses/
-│   │   │   ├── assignments/
-│   │   │   ├── quizzes/
-│   │   │   └── dashboard/
+│   │   ├── componets/       # React components
+│   │   │   ├── common/      # Header, Sidebar, Footer
+│   │   │   ├── courses/     # Course related components
+│   │   │   └── dashboard/   # Dashboard components
 │   │   ├── pages/           # Page components
 │   │   │   ├── Login.jsx
 │   │   │   ├── Dashboard.jsx
 │   │   │   ├── Courses.jsx
+│   │   │   ├── Profile.jsx
 │   │   │   ├── AdminDashboard.jsx
-│   │   │   └── AdminUsers.jsx
+│   │   │   ├── AdminUsers.jsx
+│   │   │   └── AdminCourses.jsx
 │   │   ├── services/        # API service layer
 │   │   │   └── api.js
-│   │   ├── data/           # Mock data
 │   │   ├── hooks/          # Custom React hooks
 │   │   ├── utils/          # Utility functions
+│   │   ├── index.css       # Global styles with sci-fi theme
 │   │   ├── App.jsx         # Main App component
 │   │   └── main.jsx        # Entry point
 │   ├── .env                # Environment variables
@@ -173,11 +163,15 @@ lms/
 - `POST /api/auth/login` - Login user
 - `GET /api/auth/me` - Get current user
 
+### Users
+- `GET /api/users/profile` - Get user profile
+- `PUT /api/users/profile` - Update user profile
+
 ### Courses
 - `GET /api/courses` - Get all courses
 - `GET /api/courses/:id` - Get single course
-- `POST /api/courses` - Create course (Teacher/Admin)
-- `PUT /api/courses/:id` - Update course
+- `POST /api/courses` - Create course (Admin)
+- `PUT /api/courses/:id` - Update course (Admin)
 - `DELETE /api/courses/:id` - Delete course (Admin)
 
 ### Enrollments
@@ -185,21 +179,17 @@ lms/
 - `GET /api/enrollments/my` - Get my enrollments
 - `PUT /api/enrollments/:id/progress` - Update progress
 
-### Assignments
-- `GET /api/assignments` - Get all assignments
-- `POST /api/assignments/:id/submit` - Submit assignment
-- `PUT /api/assignments/:id/grade` - Grade assignment
-
-### Quizzes
-- `GET /api/quizzes` - Get all quizzes
-- `POST /api/quizzes/:id/start` - Start quiz
-- `POST /api/quizzes/:id/submit` - Submit quiz
+### Grades
+- `GET /api/grades/my` - Get my grades
+- `GET /api/grades/course/:courseId` - Get course grades
 
 ### Admin
 - `GET /api/admin/stats` - Get dashboard stats
 - `GET /api/admin/users` - Get all users
 - `PUT /api/admin/users/:id` - Update user
 - `DELETE /api/admin/users/:id` - Delete user
+- `GET /api/admin/courses` - Get all courses
+- `DELETE /api/admin/courses/:id` - Delete course
 
 For complete API documentation, see [backend/README.md](backend/README.md)
 
@@ -211,8 +201,8 @@ Create a `.env` file in the `backend` directory:
 
 ```env
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/lms
-JWT_SECRET=your_super_secret_jwt_key
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/lms
+JWT_SECRET=your_super_secret_jwt_key_change_this
 JWT_EXPIRE=7d
 NODE_ENV=development
 ```
@@ -227,73 +217,56 @@ VITE_API_URL=http://localhost:5000/api
 
 ## 🎯 Usage
 
-1. **Start MongoDB** (if running locally):
-   ```bash
-   # Windows
-   net start MongoDB
-   
-   # Mac/Linux
-   sudo systemctl start mongod
-   ```
-
-2. **Start Backend Server**:
+1. **Start Backend Server**:
    ```bash
    cd backend
    npm run dev
    ```
 
-3. **Start Frontend**:
+2. **Start Frontend**:
    ```bash
    cd lms
    npm run dev
    ```
 
-4. **Access the Application**:
-   - Frontend: `http://localhost:5173`
+3. **Access the Application**:
+   - Frontend: `http://localhost:5174`
    - Backend API: `http://localhost:5000`
 
 ## 👥 User Roles & Permissions
 
 ### Student
 - View and enroll in courses
-- Submit assignments
-- Take quizzes
-- View own grades
-- Track progress
-
-### Teacher
-- All student permissions
-- Create and manage courses
-- Create assignments and quizzes
-- Grade student submissions
-- View student performance
+- Track course progress
+- View grades
+- Update profile
 
 ### Admin
-- All permissions
+- All student permissions
 - User management (create, update, delete users)
+- Course management (create, update, delete courses)
 - System analytics
-- Complete course management
-- Override any restrictions
+- Enrollment management
 
 ## 🎨 Features Highlights
 
+### Sci-Fi Themed UI
+- Custom SAIBA-45 font for headings and buttons
+- Dark mode design with neon accents
+- Futuristic button styles and hover effects
+- Clean, modern interface
+
 ### Authentication System
 - JWT-based authentication
-- Role-based access control (RBAC)
+- Role-based access control (Student/Admin)
 - Secure password hashing with bcrypt
 - Protected routes
 
 ### Course Management
-- Create courses with lessons
+- Create courses with modules and resources
 - Course categorization
 - Progress tracking
 - Enrollment system
-
-### Assessment System
-- Assignment submission and grading
-- Auto-graded quizzes
-- Multiple question types (MCQ, True/False, Short Answer)
-- Attempt tracking
 
 ### Admin Panel
 - Real-time statistics
@@ -304,13 +277,14 @@ VITE_API_URL=http://localhost:5000/api
 ## 🐛 Troubleshooting
 
 ### MongoDB Connection Issues
-- Make sure MongoDB is running
-- Check MongoDB URI in `.env` file
-- Verify MongoDB port (default: 27017)
+- Make sure MongoDB Atlas connection string is correct
+- Check network access settings in MongoDB Atlas
+- Verify username and password in connection string
 
 ### Port Already in Use
-- Change PORT in backend `.env` file
-- Kill process using the port: `npx kill-port 5000`
+- Frontend default port: 5174
+- Backend default port: 5000
+- Change PORT in backend `.env` if needed
 
 ### CORS Issues
 - Backend is configured to accept requests from any origin
@@ -340,9 +314,9 @@ npm run seed
 
 ### Backend
 1. Set NODE_ENV to 'production'
-2. Use a production MongoDB instance
+2. Use MongoDB Atlas for production database
 3. Set secure JWT_SECRET
-4. Deploy to platforms like Heroku, Railway, or DigitalOcean
+4. Deploy to platforms like Railway, Render, or DigitalOcean
 
 ### Frontend
 ```bash
@@ -362,13 +336,6 @@ npm run build
 ## 📄 License
 
 This project is licensed under the MIT License.
-
-## 🙏 Acknowledgments
-
-- React and Vite teams
-- MongoDB and Mongoose
-- Express.js community
-- Tailwind CSS
 
 ## 📧 Support
 

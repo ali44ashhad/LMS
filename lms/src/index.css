@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
 
 /* Kid-Friendly Coding/Game-Builder Theme */
 
@@ -85,8 +84,7 @@ button:hover {
   transition: all 0.3s ease;
 }
 
-.bg-white:hover {
-  background-color: var(--dark-grey) !important;
+.bg-white:hover { 
   box-shadow: 0 0 12px rgba(63, 139, 255, 0.3);
   transform: translateY(-2px);
 }
@@ -243,6 +241,7 @@ footer {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--green);
 }
+
 /* ==== GAMIFIED / SCI-FI BUTTON ==== */
 
 .neo-btn {
@@ -252,7 +251,6 @@ footer {
   color: #111827;
   border: 1.5px solid #3b3f46;
   cursor: pointer;
-  /* angled hex style */
   clip-path: polygon(
     10px 0,
     calc(100% - 10px) 0,
@@ -393,7 +391,6 @@ footer {
   transform: translateY(-0.5px);
 }
 
-
 /* ==== REUSABLE GAMIFIED PANELS ==== */
 
 .neo-panel {
@@ -417,6 +414,7 @@ footer {
   opacity: 0.18;
   pointer-events: none;
 }
+
 /* ==== GLOBAL GAMIFIED DASHBOARD STYLES ==== */
  
 /* base card */
@@ -550,6 +548,7 @@ footer {
     0 0 10px rgba(56, 189, 248, 0.6),
     inset 0 0 10px rgba(99, 102, 241, 0.4);
 }
+
 /* === ADMIN DASHBOARD NEO CARDS === */
 
 .neo-card {
@@ -697,6 +696,7 @@ footer {
     transform: rotate(360deg);
   }
 }
+
 /* TABLE BASE */
 .neo-table {
   width: 100%;
@@ -804,6 +804,7 @@ footer {
   color: #94a3b8;
   font-size: 0.75rem;
 }
+
 /* COURSE CARDS SPECIALIZATION */
 .neo-course-card {
   padding: 1.25rem 1.4rem;
@@ -836,7 +837,7 @@ footer {
   gap: 6px;
   padding: 4px 10px;
   border-radius: 999px;
-  border: 1px solid rgba(148,163,184,0.7);
+  border: 1px solid rgba(148, 163, 184, 0.7);
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.13em;
@@ -844,13 +845,13 @@ footer {
   transition: 0.15s ease-out;
 }
 .neo-publish-on {
-  background: rgba(22,163,74,0.18);
-  border-color: rgba(45,212,191,0.9);
+  background: rgba(22, 163, 74, 0.18);
+  border-color: rgba(45, 212, 191, 0.9);
   color: #bbf7d0;
-  box-shadow: 0 0 14px rgba(34,197,94,0.7);
+  box-shadow: 0 0 14px rgba(34, 197, 94, 0.7);
 }
 .neo-publish-off {
-  background: rgba(15,23,42,0.95);
+  background: rgba(15, 23, 42, 0.95);
   color: #cbd5f5;
 }
 .neo-publish-toggle:hover {
@@ -861,7 +862,7 @@ footer {
   height: 7px;
   border-radius: 999px;
   background: #fbbf24;
-  box-shadow: 0 0 8px rgba(251,191,36,0.9);
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.9);
 }
 .neo-publish-label {
   white-space: nowrap;
@@ -942,6 +943,7 @@ footer {
   box-shadow: 0 0 18px rgba(129,140,248,0.7);
   transform: translateY(-1px);
 }
+
 /* SECTION TITLES & LABELS */
 .neo-section-title {
   font-size: 0.9rem;
@@ -989,48 +991,13 @@ footer {
   padding: 0.6rem 0.75rem;
 }
 
-/* (re)use publish toggle styles if not already included */
-.neo-publish-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.7);
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 0.13em;
-  cursor: pointer;
-  transition: 0.15s ease-out;
-}
-.neo-publish-on {
-  background: rgba(22, 163, 74, 0.18);
-  border-color: rgba(45, 212, 191, 0.9);
-  color: #bbf7d0;
-  box-shadow: 0 0 14px rgba(34, 197, 94, 0.7);
-}
-.neo-publish-off {
-  background: rgba(15, 23, 42, 0.95);
-  color: #cbd5f5;
-}
-.neo-publish-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: #fbbf24;
-  box-shadow: 0 0 8px rgba(251, 191, 36, 0.9);
-}
-.neo-publish-label {
-  white-space: nowrap;
-}
-
 /* ====== COURSE CARD WITH SAME HEX LAYOUT AS BUTTON ====== */
 
 .neo-course-card {
   position: relative;
-  background: #d7d9dd; /* base jaise button */
+  background: #d7d9dd;
   border: 1.5px solid #3b3f46;
-  border-radius: 0; /* clip-path handle karega */
+  border-radius: 0;
   cursor: pointer;
   clip-path: polygon(
     14px 0,
@@ -1116,7 +1083,7 @@ footer {
   filter: brightness(0.97);
 }
 
-/* small chip tags */
+/* small chip tags override */
 .g-chip {
   display: inline-flex;
   align-items: center;
@@ -1131,7 +1098,7 @@ footer {
   color: #e5e7eb;
 }
 
-/* progress track + bar */
+/* progress track + bar override */
 .g-progress-track {
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.85);
@@ -1143,6 +1110,7 @@ footer {
   box-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
 }
 
+/* SAIBA font */
 @font-face {
   font-family: "SAIBA45";
   src: url("/fonts/saiba-45.regular.ttf") format("truetype");
@@ -1150,10 +1118,7 @@ footer {
   font-style: normal;
 }
 
-/* Apni khud ki CSS class, Tailwind se alag */
+/* Custom class for SAIBA */
 .saiba-font {
   font-family: "SAIBA45", system-ui, sans-serif !important;
 }
-
-
- 

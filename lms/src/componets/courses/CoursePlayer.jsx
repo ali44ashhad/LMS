@@ -294,7 +294,7 @@ const CoursePlayer = ({ course, lesson, onComplete, onNext, onPrevious, onExit }
               <button
                 onClick={onPrevious}
                 disabled={lesson.id === 1}
-                className="w-full px-3 py-2 text-left bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-3 py-2 text-left bg-lime-400 rounded-lg hover:bg-lime-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 ← Previous Lesson
               </button>

@@ -1,0 +1,1159 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+/* Kid-Friendly Coding/Game-Builder Theme */
+
+:root {
+  --green: #8CCC00;
+  --dark-grey: #545454;
+  --blue: #3F8BFF;
+  --dark: #1A1A1A;
+  --light-grey: #F0F0F0;
+  --bg: #0F0F0F;
+}
+
+* {
+  font-family: 'Poppins', 'Inter', sans-serif;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--dark);
+}
+
+/* Headings - SAIBA font */
+h1, h2, h3, h4, h5, h6 {
+  font-family: "SAIBA45", system-ui, sans-serif !important;
+}
+
+/* Buttons - SAIBA font */
+button {
+  font-family: "SAIBA45", system-ui, sans-serif !important;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  box-shadow: 0 0 15px rgba(63, 139, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Primary Buttons */
+.bg-indigo-600, .bg-indigo-500 {
+  background-color: var(--blue) !important;
+}
+
+.bg-indigo-600:hover, .bg-indigo-500:hover {
+  background-color: #2a6fd9 !important;
+  box-shadow: 0 0 20px rgba(63, 139, 255, 0.6);
+}
+
+.text-indigo-600, .text-indigo-700 {
+  color: var(--blue) !important;
+}
+
+.bg-indigo-50, .bg-indigo-100 {
+  background-color: rgba(63, 139, 255, 0.1) !important;
+}
+
+/* Success/Green Buttons */
+.bg-green-600, .bg-green-500 {
+  background-color: var(--green) !important;
+}
+
+.bg-green-600:hover, .bg-green-500:hover {
+  background-color: #7ab300 !important;
+  box-shadow: 0 0 20px rgba(140, 204, 0, 0.6);
+}
+
+.text-green-600, .text-green-700, .text-green-800 {
+  color: var(--green) !important;
+}
+
+.bg-green-100 {
+  background-color: rgba(140, 204, 0, 0.1) !important;
+}
+
+/* Cards & Panels - Same style as sidebar buttons */
+.bg-white {
+  background-color: var(--dark) !important;
+  color: var(--light-grey) !important;
+  border-radius: 10px;
+  border: 1px solid var(--dark-grey);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.bg-white:hover {
+  background-color: var(--dark-grey) !important;
+  box-shadow: 0 0 12px rgba(63, 139, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.shadow-sm, .shadow-md, .shadow-lg {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Sidebar Dark Theme */
+aside {
+  background-color: var(--dark) !important;
+  color: var(--light-grey);
+}
+
+aside button {
+  color: var(--light-grey);
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+aside button:hover {
+  background-color: var(--dark-grey) !important;
+  box-shadow: 0 0 12px rgba(63, 139, 255, 0.3);
+}
+
+aside button.bg-indigo-50 {
+  background-color: var(--blue) !important;
+  color: white !important;
+  border-left: 4px solid var(--green);
+}
+
+/* Header Dark Theme */
+header {
+  background-color: var(--dark) !important;
+  border-bottom: 2px solid var(--dark-grey);
+}
+
+header h1 {
+  color: var(--green) !important;
+  font-weight: 700;
+}
+
+header input {
+  background-color: var(--dark-grey);
+  color: var(--light-grey);
+  border: 1px solid var(--dark-grey);
+  border-radius: 8px;
+}
+
+header input::placeholder {
+  color: rgba(240, 240, 240, 0.5);
+}
+
+header button {
+  color: var(--light-grey);
+}
+
+header .bg-indigo-600 {
+  background-color: var(--green) !important;
+}
+
+header .bg-indigo-100 {
+  background-color: var(--blue) !important;
+}
+
+header .text-indigo-600 {
+  color: white !important;
+}
+
+/* Text Colors - Light text for dark cards */
+.text-gray-900 {
+  color: var(--light-grey) !important;
+}
+
+.text-gray-800 {
+  color: var(--light-grey) !important;
+}
+
+.text-gray-600, .text-gray-700 {
+  color: #ccc !important;
+}
+
+.text-gray-500 {
+  color: #999 !important;
+}
+
+/* Purple/Admin Badge */
+.bg-purple-100 {
+  background-color: rgba(140, 204, 0, 0.15) !important;
+}
+
+.text-purple-800 {
+  color: var(--green) !important;
+}
+
+/* Blue Badge */
+.bg-blue-100 {
+  background-color: rgba(63, 139, 255, 0.15) !important;
+}
+
+.text-blue-800 {
+  color: var(--blue) !important;
+}
+
+/* Border Colors */
+.border-gray-200, .border-gray-300 {
+  border-color: #ddd !important;
+}
+
+.border-indigo-600 {
+  border-color: var(--blue) !important;
+}
+
+/* Focus States */
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--blue) !important;
+  box-shadow: 0 0 0 3px rgba(63, 139, 255, 0.2) !important;
+}
+
+/* Hover Effects for Cards */
+.hover\:shadow-md:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+  transform: translateY(-4px);
+}
+
+/* Progress Bars */
+.bg-indigo-200 {
+  background-color: rgba(63, 139, 255, 0.2) !important;
+}
+
+/* Footer */
+footer {
+  background-color: var(--dark);
+  color: var(--light-grey);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--dark-grey);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--blue);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--green);
+}
+/* ==== GAMIFIED / SCI-FI BUTTON ==== */
+
+.neo-btn {
+  position: relative;
+  padding: 0.55rem 0.9rem;
+  background: #d7d9dd;
+  color: #111827;
+  border: 1.5px solid #3b3f46;
+  cursor: pointer;
+  /* angled hex style */
+  clip-path: polygon(
+    10px 0,
+    calc(100% - 10px) 0,
+    100% 8px,
+    100% calc(100% - 8px),
+    calc(100% - 14px) 100%,
+    10px 100%,
+    0 calc(100% - 10px),
+    0 8px
+  );
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.7),
+    0 4px 0 rgba(0, 0, 0, 0.45);
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.35);
+  transition:
+    transform 0.15s ease-out,
+    box-shadow 0.15s ease-out,
+    background 0.15s ease-out,
+    color 0.15s ease-out,
+    filter 0.15s ease-out;
+}
+
+/* inner border */
+.neo-btn::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  clip-path: polygon(
+    9px 0,
+    calc(100% - 9px) 0,
+    100% 8px,
+    100% calc(100% - 8px),
+    calc(100% - 13px) 100%,
+    10px 100%,
+    0 calc(100% - 10px),
+    0 8px
+  );
+  pointer-events: none;
+}
+
+/* bottom-left stripes (screenshot style) */
+.neo-btn::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  bottom: 4px;
+  width: 34px;
+  height: 4px;
+  background-image: linear-gradient(
+    90deg,
+    #111827 0,
+    #111827 30%,
+    transparent 30%,
+    transparent 50%,
+    #111827 50%,
+    #111827 80%,
+    transparent 80%,
+    transparent 100%
+  );
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* idle state */
+.neo-btn-idle {
+  background: radial-gradient(circle at 20% 0%, #f3f4f6 0, #d0d2d7 55%, #b6bac3 100%);
+}
+
+/* active / selected tab */
+.neo-btn-active {
+  background: radial-gradient(circle at 20% 0%, #e5f0ff 0, #c3d4ff 45%, #9fa8ff 100%);
+  color: #111827;
+  box-shadow:
+    0 0 0 1px rgba(129, 140, 248, 0.9),
+    0 0 18px rgba(129, 140, 248, 0.9);
+  filter: saturate(1.2);
+}
+
+/* hover + press states */
+.neo-btn:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.7),
+    0 6px 0 rgba(0, 0, 0, 0.5),
+    0 0 18px rgba(96, 165, 250, 0.5);
+  filter: brightness(1.03);
+}
+
+.neo-btn:active {
+  transform: translateY(2px);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.7),
+    0 2px 0 rgba(0, 0, 0, 0.7);
+  filter: brightness(0.96);
+}
+
+/* ==== SCI-FI SEARCH INPUT ==== */
+
+.neo-input-wrapper {
+  position: relative;
+  padding: 1px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.5), transparent 55%),
+    radial-gradient(circle at 100% 100%, rgba(129, 140, 248, 0.7), transparent 55%);
+}
+
+.neo-input {
+  width: 100%;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: radial-gradient(circle at 20% 0%, #020617 0, #020617 35%, #020617 100%);
+  color: #e5e7eb;
+  outline: none;
+  caret-color: #7dd3fc;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.9);
+  transition:
+    border 0.15s ease-out,
+    box-shadow 0.15s ease-out,
+    background 0.15s ease-out,
+    transform 0.12s ease-out;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+}
+
+.neo-input::placeholder {
+  color: rgba(148, 163, 184, 0.7);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+}
+
+.neo-input:focus {
+  border-color: rgba(129, 140, 248, 0.95);
+  box-shadow:
+    0 0 0 1px rgba(129, 140, 248, 0.9),
+    0 0 18px rgba(56, 189, 248, 0.6);
+  background: radial-gradient(circle at 20% 0%, #020617 0, #020617 40%, #020617 100%);
+  transform: translateY(-0.5px);
+}
+
+
+/* ==== REUSABLE GAMIFIED PANELS ==== */
+
+.neo-panel {
+  position: relative;
+  border-radius: 1rem;
+  border: 1px solid rgba(31, 41, 55, 0.9);
+  background: radial-gradient(circle at 0% 0%, #0b1120 0, #020617 55%, #020617 100%);
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.9),
+    0 18px 40px rgba(15, 23, 42, 0.9);
+  overflow: hidden;
+}
+
+.neo-panel::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.35), transparent 60%),
+    radial-gradient(circle at 100% 100%, rgba(129, 140, 248, 0.35), transparent 60%);
+  opacity: 0.18;
+  pointer-events: none;
+}
+/* ==== GLOBAL GAMIFIED DASHBOARD STYLES ==== */
+ 
+/* base card */
+.g-card {
+  position: relative;
+  border-radius: 1.1rem;
+  border: 1px solid rgba(30, 64, 175, 0.8);
+  background: radial-gradient(circle at 0% 0%, #020617 0, #020617 45%, #020617 100%);
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.9),
+    0 18px 40px rgba(15, 23, 42, 0.95);
+  overflow: hidden;
+}
+
+/* angled sci-fi edges */
+.g-card-angled {
+  clip-path: polygon(
+    14px 0,
+    calc(100% - 18px) 0,
+    100% 12px,
+    100% calc(100% - 12px),
+    calc(100% - 16px) 100%,
+    10px 100%,
+    0 calc(100% - 14px),
+    0 10px
+  );
+}
+
+/* inner glow lines */
+.g-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+/* bottom techno stripes */
+.g-card-strip::after {
+  content: "";
+  position: absolute;
+  left: 18px;
+  bottom: 7px;
+  width: 70px;
+  height: 5px;
+  background-image: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0.9) 0,
+    rgba(148, 163, 184, 0.9) 25%,
+    transparent 25%,
+    transparent 40%,
+    rgba(148, 163, 184, 0.9) 40%,
+    rgba(148, 163, 184, 0.9) 65%,
+    transparent 65%,
+    transparent 100%
+  );
+  opacity: 0.7;
+}
+
+/* stat cards smaller */
+.g-stat-card {
+  position: relative;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(37, 99, 235, 0.9);
+  background: radial-gradient(circle at 0% 0%, #020617 0, #020617 60%, #020617 100%);
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.9),
+    0 16px 34px rgba(15, 23, 42, 0.95);
+}
+
+.g-stat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 110% -10%, rgba(56, 189, 248, 0.5), transparent 55%),
+    radial-gradient(circle at -20% 120%, rgba(129, 140, 248, 0.6), transparent 55%);
+  opacity: 0.18;
+  pointer-events: none;
+}
+
+/* xp / tag chips */
+.g-chip {
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: rgba(15, 23, 42, 0.9);
+}
+
+/* neon progress tracks */
+.g-progress-track {
+  background: radial-gradient(circle at 0% 50%, #020617 0, #020617 40%, #020617 100%);
+  border-radius: 999px;
+  border: 1px solid rgba(30, 64, 175, 0.7);
+  overflow: hidden;
+}
+
+.g-progress-bar {
+  height: 100%;
+  border-radius: inherit;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.9);
+}
+
+/* === FOOTER ELEMENTS === */
+
+.footer-title {
+  @apply text-sm font-semibold uppercase tracking-[0.25em] text-sky-200;
+}
+
+.footer-link {
+  @apply text-slate-400 text-sm transition-all duration-150 tracking-[0.08em];
+}
+
+.footer-link:hover {
+  color: #7dd3fc;
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+  transform: translateX(3px);
+}
+
+/* glowing logo cube */
+.neo-logo {
+  background: linear-gradient(135deg, #4f46e5, #38bdf8);
+  border: 1px solid rgba(99, 102, 241, 0.5);
+  box-shadow:
+    0 0 10px rgba(56, 189, 248, 0.6),
+    inset 0 0 10px rgba(99, 102, 241, 0.4);
+}
+/* === ADMIN DASHBOARD NEO CARDS === */
+
+.neo-card {
+  position: relative;
+  padding: 1.25rem 1.35rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: radial-gradient(circle at 0% 0%, #020617 0, #020617 35%, #020617 100%);
+  box-shadow:
+    0 18px 35px rgba(15, 23, 42, 0.8),
+    inset 0 0 0 1px rgba(15, 23, 42, 0.9);
+  color: #e5e7eb;
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  transition:
+    transform 0.15s ease-out,
+    box-shadow 0.15s ease-out,
+    border-color 0.15s ease-out,
+    background 0.15s ease-out;
+}
+
+.neo-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.17;
+  background-image: linear-gradient(
+      120deg,
+      rgba(51, 65, 85, 0.4) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      210deg,
+      rgba(15, 23, 42, 0.55) 1px,
+      transparent 1px
+    );
+  background-size: 22px 18px;
+  pointer-events: none;
+}
+
+.neo-card::after {
+  content: "";
+  position: absolute;
+  right: -35px;
+  top: -35px;
+  width: 120px;
+  height: 120px;
+  border-radius: 999px;
+  opacity: 0.35;
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+.neo-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(129, 140, 248, 0.9);
+  box-shadow:
+    0 18px 40px rgba(15, 23, 42, 0.95),
+    0 0 25px rgba(129, 140, 248, 0.65);
+}
+
+/* color variants (influence the glow circle) */
+.neo-card-blue::after {
+  background: radial-gradient(circle, rgba(56, 189, 248, 1), transparent 60%);
+}
+.neo-card-purple::after {
+  background: radial-gradient(circle, rgba(129, 140, 248, 1), transparent 60%);
+}
+.neo-card-green::after {
+  background: radial-gradient(circle, rgba(45, 212, 191, 1), transparent 60%);
+}
+.neo-card-amber::after {
+  background: radial-gradient(circle, rgba(251, 191, 36, 1), transparent 60%);
+}
+
+.neo-card-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  z-index: 1;
+}
+
+.neo-chip {
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 0.22rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.8);
+  background: rgba(15, 23, 42, 0.9);
+  color: #cbd5f5;
+}
+
+.neo-icon {
+  font-size: 1.7rem;
+  filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.65));
+}
+
+.neo-card-label {
+  position: relative;
+  z-index: 1;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.neo-card-value {
+  position: relative;
+  z-index: 1;
+  font-size: 1.8rem;
+  line-height: 1.1;
+  font-weight: 800;
+  margin-top: 0.25rem;
+  color: #e5e7eb;
+  text-shadow: 0 0 16px rgba(15, 23, 42, 0.8);
+}
+
+.neo-card-sub {
+  position: relative;
+  z-index: 1;
+  margin-top: 0.4rem;
+  font-size: 0.7rem;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+/* === LOADER FOR DASHBOARD === */
+
+.neo-loader {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 2px solid rgba(30, 64, 175, 0.7);
+  border-top-color: rgba(56, 189, 248, 1);
+  animation: neo-spin 0.7s linear infinite;
+  box-shadow:
+    0 0 18px rgba(56, 189, 248, 0.7),
+    inset 0 0 12px rgba(15, 23, 42, 0.9);
+}
+
+@keyframes neo-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* TABLE BASE */
+.neo-table {
+  width: 100%;
+  border-spacing: 0;
+  border-collapse: collapse;
+  text-align: left;
+}
+.neo-table thead tr {
+  background: rgba(56, 189, 248, 0.08);
+  border-bottom: 1px solid rgba(56,189,248,.3);
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  color: #7dd3fc;
+}
+.neo-table th,
+.neo-table td {
+  padding: 14px 22px;
+  border-bottom: 1px solid rgba(148,163,184,0.18);
+}
+.neo-table tbody tr:hover {
+  background: rgba(56,189,248,0.05);
+}
+
+/* EMPTY + LOADING */
+.neo-table-loading,
+.neo-table-empty {
+  padding: 2rem;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+}
+
+/* AVATAR */
+.neo-avatar {
+  height: 40px;
+  width: 40px;
+  background: rgba(56,189,248,0.15);
+  border: 1px solid rgba(56,189,248,0.4);
+  color: #7dd3fc;
+  font-weight: 700;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-shadow: 0 0 12px rgba(56,189,248,0.7);
+}
+
+/* NAME + EMAIL */
+.neo-name {
+  font-size: 0.9rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+.neo-email {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+/* ROLE SELECT */
+.neo-select,
+.neo-select-small {
+  background: #0a0f1d;
+  border: 1px solid rgba(148,163,184,0.4);
+  color: #cbd5e1;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  outline: none;
+}
+.neo-select-small {
+  padding: 4px 6px;
+}
+
+/* BADGES */
+.neo-badge {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.neo-badge-green {
+  background: rgba(16,185,129,0.2);
+  color: #34d399;
+}
+.neo-badge-red {
+  background: rgba(239,68,68,0.2);
+  color: #f87171;
+}
+
+/* ACTION BUTTONS */
+.neo-action-btn {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: 0.15s ease;
+}
+.neo-action-btn:hover {
+  text-shadow: 0 0 10px currentColor;
+}
+.neo-date {
+  color: #94a3b8;
+  font-size: 0.75rem;
+}
+/* COURSE CARDS SPECIALIZATION */
+.neo-course-card {
+  padding: 1.25rem 1.4rem;
+}
+.neo-course-card.neo-course-live {
+  border-color: rgba(45, 212, 191, 0.6);
+}
+.neo-course-card.neo-course-draft {
+  border-color: rgba(148, 163, 184, 0.45);
+}
+
+/* icon container */
+.neo-course-icon {
+  height: 46px;
+  width: 46px;
+  border-radius: 1rem;
+  background: radial-gradient(circle at 30% 0%, rgba(56,189,248,0.8), rgba(15,23,42,1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 18px rgba(56,189,248,0.7),
+    inset 0 0 10px rgba(15,23,42,0.9);
+}
+
+/* publish toggle */
+.neo-publish-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148,163,184,0.7);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  cursor: pointer;
+  transition: 0.15s ease-out;
+}
+.neo-publish-on {
+  background: rgba(22,163,74,0.18);
+  border-color: rgba(45,212,191,0.9);
+  color: #bbf7d0;
+  box-shadow: 0 0 14px rgba(34,197,94,0.7);
+}
+.neo-publish-off {
+  background: rgba(15,23,42,0.95);
+  color: #cbd5f5;
+}
+.neo-publish-toggle:hover {
+  transform: translateY(-1px);
+}
+.neo-publish-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #fbbf24;
+  box-shadow: 0 0 8px rgba(251,191,36,0.9);
+}
+.neo-publish-label {
+  white-space: nowrap;
+}
+
+/* pills */
+.neo-pill {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid rgba(148,163,184,0.6);
+}
+.neo-pill-sky {
+  background: rgba(56,189,248,0.12);
+  color: #7dd3fc;
+  border-color: rgba(56,189,248,0.7);
+}
+.neo-pill-purple {
+  background: rgba(129,140,248,0.14);
+  color: #c7d2fe;
+  border-color: rgba(129,140,248,0.7);
+}
+.neo-pill-green {
+  background: rgba(34,197,94,0.18);
+  color: #bbf7d0;
+  border-color: rgba(45,212,191,0.9);
+}
+.neo-pill-gray {
+  background: rgba(15,23,42,0.9);
+  color: #cbd5e1;
+}
+
+/* stats text */
+.neo-stat-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(148,163,184,0.9);
+}
+.neo-stat-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
+/* action buttons */
+.neo-danger-btn {
+  padding: 0.55rem 0.9rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(248,113,113,0.8);
+  background: radial-gradient(circle at 0% 0%, rgba(127,29,29,1), rgba(15,23,42,1));
+  color: #fecaca;
+  transition: 0.15s ease-out;
+}
+.neo-danger-btn:hover {
+  box-shadow: 0 0 18px rgba(239,68,68,0.8);
+  transform: translateY(-1px);
+}
+
+.neo-secondary-btn {
+  padding: 0.55rem 0.9rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(148,163,184,0.7);
+  background: rgba(15,23,42,0.95);
+  color: #e5e7eb;
+  transition: 0.15s ease-out;
+}
+.neo-secondary-btn:hover {
+  border-color: rgba(129,140,248,0.9);
+  box-shadow: 0 0 18px rgba(129,140,248,0.7);
+  transform: translateY(-1px);
+}
+/* SECTION TITLES & LABELS */
+.neo-section-title {
+  font-size: 0.9rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #e5e7eb;
+}
+.neo-subsection-title {
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #7dd3fc;
+}
+.neo-field-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #9ca3af;
+  margin-bottom: 0.25rem;
+}
+
+/* TEXTAREA */
+.neo-textarea {
+  border-radius: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  background: #020617;
+  padding: 0.55rem 0.9rem;
+  color: #e5e7eb;
+  font-size: 0.85rem;
+  outline: none;
+  resize: vertical;
+}
+.neo-textarea:focus {
+  border-color: rgba(129, 140, 248, 0.9);
+  box-shadow:
+    0 0 0 1px rgba(129, 140, 248, 0.9),
+    0 0 18px rgba(56, 189, 248, 0.6);
+}
+
+/* MINI ROW (for videos/files/modules) */
+.neo-mini-row {
+  border-radius: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.9);
+  padding: 0.6rem 0.75rem;
+}
+
+/* (re)use publish toggle styles if not already included */
+.neo-publish-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  cursor: pointer;
+  transition: 0.15s ease-out;
+}
+.neo-publish-on {
+  background: rgba(22, 163, 74, 0.18);
+  border-color: rgba(45, 212, 191, 0.9);
+  color: #bbf7d0;
+  box-shadow: 0 0 14px rgba(34, 197, 94, 0.7);
+}
+.neo-publish-off {
+  background: rgba(15, 23, 42, 0.95);
+  color: #cbd5f5;
+}
+.neo-publish-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #fbbf24;
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.9);
+}
+.neo-publish-label {
+  white-space: nowrap;
+}
+
+/* ====== COURSE CARD WITH SAME HEX LAYOUT AS BUTTON ====== */
+
+.neo-course-card {
+  position: relative;
+  background: #d7d9dd; /* base jaise button */
+  border: 1.5px solid #3b3f46;
+  border-radius: 0; /* clip-path handle karega */
+  cursor: pointer;
+  clip-path: polygon(
+    14px 0,
+    calc(100% - 14px) 0,
+    100% 10px,
+    100% calc(100% - 10px),
+    calc(100% - 18px) 100%,
+    14px 100%,
+    0 calc(100% - 14px),
+    0 10px
+  );
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.7),
+    0 5px 0 rgba(0, 0, 0, 0.45);
+  background: radial-gradient(circle at 15% 0%, #f3f4f6 0, #d0d2d7 55%, #b6bac3 100%);
+  overflow: hidden;
+  transform-origin: center;
+  transition:
+    transform 0.15s ease-out,
+    box-shadow 0.15s ease-out,
+    filter 0.15s ease-out,
+    border-color 0.15s ease-out;
+}
+
+/* inner dark content layer so text stays dark-theme */
+.neo-course-card::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  clip-path: inherit;
+  border-radius: 0;
+  background: radial-gradient(circle at 0% 0%, #020617 0, #020617 40%, #020617 100%);
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.9);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* top stripes (screenshot retro feel) */
+.neo-course-card::after {
+  content: "";
+  position: absolute;
+  left: 18px;
+  top: 10px;
+  width: 60px;
+  height: 5px;
+  background-image: linear-gradient(
+    90deg,
+    #020617 0,
+    #020617 26%,
+    transparent 26%,
+    transparent 44%,
+    #020617 44%,
+    #020617 70%,
+    transparent 70%,
+    transparent 100%
+  );
+  opacity: 0.9;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* content inside card should ignore pseudo bg */
+.neo-course-card > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* hover / press like button */
+.neo-course-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.85),
+    0 8px 0 rgba(0, 0, 0, 0.6),
+    0 0 28px rgba(56, 189, 248, 0.6);
+  filter: brightness(1.03);
+}
+
+.neo-course-card:active {
+  transform: translateY(2px);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.85),
+    0 3px 0 rgba(0, 0, 0, 0.75);
+  filter: brightness(0.97);
+}
+
+/* small chip tags */
+.g-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.7);
+  background: rgba(15, 23, 42, 0.92);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: #e5e7eb;
+}
+
+/* progress track + bar */
+.g-progress-track {
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.85);
+  overflow: hidden;
+}
+.g-progress-bar {
+  height: 100%;
+  border-radius: 999px;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
+}
+
+@font-face {
+  font-family: "SAIBA45";
+  src: url("/fonts/saiba-45.regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* Apni khud ki CSS class, Tailwind se alag */
+.saiba-font {
+  font-family: "SAIBA45", system-ui, sans-serif !important;
+}
+
+
+ 

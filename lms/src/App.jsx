@@ -26,7 +26,12 @@ function App() {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        // Set default tab based on user role
+        if (parsedUser.role === 'admin') {
+          setActiveTab('admin-dashboard');
+        }
       } catch (error) {
         console.error('Error parsing stored user:', error);
         localStorage.removeItem('user');
@@ -37,6 +42,12 @@ function App() {
 
   const handleLogin = (userData) => {
     setUser(userData);
+    // Set default tab based on user role
+    if (userData.role === 'admin') {
+      setActiveTab('admin-dashboard');
+    } else {
+      setActiveTab('dashboard');
+    }
   };
 
   const handleLogout = () => {

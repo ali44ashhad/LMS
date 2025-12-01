@@ -196,9 +196,11 @@ const Dashboard = ({ onCourseSelect }) => {
       {/* HUD Header */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.3em] text-sky-300/80 mb-1">
-            Player Console
-          </p>
+          {user.role !== 'admin' && (
+            <p className="text-[11px] uppercase tracking-[0.3em] text-sky-300/80 mb-1">
+              Player Console
+            </p>
+          )}
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-[0.18em] uppercase">
             Dashboard
           </h1>

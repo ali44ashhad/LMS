@@ -152,17 +152,36 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 bg-[linear-gradient(#ffffff22_1px,transparent_1px),linear-gradient(90deg,#ffffff22_1px,transparent_1px)] bg-[size:40px_40px] flex flex-col">
-      <Header user={user} onLogout={handleLogout} />
-      <div className="flex flex-1 flex-col md:flex-row">
-        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} userRole={user.role} />
-        <main className="flex-1 p-3 md:p-6 overflow-x-hidden">
-          {renderContent()}
-        </main>
-      </div>
-      <Footer />
-    </div>
+   <div className="
+  min-h-screen
+  bg-[#f8f0ff]
+  bg-[linear-gradient(#8852ff22_2px,transparent_2px),linear-gradient(90deg,#8852ff22_2px,transparent_2px)]
+  bg-[size:40px_40px]
+  flex flex-col
+">
+  <Header user={user} onLogout={handleLogout} />
+
+  <div className="flex flex-1 flex-col md:flex-row">
+    <Sidebar
+      activeTab={activeTab}
+      setActiveTab={setActiveTab}
+      userRole={user.role}
+    />
+
+    <main className="flex-1 p-3 md:p-6 overflow-x-hidden">
+      {renderContent()}
+    </main>
+  </div>
+
+  <Footer />
+</div>
+
   );
 }
 
 export default App;
+
+
+
+
+

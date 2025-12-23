@@ -19,13 +19,7 @@ const StatsCards = ({ stats }) => {
             icon: '🏆',
             tag: 'Cleared',
           },
-          {
-            id: 3,
-            title: 'Assignments',
-            value: stats.totalAssignments || 0,
-            icon: '📝',
-            tag: 'Tasks',
-          },
+          
           {
             id: 4,
             title: 'Avg Progress',
@@ -41,7 +35,7 @@ const StatsCards = ({ stats }) => {
   if (statsArray.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
       {statsArray.map((stat, index) => (
         <div
           key={stat.id}
@@ -52,7 +46,7 @@ const StatsCards = ({ stats }) => {
               <p className="text-[10px] md:text-xs tracking-[0.18em] uppercase text-slate-400">
                 {stat.title}
               </p>
-              <p className="text-lg md:text-2xl font-extrabold text-slate-50 mt-1">
+              <p className="text-lg md:text-2xl font-extrabold text-[#545454] mt-1">
                 {stat.value}
               </p>
             </div>
@@ -75,4 +69,10 @@ const StatsCards = ({ stats }) => {
 };
 
 export default StatsCards;
+
+
+
+
+
+
 

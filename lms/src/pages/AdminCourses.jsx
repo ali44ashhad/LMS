@@ -49,12 +49,10 @@ const AdminCourses = ({ onCreateNew, onEdit }) => {
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-[11px] md:text-xs uppercase tracking-[0.3em] text-sky-300/80 mb-1">
-            Content Console
-          </p>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-50 tracking-[0.16em] uppercase flex items-center gap-3">
+           
+          <h1 className="text-2xl md:text-3xl font-extrabold text-[#545454] tracking-[0.16em] uppercase flex items-center gap-3">
             Course Management
-            <span className="inline-flex h-[2px] flex-1 bg-gradient-to-r from-emerald-400 via-sky-400 to-transparent shadow-[0_0_16px_rgba(45,212,191,0.9)]" />
+            <span className="inline-flex h-[2px] flex-1 bg-gradient-to-r from-lime-400 via-cyan-400 to-transparent shadow-[0_0_16px_rgba(45,212,191,0.9)]" />
           </h1>
         </div>
 
@@ -82,15 +80,15 @@ const AdminCourses = ({ onCreateNew, onEdit }) => {
       {loading ? (
         <div className="flex flex-col items-center justify-center h-64 text-slate-200">
           <div className="neo-loader mb-3" />
-          <p className="text-xs md:text-sm tracking-[0.2em] uppercase text-sky-300/80">
+          <p className="text-xs md:text-sm tracking-[0.2em] uppercase text-cyan-300/80">
             Fetching course matrix…
           </p>
         </div>
       ) : courses.length === 0 ? (
         // Empty state
         <div className="neo-card flex flex-col items-center justify-center text-center py-10">
-          <div className="text-5xl mb-3 drop-shadow-[0_0_18px_rgba(56,189,248,0.6)]">📚</div>
-          <h2 className="text-xl font-semibold text-slate-50 tracking-[0.14em] uppercase">
+          <div className="text-5xl mb-3 drop-shadow-[0_0_18px_rgba(0,195,221,0.6)]">📚</div>
+          <h2 className="text-xl font-semibold text-[#545454] tracking-[0.14em] uppercase">
             No Courses Deployed
           </h2>
           <p className="text-sm text-slate-400 mt-2 max-w-md">
@@ -123,7 +121,7 @@ const AdminCourses = ({ onCreateNew, onEdit }) => {
                     </span>
                   </div>
                   <div>
-                    <h3 className="text-base md:text-lg font-semibold text-slate-50">
+                    <h3 className="text-base md:text-lg font-semibold text-[#545454]">
                       {course.title}
                     </h3>
                     <p className="text-xs md:text-sm text-slate-400 mt-1 line-clamp-2">
@@ -212,3 +210,9 @@ const AdminCourses = ({ onCreateNew, onEdit }) => {
 };
 
 export default AdminCourses;
+
+
+
+
+
+

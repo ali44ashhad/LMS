@@ -164,6 +164,31 @@ router.get('/courses', async (req, res) => {
   }
 });
 
+// @route   PUT /api/admin/courses/:id
+// @desc    Update course
+// @access  Private/Admin
+router.put('/courses/:id', async (req, res) => {
+  try {
+    let course = await Course.findById(req.params.id);
+
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: 'Course not found'
+      });
+    }
+
+    course = await Course.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true
+    });
+
+    res.json({ success: true, course });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // @route   DELETE /api/admin/courses/:id
 // @desc    Delete course
 // @access  Private/Admin

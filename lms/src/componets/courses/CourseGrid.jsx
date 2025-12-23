@@ -20,13 +20,13 @@ const CourseGrid = ({ courses, onCourseSelect }) => {
             </div>
             <div className="flex justify-between">
               <span>Lessons:</span>
-              <span className="font-medium">{course.modules?.length || course.lessons || 0}</span>
+              <span className="font-medium">{course.modules?.length || (Array.isArray(course.lessons) ? course.lessons.length : 0)}</span>
             </div>
             <div className="flex justify-between">
               <span>Level:</span>
               <span className={`px-2 py-1 rounded-full text-xs ${
                 course.level === 'Beginner' ? 'bg-green-100 text-green-800' :
-                course.level === 'Intermediate' ? 'bg-blue-100 text-blue-800' :
+                course.level === 'Intermediate' ? 'bg-cyan-100 text-cyan-800' :
                 'bg-purple-100 text-purple-800'
               }`}>
                 {course.level}
@@ -43,7 +43,7 @@ const CourseGrid = ({ courses, onCourseSelect }) => {
           <div className="mt-4 md:mt-6">
             <p className="text-gray-700 text-xs md:text-sm mb-3 md:mb-4 line-clamp-2">{course.description}</p>
             <button 
-              className="w-full px-3 md:px-4 py-2 text-sm md:text-base bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+              className="w-full px-3 md:px-4 py-2 text-sm md:text-base bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
               onClick={() => onCourseSelect(course)}
             >
               View Course
@@ -56,4 +56,10 @@ const CourseGrid = ({ courses, onCourseSelect }) => {
 };
 
 export default CourseGrid;
+
+
+
+
+
+
 

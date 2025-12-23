@@ -201,7 +201,7 @@
 //                 required
 //                 value={courseData.title}
 //                 onChange={(e) => setCourseData({ ...courseData, title: e.target.value })}
-//                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+//                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
 //                 placeholder="e.g., Complete Web Development"
 //               />
 //             </div>
@@ -215,7 +215,7 @@
 //                 required
 //                 value={courseData.duration}
 //                 onChange={(e) => setCourseData({ ...courseData, duration: e.target.value })}
-//                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+//                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
 //                 placeholder="e.g., 8 weeks"
 //               />
 //             </div>
@@ -227,7 +227,7 @@
 //               <select
 //                 value={courseData.category}
 //                 onChange={(e) => setCourseData({ ...courseData, category: e.target.value })}
-//                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+//                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
 //               >
 //                 <option value="Development">Development</option>
 //                 <option value="Data Science">Data Science</option>
@@ -245,7 +245,7 @@
 //               <select
 //                 value={courseData.level}
 //                 onChange={(e) => setCourseData({ ...courseData, level: e.target.value })}
-//                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+//                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
 //               >
 //                 <option value="Beginner">Beginner</option>
 //                 <option value="Intermediate">Intermediate</option>
@@ -261,7 +261,7 @@
 //                 type="text"
 //                 value={courseData.image}
 //                 onChange={(e) => setCourseData({ ...courseData, image: e.target.value })}
-//                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+//                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
 //                 placeholder="e.g., 📚"
 //               />
 //             </div>
@@ -272,7 +272,7 @@
 //                   type="checkbox"
 //                   checked={courseData.isPublished}
 //                   onChange={(e) => setCourseData({ ...courseData, isPublished: e.target.checked })}
-//                   className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+//                   className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
 //                 />
 //                 <span className="text-sm font-medium text-gray-700">Publish Course</span>
 //               </label>
@@ -288,7 +288,7 @@
 //               rows="3"
 //               value={courseData.description}
 //               onChange={(e) => setCourseData({ ...courseData, description: e.target.value })}
-//               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+//               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
 //               placeholder="Describe what students will learn in this course..."
 //             />
 //           </div>
@@ -307,7 +307,7 @@
 //                 type="text"
 //                 value={currentModule.title}
 //                 onChange={(e) => setCurrentModule({ ...currentModule, title: e.target.value })}
-//                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+//                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
 //                 placeholder="e.g., Introduction to JavaScript"
 //               />
 //             </div>
@@ -320,7 +320,7 @@
 //                 rows="2"
 //                 value={currentModule.description}
 //                 onChange={(e) => setCurrentModule({ ...currentModule, description: e.target.value })}
-//                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+//                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
 //                 placeholder="Describe this module..."
 //               />
 //             </div>
@@ -334,14 +334,14 @@
 //                   type="text"
 //                   value={currentVideo.title}
 //                   onChange={(e) => setCurrentVideo({ ...currentVideo, title: e.target.value })}
-//                   className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+//                   className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
 //                   placeholder="Video title"
 //                 />
 //                 <input
 //                   type="text"
 //                   value={currentVideo.url}
 //                   onChange={(e) => setCurrentVideo({ ...currentVideo, url: e.target.value })}
-//                   className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+//                   className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
 //                   placeholder="Video URL"
 //                 />
 //                 <div className="flex gap-2">
@@ -349,13 +349,13 @@
 //                     type="text"
 //                     value={currentVideo.duration}
 //                     onChange={(e) => setCurrentVideo({ ...currentVideo, duration: e.target.value })}
-//                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+//                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
 //                     placeholder="Duration"
 //                   />
 //                   <button
 //                     type="button"
 //                     onClick={addVideo}
-//                     className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+//                     className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
 //                   >
 //                     Add
 //                   </button>
@@ -392,21 +392,21 @@
 //                   type="text"
 //                   value={currentFile.title}
 //                   onChange={(e) => setCurrentFile({ ...currentFile, title: e.target.value })}
-//                   className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+//                   className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
 //                   placeholder="File title"
 //                 />
 //                 <input
 //                   type="text"
 //                   value={currentFile.url}
 //                   onChange={(e) => setCurrentFile({ ...currentFile, url: e.target.value })}
-//                   className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+//                   className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
 //                   placeholder="File URL"
 //                 />
 //                 <div className="flex gap-2">
 //                   <select
 //                     value={currentFile.type}
 //                     onChange={(e) => setCurrentFile({ ...currentFile, type: e.target.value })}
-//                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+//                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
 //                   >
 //                     <option value="pdf">PDF</option>
 //                     <option value="doc">Document</option>
@@ -491,7 +491,7 @@
 //           <button
 //             type="submit"
 //             disabled={loading || !courseData.title || courseData.modules.length === 0}
-//             className="flex-1 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+//             className="flex-1 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
 //           >
 //             {loading ? 'Creating Course...' : 'Create Course'}
 //           </button>
@@ -700,12 +700,12 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-[11px] md:text-xs uppercase tracking-[0.28em] text-sky-300/80 mb-1">
+          <p className="text-[11px] md:text-xs uppercase tracking-[0.28em] text-cyan-300/80 mb-1">
             Course Forge
           </p>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-50 tracking-[0.16em] uppercase flex items-center gap-3">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-[#545454] tracking-[0.16em] uppercase flex items-center gap-3">
             {isEditMode ? 'Edit Course' : 'Create New Course'}
-            <span className="inline-flex h-[2px] flex-1 bg-gradient-to-r from-sky-400 via-indigo-500 to-transparent shadow-[0_0_16px_rgba(56,189,248,0.9)]" />
+            <span className="inline-flex h-[2px] flex-1 bg-gradient-to-r from-cyan-400 via-purple-500 to-transparent shadow-[0_0_16px_rgba(0,195,221,0.9)]" />
           </h1>
         </div>
 
@@ -823,7 +823,7 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
         <div className="neo-card">
           <h2 className="neo-section-title flex items-center justify-between gap-3">
             Module Builder
-            <span className="text-[10px] md:text-xs text-sky-300/80 tracking-[0.18em] uppercase">
+            <span className="text-[10px] md:text-xs text-cyan-300/80 tracking-[0.18em] uppercase">
               Stage {courseData.modules.length + 1}
             </span>
           </h2>
@@ -902,7 +902,7 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
                       className="neo-mini-row flex items-center justify-between"
                     >
                       <div>
-                        <p className="text-sm font-semibold text-slate-50">
+                        <p className="text-sm font-semibold text-[#545454]">
                           {video.title}
                         </p>
                         <p className="text-[11px] text-slate-400 break-all">
@@ -974,7 +974,7 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
                       className="neo-mini-row flex items-center justify-between"
                     >
                       <div>
-                        <p className="text-sm font-semibold text-slate-50">
+                        <p className="text-sm font-semibold text-[#545454]">
                           {file.title}
                         </p>
                         <p className="text-[11px] text-slate-400 break-all">
@@ -1016,7 +1016,7 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
               {courseData.modules.map((module, index) => (
                 <div key={module.id} className="neo-mini-row">
                   <div className="flex-1">
-                    <p className="text-sm md:text-base font-semibold text-slate-50">
+                    <p className="text-sm md:text-base font-semibold text-[#545454]">
                       Module {index + 1}: {module.title}
                     </p>
                     {module.description && (
@@ -1072,3 +1072,9 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
 };
 
 export default AdminCourseCreate;
+
+
+
+
+
+

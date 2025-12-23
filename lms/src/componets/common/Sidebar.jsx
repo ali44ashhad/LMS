@@ -17,7 +17,7 @@ const Sidebar = ({ activeTab, setActiveTab, userRole = 'student' }) => {
   const menuItems = userRole === 'admin' ? adminMenuItems : studentMenuItems;
 
   return (
-    <aside className="w-full saiba-font md:w-64 bg-[#050611] text-gray-100 shadow-sm md:min-h-screen border-r border-zinc-800">
+    <aside className="w-full saiba-font md:w-64 bg-[#8852ff] text-gray-100 shadow-sm md:min-h-screen border-r border-zinc-800">
       <nav className="mt-4 md:mt-8">
         {userRole === 'admin' && (
           <div className="px-3 md:px-6 mb-2 md:mb-4">
@@ -53,19 +53,19 @@ const Sidebar = ({ activeTab, setActiveTab, userRole = 'student' }) => {
 
       {userRole === 'student' && (
         <div className="mt-6 md:mt-10 px-4 md:px-6 hidden md:block">
-          <div className="bg-gradient-to-br from-indigo-600/20 via-slate-900 to-purple-600/20 rounded-xl p-4 border border-indigo-500/40 shadow-[0_0_25px_rgba(99,102,241,0.4)]">
-            <h3 className="text-xs md:text-sm font-semibold text-indigo-100 tracking-[0.18em] uppercase">
+          <div className="bg-[#8852ff] rounded-xl p-4 border border-purple-500/40 shadow-[0_0_25px_rgba(136,82,255,0.4)]">
+            <h3 className="text-xs md:text-sm font-semibold text-purple-100 tracking-[0.18em] uppercase">
               Overall Progress
             </h3>
 
             <div className="mt-3">
-              <div className="flex items-center justify-between text-[11px] md:text-xs text-indigo-100">
+              <div className="flex items-center justify-between text-[11px] md:text-xs text-purple-100">
                 <span className="font-semibold">65% Complete</span>
-                <span className="text-indigo-200/80">13/20 courses</span>
+                <span className="text-purple-200/80">13/20 courses</span>
               </div>
-              <div className="mt-2 w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+              <div className="mt-2 w-full bg-[#8852ff] rounded-full h-2 overflow-hidden">
                 <div
-                  className="h-2 rounded-full bg-gradient-to-r from-indigo-400 via-cyan-400 to-emerald-400 shadow-[0_0_15px_rgba(56,189,248,0.9)]"
+                  className="h-2 rounded-full bg-[#00c3dd] shadow-[0_0_15px_rgba(0,195,221,0.9)]"
                   style={{ width: '65%' }}
                 ></div>
               </div>
@@ -78,3 +78,9 @@ const Sidebar = ({ activeTab, setActiveTab, userRole = 'student' }) => {
 };
 
 export default Sidebar;
+
+
+
+
+
+

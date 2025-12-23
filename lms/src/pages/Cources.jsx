@@ -82,12 +82,12 @@
 //           <input
 //             type="text"
 //             placeholder="Search courses..."
-//             className="px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-full sm:w-auto"
+//             className="px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent w-full sm:w-auto"
 //             value={searchTerm}
 //             onChange={(e) => setSearchTerm(e.target.value)}
 //           />
 //           <select 
-//             className="px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-full sm:w-auto"
+//             className="px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent w-full sm:w-auto"
 //             value={filter}
 //             onChange={(e) => setFilter(e.target.value)}
 //           >
@@ -228,12 +228,12 @@ const Courses = ({ onCourseSelect }) => {
     <div className="space-y-10">
       {/* TITLE */}
       <div>
-        <p className="text-[11px] uppercase tracking-[0.32em] text-sky-300/70 mb-1">
+        <p className="text-[11px] uppercase tracking-[0.32em] text-cyan-300/70 mb-1">
           Explore Courses
         </p>
-        <h1 className="text-3xl md:text-4xl font-extrabold text-slate-50 tracking-[0.14em] uppercase flex items-center gap-3">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-[#545454] tracking-[0.14em] uppercase flex items-center gap-3">
           Courses
-          <span className="inline-flex h-[2px] flex-1 bg-gradient-to-r from-sky-400 to-transparent shadow-[0_0_18px_rgba(56,189,248,0.8)]" />
+          <span className="inline-flex h-[2px] flex-1 bg-gradient-to-r from-cyan-400 to-transparent shadow-[0_0_18px_rgba(0,195,221,0.8)]" />
         </h1>
       </div>
 
@@ -321,3 +321,9 @@ const Courses = ({ onCourseSelect }) => {
 };
 
 export default Courses;
+
+
+
+
+
+

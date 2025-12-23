@@ -57,8 +57,8 @@
 //         <div className="lg:col-span-1">
 //           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
 //             <div className="text-center">
-//               <div className="w-24 h-24 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-//                 <span className="text-2xl font-semibold text-indigo-600">
+//               <div className="w-24 h-24 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+//                 <span className="text-2xl font-semibold text-purple-600">
 //                   {user.name?.substring(0, 2).toUpperCase() || 'US'}
 //                 </span>
 //               </div>
@@ -80,7 +80,7 @@
 //                   onClick={() => setActiveTab(item.id)}
 //                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left ${
 //                     activeTab === item.id
-//                       ? 'bg-indigo-50 text-indigo-600 border-r-2 border-indigo-600'
+//                       ? 'bg-indigo-50 text-purple-600 border-r-2 border-purple-600'
 //                       : 'text-gray-600 hover:bg-gray-100'
 //                   }`}
 //                 >
@@ -107,7 +107,7 @@
 //                     type="text"
 //                     value={user.name}
 //                     onChange={(e) => setUser({...user, name: e.target.value})}
-//                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+//                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
 //                   />
 //                 </div>
                 
@@ -119,7 +119,7 @@
 //                     type="email"
 //                     value={user.email}
 //                     onChange={(e) => setUser({...user, email: e.target.value})}
-//                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+//                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
 //                   />
 //                 </div>
                 
@@ -131,7 +131,7 @@
 //                     value={user.bio}
 //                     onChange={(e) => setUser({...user, bio: e.target.value})}
 //                     rows={4}
-//                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+//                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
 //                   />
 //                 </div>
                 
@@ -143,7 +143,7 @@
 //                     type="text"
 //                     value={user.address || ''}
 //                     onChange={(e) => setUser({...user, address: e.target.value})}
-//                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+//                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
 //                   />
 //                 </div>
 
@@ -155,7 +155,7 @@
 //                     type="text"
 //                     value={user.phone || ''}
 //                     onChange={(e) => setUser({...user, phone: e.target.value})}
-//                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+//                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
 //                   />
 //                 </div>
 //               </div>
@@ -163,7 +163,7 @@
 //               <div className="mt-6 flex justify-end">
 //                 <button 
 //                   onClick={handleUpdateProfile}
-//                   className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+//                   className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
 //                 >
 //                   Save Changes
 //                 </button>
@@ -195,7 +195,7 @@
 //                         <div className="text-sm font-medium text-gray-900">{enrollment.progress || 0}%</div>
 //                         <div className="w-32 h-2 bg-gray-200 rounded-full mt-1">
 //                           <div 
-//                             className="h-2 bg-indigo-600 rounded-full"
+//                             className="h-2 bg-purple-600 rounded-full"
 //                             style={{ width: `${enrollment.progress || 0}%` }}
 //                           ></div>
 //                         </div>
@@ -207,7 +207,7 @@
 
 //               <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
 //                 <div className="bg-gray-50 rounded-lg p-4">
-//                   <div className="text-2xl font-bold text-indigo-600">{enrolledCourses.length}</div>
+//                   <div className="text-2xl font-bold text-purple-600">{enrolledCourses.length}</div>
 //                   <div className="text-sm text-gray-600">Enrolled Courses</div>
 //                 </div>
 //                 <div className="bg-gray-50 rounded-lg p-4">
@@ -293,31 +293,32 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
     <div className="space-y-10 max-w-6xl mx-auto">
       {/* HEADER */}
       <div>
-        <p className="text-[11px] uppercase tracking-[0.3em] text-sky-300/70 mb-1">
+        <p className="text-[11px] uppercase tracking-[0.3em] text-cyan-300/70 mb-1">
           User Dashboard
         </p>
-        <h1 className="text-3xl md:text-4xl font-extrabold text-slate-50 tracking-[0.14em] uppercase flex items-center gap-3">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-[#545454] tracking-[0.14em] uppercase flex items-center gap-3">
           Profile
-          <span className="inline-flex h-[2px] flex-1 bg-gradient-to-r from-indigo-400 via-sky-400 to-transparent shadow-[0_0_16px_rgba(99,102,241,0.9)]" />
+          <span className="inline-flex h-[2px] flex-1 bg-gradient-to-r from-purple-400 via-cyan-400 to-transparent shadow-[0_0_16px_rgba(136,82,255,0.9)]" />
         </h1>
       </div>
 
-      <div className="grid grid-cols-1 max-w-container lg:grid-cols-4 gap-8">
+    <div className="grid grid-cols-1 max-w-container lg:grid-cols-4 gap-8 items-start">
+
         {/* SIDEBAR USER CARD */}
-        <aside className="lg:col-span-1">
+        <aside className="lg:col-span-1 rounded-2xl">
           <div className="neo-card p-6 text-center">
-            <div className="mx-auto w-24 h-24 rounded-full bg-indigo-600/20 border border-indigo-500/60 flex items-center justify-center text-indigo-300 shadow-[0_0_30px_rgba(99,102,241,0.5)] mb-4">
+            <div className="mx-auto w-24 h-24 rounded-full bg-purple-600/20 border border-purple-500/60 flex items-center justify-center text-purple-300 shadow-[0_0_30px_rgba(136,82,255,0.5)] mb-4">
               <span className="text-3xl font-bold tracking-[0.12em]">
                 {user.name?.substring(0, 2).toUpperCase() || 'US'}
               </span>
             </div>
 
-            <h2 className="text-lg font-semibold text-slate-50">{user.name}</h2>
+            <h2 className="text-lg font-semibold text-[#545454]">{user.name}</h2>
             <p className="text-sm text-slate-400">{user.email}</p>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-[#545454]0 mt-1">
               {user.address || 'No location set'}
             </p>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[#545454]0">
               Joined {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
             </p>
 
@@ -425,7 +426,7 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
               {loading ? (
                 <div className="text-slate-400">Loading courses...</div>
               ) : enrolledCourses.length === 0 ? (
-                <p className="text-slate-500">You haven’t enrolled in any courses yet.</p>
+                <p className="text-[#545454]0">You haven’t enrolled in any courses yet.</p>
               ) : (
                 <div className="space-y-4">
                   {enrolledCourses.map(enroll => (
@@ -437,7 +438,7 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
                       <div className="flex items-center gap-4">
                         <div className="text-3xl">{enroll.course?.image || '📚'}</div>
                         <div>
-                          <p className="text-slate-50 font-semibold">
+                          <p className="text-[#545454] font-semibold">
                             {enroll.course?.title || 'Course'}
                           </p>
                           <p className="text-xs text-slate-400">
@@ -452,7 +453,7 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
                         </p>
                         <div className="w-32 h-2 bg-slate-800 rounded-full mt-1 overflow-hidden">
                           <div
-                            className="h-2 bg-sky-400 rounded-full transition-all duration-500"
+                            className="h-2 bg-cyan-400 rounded-full transition-all duration-500"
                             style={{ width: `${enroll.progress || 0}%` }}
                           ></div>
                         </div>
@@ -494,3 +495,9 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
 };
 
 export default Profile;
+
+
+
+
+
+

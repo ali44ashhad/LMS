@@ -107,9 +107,9 @@ const AdminDashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-slate-200">
+      <div className="flex flex-col items-center justify-center h-64 text-[# ff7517]">
         <div className="neo-loader mb-3" />
-        <p className="text-xs md:text-sm tracking-[0.25em] uppercase text-sky-300/80">
+        <p className="text-xs md:text-sm tracking-[0.25em] uppercase text-cyan-300/80">
           Booting Admin Console…
         </p>
       </div>
@@ -121,12 +121,10 @@ const AdminDashboard = () => {
     <div className="space-y-8">
       {/* title */}
       <div>
-        <p className="text-[11px] md:text-xs uppercase tracking-[0.3em] text-sky-300/80 mb-1">
-          Control Center
-        </p>
-        <h1 className="text-2xl md:text-3xl font-extrabold text-slate-50 tracking-[0.16em] uppercase flex items-center gap-3">
+       
+        <h1 className="text-2xl md:text-3xl font-extrabold text-[#18455b] tracking-[0.16em] uppercase flex items-center gap-3">
           Admin Dashboard
-          <span className="inline-flex h-[2px] flex-1 bg-gradient-to-r from-sky-400 via-indigo-500 to-transparent shadow-[0_0_16px_rgba(56,189,248,0.9)]" />
+          <span className="inline-flex h-[2px] flex-1 bg-[#ff9d00] " />
         </h1>
       </div>
 
@@ -152,7 +150,7 @@ const AdminDashboard = () => {
           <p className="neo-card-label">Total Courses</p>
           <p className="neo-card-value">{stats?.totalCourses || 0}</p>
           <p className="neo-card-sub">
-            Published: <span className="font-semibold text-sky-200">{stats?.publishedCourses || 0}</span>
+            Published: <span className="font-semibold text-cyan-200">{stats?.publishedCourses || 0}</span>
           </p>
         </div>
 
@@ -173,3 +171,9 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+
+
+
+
+
+

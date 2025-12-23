@@ -40,7 +40,7 @@
 //               <span>•</span>
 //               <span className={`px-2 py-1 rounded-full text-xs ${
 //                 course.level === 'Beginner' ? 'bg-green-100 text-green-800' :
-//                 course.level === 'Intermediate' ? 'bg-blue-100 text-blue-800' :
+//                 course.level === 'Intermediate' ? 'bg-cyan-100 text-cyan-800' :
 //                 'bg-purple-100 text-purple-800'
 //               }`}>
 //                 {course.level}
@@ -67,7 +67,7 @@
 //         <div className="mt-4">
 //           <div className="flex items-center justify-between text-sm mb-2">
 //             <span className="text-gray-600 font-medium">Course Progress</span>
-//             <span className="text-indigo-600 font-semibold">{course.progress}%</span>
+//             <span className="text-purple-600 font-semibold">{course.progress}%</span>
 //           </div>
 //           <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
 //             <div 
@@ -81,7 +81,7 @@
 //       {course.enrolled && course.lastAccessed && (
 //         <div className="mt-4 flex items-center justify-between">
 //           <span className="text-sm text-gray-500">Last accessed: {formatDate(course.lastAccessed)}</span>
-//           <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium">
+//           <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium">
 //             Continue Learning
 //           </button>
 //         </div>
@@ -94,7 +94,7 @@
 //             <span>•</span>
 //             <span>👥 {course.enrolledStudents || 0} students</span>
 //           </div>
-//           <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium">
+//           <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium">
 //             Enroll Now
 //           </button>
 //         </div>
@@ -109,8 +109,8 @@ import React from 'react';
 
 const CourseCard = ({ course, onSelect }) => {
   const getGradient = (progress) => {
-    if (progress >= 75) return 'from-emerald-400 via-lime-300 to-emerald-500';
-    if (progress >= 50) return 'from-sky-400 via-cyan-300 to-sky-500';
+    if (progress >= 75) return 'from-lime-400 via-lime-300 to-lime-500';
+    if (progress >= 50) return 'from-cyan-400 via-cyan-300 to-cyan-500';
     if (progress >= 25) return 'from-amber-400 via-yellow-300 to-amber-500';
     return 'from-rose-400 via-red-300 to-rose-500';
   };
@@ -153,7 +153,7 @@ const CourseCard = ({ course, onSelect }) => {
             {course.image || '🎮'}
           </div>
           <div className="flex-1">
-            <h3 className="text-base md:text-lg font-semibold text-slate-50">
+            <h3 className="text-base md:text-lg font-semibold text-[#545454]">
               {course.title}
             </h3>
             <p className="text-slate-400 mt-1 text-xs md:text-sm">
@@ -167,9 +167,9 @@ const CourseCard = ({ course, onSelect }) => {
               <span
                 className={`px-2 py-0.5 rounded-full text-[10px] uppercase tracking-[0.16em] border ${
                   course.level === 'Beginner'
-                    ? 'bg-emerald-500/15 text-emerald-200 border-emerald-400/80'
+                    ? 'bg-lime-500/15 text-lime-200 border-lime-400/80'
                     : course.level === 'Intermediate'
-                    ? 'bg-sky-500/15 text-sky-200 border-sky-400/80'
+                    ? 'bg-cyan-500/15 text-cyan-200 border-cyan-400/80'
                     : 'bg-purple-500/15 text-purple-200 border-purple-400/80'
                 }`}
               >
@@ -181,7 +181,7 @@ const CourseCard = ({ course, onSelect }) => {
 
         {course.enrolled && (
           <div className="text-right ml-4 min-w-[90px]">
-            <span className="text-xs md:text-sm font-semibold text-slate-50">
+            <span className="text-xs md:text-sm font-semibold text-[#545454]">
               {progress}% Sync
             </span>
             <div className="w-24 md:w-28 h-2 g-progress-track mt-1">
@@ -203,7 +203,7 @@ const CourseCard = ({ course, onSelect }) => {
               <span className="text-slate-400 uppercase tracking-[0.18em]">
                 Course Progress
               </span>
-              <span className="text-sky-300 font-semibold">
+              <span className="text-cyan-300 font-semibold">
                 {progress}% XP
               </span>
             </div>
@@ -245,4 +245,10 @@ const CourseCard = ({ course, onSelect }) => {
 };
 
 export default CourseCard;
+
+
+
+
+
+
 

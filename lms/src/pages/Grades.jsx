@@ -67,7 +67,7 @@ const Grades = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Grades</h1>
         <div className="text-right">
-          <div className="text-2xl font-bold text-indigo-600">GPA: {calculateGPA()}</div>
+          <div className="text-2xl font-bold text-purple-600">GPA: {calculateGPA()}</div>
           <p className="text-sm text-gray-600">Current Grade Point Average</p>
         </div>
       </div>
@@ -87,7 +87,7 @@ const Grades = () => {
           <p className="text-gray-600">Active Courses</p>
         </div>
         <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="text-2xl font-bold text-indigo-600">{averageScore}%</div>
+          <div className="text-2xl font-bold text-purple-600">{averageScore}%</div>
           <p className="text-gray-600">Average Score</p>
         </div>
       </div>
@@ -133,7 +133,7 @@ const Grades = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-cyan-100 text-cyan-800">
                       {grade.type || 'Assignment'}
                     </span>
                   </td>
@@ -164,3 +164,8 @@ const Grades = () => {
 };
 
 export default Grades;
+
+
+
+
+

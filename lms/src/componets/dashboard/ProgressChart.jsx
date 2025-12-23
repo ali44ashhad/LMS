@@ -17,7 +17,7 @@
 //           </div>
 //           <div className="w-24 h-2 bg-gray-200 rounded-full">
 //             <div 
-//               className="h-2 bg-indigo-600 rounded-full"
+//               className="h-2 bg-purple-600 rounded-full"
 //               style={{ width: `${course.progress}%` }}
 //             ></div>
 //           </div>
@@ -63,7 +63,7 @@ const ProgressChart = ({ courses = [] }) => {
             <div className="flex items-center gap-3 flex-1">
               <span className="text-xl md:text-2xl">{course.emoji}</span>
               <div className="flex-1">
-                <p className="font-medium text-slate-100 truncate">
+                <p className="font-medium text-slate-[#545454] truncate">
                   {course.title}
                 </p>
                 <p className="text-[10px] text-slate-400 mt-0.5 uppercase tracking-[0.16em]">
@@ -73,7 +73,7 @@ const ProgressChart = ({ courses = [] }) => {
             </div>
             <div className="w-28 md:w-32 h-2.5 g-progress-track">
               <div
-                className="g-progress-bar bg-gradient-to-r from-emerald-400 via-sky-400 to-indigo-400"
+                className="g-progress-bar bg-gradient-to-r from-lime-400 via-cyan-400 to-purple-400"
                 style={{ width: `${pct}%` }}
               />
             </div>
@@ -85,3 +85,9 @@ const ProgressChart = ({ courses = [] }) => {
 };
 
 export default ProgressChart;
+
+
+
+
+
+

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useProgress } from '../../hooks/useProgress'; 
 
-const CourseDetail = ({ course, onBack, onLessonSelect }) => {
+const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) => {
   const [activeTab, setActiveTab] = useState('curriculum');
   const { progress } = useProgress(course.id);
 
@@ -20,47 +20,68 @@ const CourseDetail = ({ course, onBack, onLessonSelect }) => {
   const courseCategory = course?.category || 'General';
   const courseStudents = course?.enrolledStudents || course?.students || 0;
 
-  // Modules
-  const modules =
-    course.modules && Array.isArray(course.modules) && course.modules.length > 0
-      ? course.modules.map((mod, idx) => ({
-          id: mod._id || idx + 1,
-          title: mod.title || `Module ${idx + 1}`,
-          duration: mod.duration || '1 hour',
-          lessons:
-            mod.resources && Array.isArray(mod.resources)
-              ? mod.resources.map((res, resIdx) => ({
-                  id: res._id || resIdx + 1,
-                  title: res.title || `Lesson ${resIdx + 1}`,
-                  duration: res.duration || '10 min',
-                  type: res.type || 'video',
-                  completed: false,
-                }))
-              : [],
+  // Modules - Support both lessons array from backend and modules structure
+  const modules = (() => {
+    if (course.lessons && Array.isArray(course.lessons) && course.lessons.length > 0) {
+      // Backend sends flat lessons array - group them by title prefix or create single module
+      return [{
+        id: 1,
+        title: 'Course Content',
+        duration: 'Self-paced',
+        lessons: course.lessons.map((lesson, idx) => ({
+          id: lesson._id || idx + 1,
+          title: lesson.title || `Lesson ${idx + 1}`,
+          duration: lesson.duration || '10 min',
+          type: 'video',
+          completed: false,
+          url: lesson.videoUrl,
+          description: lesson.description,
         }))
-      : [
-          {
-            id: 1,
-            title: 'Introduction',
-            duration: '45 min',
-            lessons: [
-              {
-                id: 1,
-                title: 'Welcome to the Course',
-                duration: '5 min',
-                type: 'video',
+      }];
+    } else if (course.modules && Array.isArray(course.modules) && course.modules.length > 0) {
+      // Old format - modules with resources
+      return course.modules.map((mod, idx) => ({
+        id: mod._id || idx + 1,
+        title: mod.title || `Module ${idx + 1}`,
+        duration: mod.duration || '1 hour',
+        lessons:
+          mod.resources && Array.isArray(mod.resources)
+            ? mod.resources.map((res, resIdx) => ({
+                id: res._id || resIdx + 1,
+                title: res.title || `Lesson ${resIdx + 1}`,
+                duration: res.duration || '10 min',
+                type: res.type || 'video',
                 completed: false,
-              },
-              {
-                id: 2,
-                title: 'Course Overview',
-                duration: '10 min',
-                type: 'video',
-                completed: false,
-              },
-            ],
-          },
-        ];
+              }))
+            : [],
+      }));
+    } else {
+      // Default fallback
+      return [
+        {
+          id: 1,
+          title: 'Introduction',
+          duration: '45 min',
+          lessons: [
+            {
+              id: 1,
+              title: 'Welcome to the Course',
+              duration: '5 min',
+              type: 'video',
+              completed: false,
+            },
+            {
+              id: 2,
+              title: 'Course Overview',
+              duration: '10 min',
+              type: 'video',
+              completed: false,
+            },
+          ],
+        },
+      ];
+    }
+  })();
 
   const totalLessons = modules.reduce(
     (total, module) => total + module.lessons.length,
@@ -107,12 +128,12 @@ const CourseDetail = ({ course, onBack, onLessonSelect }) => {
               <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">
                 Course Progress
               </p>
-              <div className="text-2xl font-extrabold text-sky-300">
+              <div className="text-2xl font-extrabold text-cyan-300">
                 {progress}%
               </div>
               <div className="w-32 h-2 bg-slate-800 rounded-full mt-2 overflow-hidden">
                 <div
-                  className="h-2 rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 to-indigo-500 shadow-[0_0_18px_rgba(56,189,248,0.8)]"
+                  className="h-2 rounded-full bg-gradient-to-r from-lime-400 via-cyan-400 to-purple-500 shadow-[0_0_18px_rgba(0,195,221,0.8)]"
                   style={{ width: `${Math.min(progress, 100)}%` }}
                 />
               </div>
@@ -123,7 +144,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect }) => {
             <div className="flex items-start gap-4 md:gap-6 flex-1">
               <div className="text-5xl md:text-6xl">{courseImage}</div>
               <div className="space-y-3">
-                <h1 className="text-2xl md:text-3xl font-extrabold text-slate-50 tracking-[0.08em]">
+                <h1 className="text-2xl md:text-3xl font-extrabold text-[#545454] tracking-[0.08em]">
                   {courseTitle}
                 </h1>
                 <p className="text-sm text-slate-400">{courseInstructor}</p>
@@ -183,7 +204,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect }) => {
                   </defs>
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg font-extrabold text-sky-300">
+                  <span className="text-lg font-extrabold text-cyan-300">
                     {progress}%
                   </span>
                 </div>
@@ -234,7 +255,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect }) => {
                   <div key={module.id} className="p-5 space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="text-base md:text-lg font-semibold text-slate-50">
+                        <h3 className="text-base md:text-lg font-semibold text-[#545454]">
                           {moduleIndex + 1}. {module.title}
                         </h3>
                         <p className="text-xs text-slate-400 mt-1">
@@ -261,14 +282,14 @@ const CourseDetail = ({ course, onBack, onLessonSelect }) => {
                           }
                           className={`neo-mini-row flex items-center gap-4 cursor-pointer ${
                             lesson.completed
-                              ? 'border-emerald-400/60 bg-emerald-500/5'
+                              ? 'border-lime-400/60 bg-lime-500/5'
                               : ''
                           }`}
                         >
                           <div
                             className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
                               lesson.completed
-                                ? 'bg-emerald-500 text-white'
+                                ? 'bg-lime-500 text-white'
                                 : 'bg-slate-700 text-slate-200'
                             }`}
                           >
@@ -276,7 +297,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect }) => {
                           </div>
 
                           <div className="flex-1">
-                            <h4 className="text-sm font-medium text-slate-50">
+                            <h4 className="text-sm font-medium text-[#545454]">
                               {lesson.title}
                             </h4>
                             <div className="flex flex-wrap items-center gap-3 mt-1 text-[11px] text-slate-400">
@@ -329,7 +350,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect }) => {
                 </p>
 
                 <div>
-                  <h3 className="text-sm font-semibold text-sky-200 tracking-[0.16em] uppercase mb-3">
+                  <h3 className="text-sm font-semibold text-cyan-200 tracking-[0.16em] uppercase mb-3">
                     What You&apos;ll Learn
                   </h3>
                   <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -347,7 +368,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect }) => {
                         key={index}
                         className="flex items-center gap-2 text-slate-300"
                       >
-                        <span className="text-emerald-400">✓</span>
+                        <span className="text-lime-400">✓</span>
                         <span>{item}</span>
                       </li>
                     ))}
@@ -355,7 +376,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect }) => {
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-semibold text-sky-200 tracking-[0.16em] uppercase mb-2">
+                  <h3 className="text-sm font-semibold text-cyan-200 tracking-[0.16em] uppercase mb-2">
                     Prerequisites
                   </h3>
                   <ul className="list-disc list-inside space-y-1">
@@ -366,7 +387,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect }) => {
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-semibold text-sky-200 tracking-[0.16em] uppercase mb-2">
+                  <h3 className="text-sm font-semibold text-cyan-200 tracking-[0.16em] uppercase mb-2">
                     Who This Course Is For
                   </h3>
                   <p>
@@ -392,7 +413,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect }) => {
                   >
                     <div className="text-5xl">{instructor.image}</div>
                     <div>
-                      <h3 className="text-lg font-semibold text-slate-50">
+                      <h3 className="text-lg font-semibold text-[#545454]">
                         {instructor.name}
                       </h3>
                       <p className="text-sm text-slate-400 mt-1">
@@ -404,7 +425,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect }) => {
 
                       <div className="flex flex-wrap items-center gap-6 mt-4 text-sm">
                         <div className="text-center">
-                          <div className="text-xl font-bold text-sky-300">
+                          <div className="text-xl font-bold text-cyan-300">
                             4.8
                           </div>
                           <div className="text-xs text-slate-400">
@@ -412,7 +433,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect }) => {
                           </div>
                         </div>
                         <div className="text-center">
-                          <div className="text-xl font-bold text-sky-300">
+                          <div className="text-xl font-bold text-cyan-300">
                             12,450
                           </div>
                           <div className="text-xs text-slate-400">
@@ -420,7 +441,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect }) => {
                           </div>
                         </div>
                         <div className="text-center">
-                          <div className="text-xl font-bold text-sky-300">8</div>
+                          <div className="text-xl font-bold text-cyan-300">8</div>
                           <div className="text-xs text-slate-400">Courses</div>
                         </div>
                       </div>
@@ -438,7 +459,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect }) => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-sky-300">4.8</div>
+                  <div className="text-4xl font-bold text-cyan-300">4.8</div>
                   <div className="flex justify-center mt-2 text-yellow-400">
                     {'★'.repeat(5)}
                   </div>
@@ -520,7 +541,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect }) => {
                           {review.avatar}
                         </div>
                         <div>
-                          <h4 className="font-medium text-slate-50">
+                          <h4 className="font-medium text-[#545454]">
                             {review.name}
                           </h4>
                           <div className="flex items-center gap-1 mt-1 text-xs">
@@ -538,7 +559,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect }) => {
                                 </span>
                               ))}
                             </div>
-                            <span className="text-slate-500">
+                            <span className="text-[#545454]0">
                               {review.date}
                             </span>
                           </div>
@@ -594,13 +615,13 @@ const CourseDetail = ({ course, onBack, onLessonSelect }) => {
                         {resource.type === 'pdf' ? '📄' : '📦'}
                       </div>
                       <div>
-                        <h3 className="font-medium text-slate-50">
+                        <h3 className="font-medium text-[#545454]">
                           {resource.title}
                         </h3>
                         <p className="text-xs text-slate-400 mt-1">
                           {resource.description}
                         </p>
-                        <p className="text-[11px] text-slate-500 mt-2">
+                        <p className="text-[11px] text-[#545454]0 mt-2">
                           {resource.size}
                         </p>
                       </div>
@@ -617,6 +638,16 @@ const CourseDetail = ({ course, onBack, onLessonSelect }) => {
 
         {/* RIGHT SIDEBAR CARDS */}
         <div className="space-y-5">
+          {/* Enroll Button */}
+          {!course?.enrolled && (
+            <button
+              onClick={() => onEnroll && onEnroll(course._id)}
+              className="neo-btn neo-btn-active w-full py-4 text-base font-semibold justify-center"
+            >
+              Enroll Now
+            </button>
+          )}
+
           {/* Progress Card */}
           <div className="neo-card p-6">
             <h3 className="neo-section-title mb-4">Your Progress</h3>
@@ -643,7 +674,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect }) => {
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-xl font-bold text-emerald-300">
+                  <span className="text-xl font-bold text-lime-300">
                     {progress}%
                   </span>
                 </div>
@@ -708,3 +739,9 @@ const CourseDetail = ({ course, onBack, onLessonSelect }) => {
 };
 
 export default CourseDetail;
+
+
+
+
+
+

@@ -197,11 +197,11 @@ const Dashboard = ({ onCourseSelect }) => {
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
         <div>
           {user.role !== 'admin' && (
-            <p className="text-[11px] uppercase tracking-[0.3em] text-sky-300/80 mb-1">
+            <p className="text-[11px] uppercase tracking-[0.3em] text-cyan-300/80 mb-1">
               Player Console
             </p>
           )}
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-[0.18em] uppercase">
+          <h1 className="text-2xl md:text-3xl text-[#545454] font-extrabold tracking-[0.18em] uppercase">
             Dashboard
           </h1>
           <p className="text-[10px] md:text-xs text-slate-400 tracking-[0.25em] uppercase mt-1">
@@ -211,7 +211,7 @@ const Dashboard = ({ onCourseSelect }) => {
 
         <div className="flex items-center gap-2 text-[10px] md:text-xs">
           <div className="g-chip flex items-center">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-lime-400 mr-2 animate-pulse" />
             Sync: {stats.averageProgress}% Complete
           </div>
           <div className="g-chip hidden sm:flex items-center">
@@ -284,3 +284,9 @@ const Dashboard = ({ onCourseSelect }) => {
 };
 
 export default Dashboard;
+
+
+
+
+
+

@@ -232,6 +232,15 @@ export const adminAPI = {
     return handleResponse(response);
   },
 
+  updateCourse: async (id, courseData) => {
+    const response = await fetch(`${API_URL}/admin/courses/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(courseData)
+    });
+    return handleResponse(response);
+  },
+
   deleteCourse: async (id) => {
     const response = await fetch(`${API_URL}/admin/courses/${id}`, {
       method: 'DELETE',

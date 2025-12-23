@@ -70,12 +70,12 @@
 //           <input
 //             type="text"
 //             placeholder="Search by name or email..."
-//             className="flex-1 min-w-[200px] px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+//             className="flex-1 min-w-[200px] px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
 //             value={filters.search}
 //             onChange={(e) => setFilters({ ...filters, search: e.target.value })}
 //           />
 //           <select
-//             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+//             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
 //             value={filters.role}
 //             onChange={(e) => setFilters({ ...filters, role: e.target.value })}
 //           >
@@ -128,7 +128,7 @@
 //                     <td className="px-6 py-4 whitespace-nowrap">
 //                       <div className="flex items-center">
 //                         <div className="h-10 w-10 flex-shrink-0">
-//                           <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-semibold">
+//                           <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-semibold">
 //                             {user.name.charAt(0).toUpperCase()}
 //                           </div>
 //                         </div>
@@ -142,7 +142,7 @@
 //                       <select
 //                         value={user.role}
 //                         onChange={(e) => handleChangeRole(user._id, e.target.value)}
-//                         className="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-indigo-500"
+//                         className="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-purple-500"
 //                       >
 //                         <option value="student">Student</option>
 //                         <option value="admin">Admin</option>
@@ -253,9 +253,9 @@ const AdminUsers = () => {
 
       {/* Page title */}
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-extrabold text-slate-50 tracking-[0.16em] uppercase flex items-center gap-3">
+        <h1 className="text-3xl font-extrabold text-[#545454] tracking-[0.16em] uppercase flex items-center gap-3">
           User Management
-          <span className="inline-flex h-[2px] flex-1 bg-gradient-to-r from-sky-400 via-indigo-500 to-transparent shadow-[0_0_16px_rgba(56,189,248,0.7)]" />
+          <span className="inline-flex h-[2px] flex-1 bg-gradient-to-r from-cyan-400 via-purple-500 to-transparent shadow-[0_0_16px_rgba(0,195,221,0.7)]" />
         </h1>
       </div>
 
@@ -371,3 +371,9 @@ const AdminUsers = () => {
 };
 
 export default AdminUsers;
+
+
+
+
+
+

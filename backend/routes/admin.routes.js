@@ -5,6 +5,20 @@ import Enrollment from '../models/Enrollment.model.js';
 import Grade from '../models/Grade.model.js';
 import { protect, authorize } from '../middleware/auth.middleware.js';
 
+// Check if Assignment and Quiz models exist, if not just skip them
+let Assignment = null;
+let Quiz = null;
+try {
+  Assignment = (await import('../models/Assignment.model.js')).default;
+} catch (e) {
+  console.log('Assignment model not found');
+}
+try {
+  Quiz = (await import('../models/Quiz.model.js')).default;
+} catch (e) {
+  console.log('Quiz model not found');
+}
+
 const router = express.Router();
 
 // All routes require admin role
@@ -205,8 +219,15 @@ router.delete('/courses/:id', async (req, res) => {
 
     // Delete related data
     await Enrollment.deleteMany({ course: req.params.id });
-    await Assignment.deleteMany({ course: req.params.id });
-    await Quiz.deleteMany({ course: req.params.id });
+    
+    // Only delete if models exist
+    if (Assignment) {
+      await Assignment.deleteMany({ course: req.params.id });
+    }
+    if (Quiz) {
+      await Quiz.deleteMany({ course: req.params.id });
+    }
+    
     await Grade.deleteMany({ course: req.params.id });
 
     await course.deleteOne();

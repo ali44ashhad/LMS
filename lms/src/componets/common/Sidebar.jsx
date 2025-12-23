@@ -64,11 +64,12 @@ const Sidebar = ({ activeTab, setActiveTab, userRole = 'student' }) => {
                 <span className="text-purple-200/80">13/20 courses</span>
               </div>
               <div className="mt-2 w-full bg-[#2FC1E8] rounded-full h-2 overflow-hidden">
-                <div
-                  className="h-2 rounded-full bg-[#00c3dd] shadow-[0_0_15px_rgba(0,195,221,0.9)]"
-                  style={{ width: '65%' }}
-                ></div>
-              </div>
+  <div
+    className="h-2 rounded-full bg-green-600 shadow-[0_0_15px_rgba(239,68,68,0.9)]"
+    style={{ width: '65%' }}
+  ></div>
+</div>
+
             </div>
           </div>
         </div>

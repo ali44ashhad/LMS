@@ -93,7 +93,7 @@ const CoursePlayer = ({ course, lesson, onComplete, onNext, onPrevious, onExit }
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="max-w-6xl mx-auto bg-[#2FC1E8] rounded-lg shadow-sm border border-gray-200">
+    <div className="max-w-6xl mx-auto bg-[#FBFBFB] rounded-lg shadow-sm border border-gray-200">
       {/* Header */}
       <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
         <div>
@@ -101,15 +101,15 @@ const CoursePlayer = ({ course, lesson, onComplete, onNext, onPrevious, onExit }
             onClick={onExit}
             className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-2"
           >
-            <span>←</span>
-            <span>Back to Course</span>
+            <h2>←</h2>
+            <h2>Back to Course</h2>
           </button>
-          <h1 className="text-xl font-bold text-gray-900">{lesson.title}</h1>
-          <p className="text-gray-600">{course.title}</p>
+          <h1 className="text-xl font-bold ">{lesson.title}</h1>
+          <p className="text-[#5E607E]">{course.title}</p>
         </div>
         <div className="text-right">
-          <div className="text-sm text-gray-600">Lesson {lesson.id} of 12</div>
-          <div className="text-sm font-medium text-gray-900">{videoContent.type.toUpperCase()}</div>
+          <div className="text-sm ">Lesson {lesson.id} of 12</div>
+          <div className="text-sm font-medium  ">{videoContent.type.toUpperCase()}</div>
         </div>
       </div>
 
@@ -227,7 +227,7 @@ const CoursePlayer = ({ course, lesson, onComplete, onNext, onPrevious, onExit }
                   <div>
                     <div className="text-6xl mb-4">🎥</div>
                     <p className="text-xl">No Video Available</p>
-                    <p className="text-gray-400 mt-2">Video URL not provided for {lesson.title}</p>
+                    <p className="  mt-2">Video URL not provided for {lesson.title}</p>
                   </div>
                 </div>
               </div>
@@ -236,7 +236,7 @@ const CoursePlayer = ({ course, lesson, onComplete, onNext, onPrevious, onExit }
                 <div className="text-center text-white p-8">
                   <div className="text-6xl mb-6">🧠</div>
                   <h2 className="text-2xl font-bold mb-4">Knowledge Check</h2>
-                  <p className="text-gray-300 mb-6">{videoContent.description}</p>
+                  <p className=" mb-6">{videoContent.description}</p>
                   <button 
                     onClick={handleComplete}
                     className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium"
@@ -250,7 +250,7 @@ const CoursePlayer = ({ course, lesson, onComplete, onNext, onPrevious, onExit }
                 <div className="text-center text-white p-8">
                   <div className="text-6xl mb-6">📝</div>
                   <h2 className="text-2xl font-bold mb-4">Practical Assignment</h2>
-                  <p className="text-gray-300 mb-6">{videoContent.description}</p>
+                  <p className="  mb-6">{videoContent.description}</p>
                   <button 
                     onClick={handleComplete}
                     className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium"
@@ -280,18 +280,17 @@ const CoursePlayer = ({ course, lesson, onComplete, onNext, onPrevious, onExit }
               </div>
             </div>
           )}
-
           {/* Lesson Description */}
           <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">About This Lesson</h2>
+            <h2 className="text-xl font-semibold mb-4">About This Lesson</h2>
             <div className="prose max-w-none">
-              <p className="text-gray-700 mb-4">
+              <p className="  mb-4">
                 This lesson covers important concepts and techniques that are fundamental to understanding {" "}
                 {course.category.toLowerCase()}. You'll learn through practical examples and hands-on exercises.
               </p>
               
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Key Takeaways</h3>
-              <ul className="list-disc list-inside text-gray-700 space-y-2 mb-6">
+              <h3 className="text-lg font-semibold mb-3">Key Takeaways</h3>
+              <ul className="list-disc list-inside space-y-2 mb-6">
                 <li>Understand core concepts and principles</li>
                 <li>Learn practical implementation techniques</li>
                 <li>Apply knowledge through exercises</li>
@@ -306,7 +305,7 @@ const CoursePlayer = ({ course, lesson, onComplete, onNext, onPrevious, onExit }
         {/* Sidebar */}
         <div className="lg:col-span-1 border-l border-gray-200">
           <div className="p-4">
-            <h3 className="font-semibold text-gray-900 mb-4">Lesson Navigation</h3>
+            <h3 className="font-semibold  mb-4">Lesson Navigation</h3>
             
             <div className="space-y-2 mb-6">
               <button

@@ -230,9 +230,9 @@ const Dashboard = ({ onCourseSelect }) => {
           <div className="neo-card p-4 md:p-6">
             <div className="flex justify-between items-center mb-4 md:mb-5">
               <div>
-                <h2 className="text-lg md:text-xl font-semibold tracking-[0.16em] uppercase">
+                <h1 className="text-lg md:text-xl font-semibold tracking-[0.16em] uppercase">
                   Active Quests
-                </h2>
+                </h1>
                 <p className="text-[10px] md:text-xs text-slate-400 tracking-[0.18em] uppercase mt-1">
                   Continue where you left off
                 </p>

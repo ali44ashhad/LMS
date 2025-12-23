@@ -50,9 +50,9 @@ const AdminCourses = ({ onCreateNew, onEdit }) => {
       <div className="flex items-center justify-between gap-4">
         <div>
            
-          <h1 className="text-2xl md:text-3xl font-extrabold text-[#545454] tracking-[0.16em] uppercase flex items-center gap-3">
+          <h1 className="text-2xl md:text-3xl font-extrabold   uppercase flex items-center gap-3">
             Course Management
-            <span className="inline-flex h-[2px] flex-1 bg-gradient-to-r from-lime-400 via-cyan-400 to-transparent shadow-[0_0_16px_rgba(45,212,191,0.9)]" />
+            <span className="inline-flex h-[2px] flex-1   " />
           </h1>
         </div>
 
@@ -88,10 +88,10 @@ const AdminCourses = ({ onCreateNew, onEdit }) => {
         // Empty state
         <div className="neo-card flex flex-col items-center justify-center text-center py-10">
           <div className="text-5xl mb-3 drop-shadow-[0_0_18px_rgba(0,195,221,0.6)]">📚</div>
-          <h2 className="text-xl font-semibold text-[#545454] tracking-[0.14em] uppercase">
+          <h2 className="text-xl font-semibold tracking-[0.14em] uppercase">
             No Courses Deployed
           </h2>
-          <p className="text-sm text-slate-400 mt-2 max-w-md">
+          <p className="text-sm mt-2 max-w-md">
             Spin up your first course to activate the learning environment and start enrolling students.
           </p>
           <button
@@ -121,10 +121,10 @@ const AdminCourses = ({ onCreateNew, onEdit }) => {
                     </span>
                   </div>
                   <div>
-                    <h3 className="text-base md:text-lg font-semibold text-[#545454]">
+                    <h3 className="text-base md:text-lg font-semibold">
                       {course.title}
                     </h3>
-                    <p className="text-xs md:text-sm text-slate-400 mt-1 line-clamp-2">
+                    <p className="text-xs md:text-sm mt-1 line-clamp-2">
                       {course.description}
                     </p>
                   </div>

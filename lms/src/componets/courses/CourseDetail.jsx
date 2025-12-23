@@ -243,7 +243,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
           {activeTab === 'curriculum' && (
             <div className="neo-card">
               <div className="p-5 border-b border-slate-800/70">
-                <h2 className="neo-section-title">Course Content</h2>
+                <h1 className="neo-section-title">Course Content</h1>
                 <p className="text-xs text-slate-400 mt-1">
                   {completedLessons} of {totalLessons} lessons completed ({progress}
                   %)

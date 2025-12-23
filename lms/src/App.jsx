@@ -155,7 +155,7 @@ function App() {
    <div className="
   min-h-screen
   bg-[#f8f0ff]
-  bg-[linear-gradient(#8852ff22_2px,transparent_2px),linear-gradient(90deg,#8852ff22_2px,transparent_2px)]
+  bg-[linear-gradient(#2FC1E822_2px,transparent_2px),linear-gradient(90deg,#2FC1E822_2px,transparent_2px)]
   bg-[size:40px_40px]
   flex flex-col
 ">

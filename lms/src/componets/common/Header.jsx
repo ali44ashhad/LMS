@@ -1,7 +1,7 @@
 
 // src/components/common/Header.jsx
 import React, { useState } from 'react';
-
+import logo from '../../assets/logo.png';
 const Header = ({ user, onLogout }) => {
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -34,7 +34,7 @@ const Header = ({ user, onLogout }) => {
       <div
         className="
           absolute inset-0
-          bg-[#8852ff]
+          bg-[#2FC1E8]
           border-b border-zinc-800
           shadow-[0_0_28px_rgba(15,23,42,0.9)]
           [clip-path:polygon(0_0,90%_0,100%_50%,90%_100%,10%_100%,0_50%)]
@@ -45,15 +45,18 @@ const Header = ({ user, onLogout }) => {
       <div className="relative max-w-full mx-auto px-3 sm:px-4 lg:px-8">
         <div className="flex justify-between items-center h-14 md:h-16">
           {/* Logo / Brand */}
-          <div className="flex items-center">
-            <div className="flex-shrink-0 flex items-center">
-              <div className="ml-2 saiba-font md:ml-3">
-                <h1 className="text-lg md:text-2xl saiba-font font-extrabold text-[#545454] tracking-[0.18em] uppercase leading-tight">
-                NESTA TOYS
-                </h1>
-              </div>
-            </div>
-          </div>
+         <div className="flex items-center">
+  <div className="flex-shrink-0 flex items-center">
+    <div className="ml-2 md:ml-3">
+      <img
+        src={logo}
+        alt="Tranga Pods Logo"
+        className="h-10 w-auto md:h-12 object-contain"
+      />
+    </div>
+  </div>
+</div>
+
 
           {/* Right side */}
           <div className="flex items-center space-x-2 md:space-x-4">
@@ -109,7 +112,7 @@ const Header = ({ user, onLogout }) => {
               </button>
 
               {showDropdown && (
-                <div className="absolute right-0 mt-2 w-48 bg-[#8852ff] border border-zinc-700 rounded-xl shadow-[0_0_18px_rgba(15,23,42,0.9)] py-1 z-50">
+                <div className="absolute right-0 mt-2 w-48 bg-[#2FC1E8] border border-zinc-700 rounded-xl shadow-[0_0_18px_rgba(15,23,42,0.9)] py-1 z-50">
                   <div className="px-3 py-2 border-b border-zinc-700/70">
                     <p className="text-xs font-semibold text-slate-100 truncate">
                       {user?.name || 'User'}

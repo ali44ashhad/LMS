@@ -4,7 +4,7 @@
 
 // const Footer = () => {
 //   return (
-//     <footer className="relative bg-[#8852ff] overflow-hidden">
+//     <footer className="relative bg-[#2FC1E8] overflow-hidden">
 
 //       {/* Zigzag Top Shape */}
 //       <div className="absolute top-0 left-0 w-full overflow-hidden leading-none">
@@ -55,7 +55,7 @@ const Footer = () => {
       <div
         className="
           absolute inset-0
-          bg-[#8852ff]
+          bg-[#2FC1E8]
           border-t border-purple-400/40
           shadow-[0_-8px_30px_rgba(15,23,42,0.9)]
           [clip-path:polygon(

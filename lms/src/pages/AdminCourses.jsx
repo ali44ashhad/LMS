@@ -210,9 +210,3 @@ const AdminCourses = ({ onCreateNew, onEdit }) => {
 };
 
 export default AdminCourses;
-
-
-
-
-
-

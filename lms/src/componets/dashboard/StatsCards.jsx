@@ -1,31 +1,27 @@
-
-
-// src/components/dashboard/StatsCards.jsx
 const StatsCards = ({ stats }) => {
   const statsArray =
-    stats && typeof stats === 'object' && !Array.isArray(stats)
+    stats && typeof stats === "object" && !Array.isArray(stats)
       ? [
           {
             id: 1,
-            title: 'Total Courses',
+            title: "Total Courses",
             value: stats.totalCourses || 0,
-            icon: '📚',
-            tag: 'Library',
+            icon: "📚",
+            tag: "Library",
           },
           {
             id: 2,
-            title: 'Completed',
+            title: "Completed",
             value: stats.completedCourses || 0,
-            icon: '🏆',
-            tag: 'Cleared',
+            icon: "🏆",
+            tag: "Cleared",
           },
-          
           {
             id: 4,
-            title: 'Avg Progress',
+            title: "Avg Progress",
             value: `${stats.averageProgress || 0}%`,
-            icon: '📊',
-            tag: 'Sync',
+            icon: "📊",
+            tag: "Sync",
           },
         ]
       : Array.isArray(stats)
@@ -39,8 +35,16 @@ const StatsCards = ({ stats }) => {
       {statsArray.map((stat, index) => (
         <div
           key={stat.id}
-          className="g-stat-card p-3 md:p-4 flex flex-col justify-between"
+          className="
+            bg-white
+            border border-slate-200
+            rounded-xl
+            p-3 md:p-4
+            shadow-sm
+            flex flex-col justify-between
+          "
         >
+          {/* TOP */}
           <div className="flex items-start justify-between">
             <div>
               <p className="text-[10px] md:text-xs tracking-[0.18em] uppercase text-slate-400">
@@ -50,14 +54,27 @@ const StatsCards = ({ stats }) => {
                 {stat.value}
               </p>
             </div>
+
             <div className="text-2xl md:text-3xl">
               {stat.icon}
             </div>
           </div>
+
+          {/* BOTTOM */}
           <div className="mt-2 flex items-center justify-between">
-            <span className="g-chip">
-              {stat.tag || 'Stat'}
+            <span className="
+              px-2 py-0.5
+              rounded-full
+              border
+              border-slate-300
+              text-[10px]
+              uppercase
+              tracking-[0.16em]
+              text-slate-500
+            ">
+              {stat.tag || "Stat"}
             </span>
+
             <span className="text-[9px] text-slate-400 tracking-[0.18em] uppercase hidden md:inline">
               Slot {index + 1}
             </span>
@@ -69,10 +86,3 @@ const StatsCards = ({ stats }) => {
 };
 
 export default StatsCards;
-
-
-
-
-
-
-

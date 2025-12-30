@@ -1,6 +1,5 @@
-
 import React from 'react';
-
+import robot from '../../assets/robot2.png';
 const Sidebar = ({ activeTab, setActiveTab, userRole = 'student' }) => {
   const adminMenuItems = [
     { id: 'admin-dashboard', label: 'Admin Dashboard', icon: '👨‍💼' },
@@ -10,40 +9,42 @@ const Sidebar = ({ activeTab, setActiveTab, userRole = 'student' }) => {
 
   const studentMenuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-    { id: 'courses', label: 'My Courses', icon: '📚' }, 
+    { id: 'courses', label: 'My Courses', icon: '📚' },
     { id: 'profile', label: 'Profile', icon: '👤' },
   ];
 
   const menuItems = userRole === 'admin' ? adminMenuItems : studentMenuItems;
 
   return (
-    <aside className="w-full saiba-font md:w-64 bg-[#2FC1E8] text-gray-100 shadow-sm md:min-h-screen border-r border-zinc-800">
+    <aside className="w-full md:w-64 bg-[#CEECF7] text-slate-700 border-r border-slate-300 md:min-h-screen">
       <nav className="mt-4 md:mt-8">
         {userRole === 'admin' && (
-          <div className="px-3 md:px-6 mb-2 md:mb-4">
-            <div className="px-3 md:px-4 py-1.5 md:py-2 bg-purple-500/20 text-purple-200 rounded-lg text-xs md:text-sm saiba-font text-center border border-purple-400/60">
+          <div className="px-4 mb-4">
+            <div className="bg-purple-100 text-purple-700 rounded-lg text-sm text-center py-2 font-semibold">
               Admin Panel
             </div>
           </div>
         )}
 
-        <ul className="space-y-2 px-2 md:px-4 grid grid-cols-2 md:grid-cols-1 gap-2">
+        <ul className="space-y-2 px-3 grid grid-cols-2 md:grid-cols-1 gap-2">
           {menuItems.map((item) => {
             const isActive = activeTab === item.id;
             return (
               <li key={item.id}>
-                <button
-                  onClick={() => setActiveTab(item.id)}
-                  className={`neo-btn group w-full text-[10px] md:text-sm tracking-[0.15em] uppercase font-semibold flex items-center justify-center md:justify-between gap-1 md:gap-2
-                    ${isActive ? 'neo-btn-active' : 'neo-btn-idle'}
-                  `}
-                >
-                  <span className="text-lg md:text-xl group-hover:scale-110 transition-transform">
-                    {item.icon}
-                  </span>
-                  <span className="mt-[2px] saiba-font md:mt-0 whitespace-nowrap">
-                    {item.label}
-                  </span>
+               <button
+  onClick={() => setActiveTab(item.id)}
+  className={`w-full flex items-center justify-center md:justify-between gap-2 
+    px-3 py-2 rounded-md text-xs md:text-sm font-semibold uppercase tracking-wide 
+    transition border
+    ${
+      isActive
+        ? 'bg-white shadow text-slate-900 border-slate-300'
+        : 'bg-white/40 border-slate-300 hover:bg-white/70'
+    }`}
+>
+
+                  <span className="text-lg">{item.icon}</span>
+                  <span className="whitespace-nowrap">{item.label}</span>
                 </button>
               </li>
             );
@@ -52,36 +53,38 @@ const Sidebar = ({ activeTab, setActiveTab, userRole = 'student' }) => {
       </nav>
 
       {userRole === 'student' && (
-        <div className="mt-6 md:mt-10 px-4 md:px-6 hidden md:block">
-          <div className="bg-[#2FC1E8] rounded-xl p-4 border border-purple-500/40 shadow-[0_0_25px_rgba(136,82,255,0.4)]">
-            <h3 className="text-xs md:text-sm font-semibold text-purple-100 tracking-[0.18em] uppercase">
+        <div className="hidden md:block mt-10 px-4">
+          <div className="bg-white rounded-xl p-4 border border-slate-300">
+            <h3 className="text-sm font-semibold text-slate-600 uppercase tracking-wide">
               Overall Progress
             </h3>
 
             <div className="mt-3">
-              <div className="flex items-center justify-between text-[11px] md:text-xs text-purple-100">
+              <div className="flex justify-between text-xs text-slate-600">
                 <span className="font-semibold">65% Complete</span>
-                <span className="text-purple-200/80">13/20 courses</span>
+                <span>13 / 20 courses</span>
               </div>
-              <div className="mt-2 w-full bg-[#2FC1E8] rounded-full h-2 overflow-hidden">
-  <div
-    className="h-2 rounded-full bg-green-600 shadow-[0_0_15px_rgba(239,68,68,0.9)]"
-    style={{ width: '65%' }}
-  ></div>
-</div>
 
+              <div className="mt-2 w-full bg-slate-200 rounded-full h-2">
+                <div
+                  className="h-2 bg-green-600 rounded-full"
+                  style={{ width: '65%' }}
+                />
+              </div>
             </div>
           </div>
         </div>
       )}
+      <div className="hidden md:flex justify-center mt-auto p-4">
+  <img
+    src={robot}
+    alt="Learning assistant robot"
+    className="w-60 max-w-full   py-20 object-contain"
+  />
+</div>
+
     </aside>
   );
 };
 
 export default Sidebar;
-
-
-
-
-
-

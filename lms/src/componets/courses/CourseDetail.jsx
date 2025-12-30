@@ -111,29 +111,29 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
   ];
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6 p-4">
       {/* TOP HUD CARD */}
-      <div className="neo-card">
+      <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 overflow-hidden">
         <div className="p-4 md:p-6 pb-3 md:pb-4">
           <div className="flex items-center justify-between gap-4 mb-4">
             <button
               onClick={onBack}
-              className="neo-secondary-btn flex items-center gap-2 text-[10px] md:text-xs px-3 py-2"
+              className="flex items-center gap-2 text-[10px] md:text-xs px-3 py-2 rounded-lg bg-white hover:bg-gray-100 border border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 transition-all duration-200"
             >
               <span>←</span>
               <span>Back to Courses</span>
             </button>
 
             <div className="text-right">
-              <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500">
                 Course Progress
               </p>
-              <div className="text-2xl font-extrabold text-cyan-300">
+              <div className="text-2xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
                 {progress}%
               </div>
-              <div className="w-32 h-2 bg-slate-800 rounded-full mt-2 overflow-hidden">
+              <div className="w-32 h-2 bg-gray-200 rounded-full mt-2 overflow-hidden">
                 <div
-                  className="h-2 rounded-full bg-gradient-to-r from-lime-400 via-cyan-400 to-purple-500 shadow-[0_0_18px_rgba(0,195,221,0.8)]"
+                  className="h-2 rounded-full bg-gradient-to-r from-lime-500 via-cyan-500 to-purple-500 shadow-[0_0_10px_rgba(0,195,221,0.4)]"
                   style={{ width: `${Math.min(progress, 100)}%` }}
                 />
               </div>
@@ -144,19 +144,21 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
             <div className="flex items-start gap-4 md:gap-6 flex-1">
               <div className="text-5xl md:text-6xl">{courseImage}</div>
               <div className="space-y-3">
-                <h1 className="text-2xl md:text-3xl font-extrabold text-[#545454] tracking-[0.08em]">
+                <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-[0.08em]">
                   {courseTitle}
                 </h1>
-                <p className="text-sm text-slate-400">{courseInstructor}</p>
-                <p className="text-sm md:text-[15px] text-slate-300 max-w-2xl">
+                <p className="text-sm text-gray-600">{courseInstructor}</p>
+                <p className="text-sm md:text-[15px] text-gray-700 max-w-2xl">
                   {courseDescription}
                 </p>
 
-                <div className="flex flex-wrap items-center gap-3 mt-2 text-[11px] text-slate-300">
-                  <span className="neo-pill neo-pill-sky">
+                <div className="flex flex-wrap items-center gap-3 mt-2 text-[11px] text-gray-600">
+                  <span className="px-2.5 py-1 rounded-full bg-cyan-100 text-cyan-700 border border-cyan-200">
                     {courseLevel} Level
                   </span>
-                  <span className="neo-pill neo-pill-purple">{courseCategory}</span>
+                  <span className="px-2.5 py-1 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
+                    {courseCategory}
+                  </span>
                   <span className="flex items-center gap-1">
                     ⏱️ <span>{courseDuration}</span>
                   </span>
@@ -182,7 +184,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
                       a 15.9155 15.9155 0 0 1 0 31.831
                       a 15.9155 15.9155 0 0 1 0 -31.831"
                     fill="none"
-                    stroke="#1f2937"
+                    stroke="#e5e7eb"
                     strokeWidth="3"
                   />
                   <path
@@ -197,35 +199,37 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
                   />
                   <defs>
                     <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#22c55e" />
-                      <stop offset="50%" stopColor="#38bdf8" />
-                      <stop offset="100%" stopColor="#6366f1" />
+                      <stop offset="0%" stopColor="#10b981" />
+                      <stop offset="50%" stopColor="#3b82f6" />
+                      <stop offset="100%" stopColor="#8b5cf6" />
                     </linearGradient>
                   </defs>
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg font-extrabold text-cyan-300">
+                  <span className="text-lg font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
                     {progress}%
                   </span>
                 </div>
               </div>
-              <p className="text-xs text-slate-400 mt-2">
+              <p className="text-xs text-gray-500 mt-2">
                 {completedLessons} / {totalLessons} lessons
               </p>
             </div>
           </div>
         </div>
 
-        {/* TABS – use same button style as sidebar */}
-        <div className="border-t border-slate-800/80 px-4 md:px-6 py-3 flex flex-wrap gap-2 bg-slate-950/60">
+        {/* TABS */}
+        <div className="border-t border-gray-200 px-4 md:px-6 py-3 flex flex-wrap gap-2 bg-gray-50/80">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`neo-btn px-3 py-2 text-[10px] md:text-xs ${
-                  isActive ? 'neo-btn-active' : 'neo-btn-idle'
+                className={`px-3 py-2 text-[10px] md:text-xs rounded-lg transition-all duration-200 ${
+                  isActive
+                    ? 'bg-gradient-to-r from-cyan-600 to-purple-600 text-white shadow-md shadow-cyan-500/20'
+                    : 'bg-white hover:bg-gray-100 text-gray-700 hover:text-gray-900 border border-gray-300'
                 }`}
               >
                 {tab.label}
@@ -241,28 +245,30 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
         <div className="lg:col-span-3 space-y-6">
           {/* CURRICULUM */}
           {activeTab === 'curriculum' && (
-            <div className="neo-card">
-              <div className="p-5 border-b border-slate-800/70">
-                <h1 className="neo-section-title">Course Content</h1>
-                <p className="text-xs text-slate-400 mt-1">
+            <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 overflow-hidden">
+              <div className="p-5 border-b border-gray-200">
+                <h1 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-[0.16em] uppercase">
+                  Course Content
+                </h1>
+                <p className="text-xs text-gray-500 mt-1">
                   {completedLessons} of {totalLessons} lessons completed ({progress}
                   %)
                 </p>
               </div>
 
-              <div className="divide-y divide-slate-800/80">
+              <div className="divide-y divide-gray-200">
                 {modules.map((module, moduleIndex) => (
                   <div key={module.id} className="p-5 space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="text-base md:text-lg font-semibold text-[#545454]">
+                        <h3 className="text-base md:text-lg font-semibold text-gray-900">
                           {moduleIndex + 1}. {module.title}
                         </h3>
-                        <p className="text-xs text-slate-400 mt-1">
+                        <p className="text-xs text-gray-500 mt-1">
                           {module.lessons.length} lessons • {module.duration}
                         </p>
                       </div>
-                      <div className="text-right text-xs text-slate-400">
+                      <div className="text-right text-xs text-gray-500">
                         <span>
                           {
                             module.lessons.filter((lesson) => lesson.completed)
@@ -280,27 +286,27 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
                           onClick={() =>
                             onLessonSelect && onLessonSelect(lesson)
                           }
-                          className={`neo-mini-row flex items-center gap-4 cursor-pointer ${
+                          className={`flex items-center gap-4 p-3 rounded-xl cursor-pointer transition-all duration-200 hover:bg-white border ${
                             lesson.completed
-                              ? 'border-lime-400/60 bg-lime-500/5'
-                              : ''
+                              ? 'border-lime-300 bg-lime-50'
+                              : 'border-gray-300 bg-white hover:shadow-sm'
                           }`}
                         >
                           <div
                             className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
                               lesson.completed
-                                ? 'bg-lime-500 text-white'
-                                : 'bg-slate-700 text-slate-200'
+                                ? 'bg-gradient-to-r from-lime-500 to-lime-400 text-white shadow-md shadow-lime-500/30'
+                                : 'bg-gray-200 text-gray-700'
                             }`}
                           >
                             {lesson.completed ? '✓' : lessonIndex + 1}
                           </div>
 
                           <div className="flex-1">
-                            <h4 className="text-sm font-medium text-[#545454]">
+                            <h4 className="text-sm font-medium text-gray-900">
                               {lesson.title}
                             </h4>
-                            <div className="flex flex-wrap items-center gap-3 mt-1 text-[11px] text-slate-400">
+                            <div className="flex flex-wrap items-center gap-3 mt-1 text-[11px] text-gray-600">
                               <span className="flex items-center gap-1">
                                 <span>
                                   {lesson.type === 'video'
@@ -321,10 +327,10 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
                           </div>
 
                           <button
-                            className={`neo-btn text-[10px] px-3 py-1 ${
+                            className={`px-3 py-1 text-[10px] rounded-lg transition-all duration-200 ${
                               lesson.completed
-                                ? 'neo-btn-idle'
-                                : 'neo-btn-active'
+                                ? 'bg-white hover:bg-gray-100 text-gray-700 hover:text-gray-900 border border-gray-300'
+                                : 'bg-gradient-to-r from-cyan-600 to-purple-600 text-white shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/40'
                             }`}
                           >
                             {lesson.completed ? 'Review' : 'Start'}
@@ -340,9 +346,11 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
 
           {/* OVERVIEW */}
           {activeTab === 'overview' && (
-            <div className="neo-card p-6">
-              <h2 className="neo-section-title mb-4">Course Overview</h2>
-              <div className="space-y-6 text-sm text-slate-300">
+            <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
+              <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-4">
+                Course Overview
+              </h2>
+              <div className="space-y-6 text-sm text-gray-700">
                 <p>
                   This comprehensive course will take you from beginner to
                   proficient in web development fundamentals. You'll learn the
@@ -350,7 +358,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
                 </p>
 
                 <div>
-                  <h3 className="text-sm font-semibold text-cyan-200 tracking-[0.16em] uppercase mb-3">
+                  <h3 className="text-sm font-semibold text-gray-800 tracking-[0.16em] uppercase mb-3">
                     What You&apos;ll Learn
                   </h3>
                   <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -366,9 +374,9 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
                     ].map((item, index) => (
                       <li
                         key={index}
-                        className="flex items-center gap-2 text-slate-300"
+                        className="flex items-center gap-2 text-gray-700"
                       >
-                        <span className="text-lime-400">✓</span>
+                        <span className="text-lime-600">✓</span>
                         <span>{item}</span>
                       </li>
                     ))}
@@ -376,10 +384,10 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-semibold text-cyan-200 tracking-[0.16em] uppercase mb-2">
+                  <h3 className="text-sm font-semibold text-gray-800 tracking-[0.16em] uppercase mb-2">
                     Prerequisites
                   </h3>
-                  <ul className="list-disc list-inside space-y-1">
+                  <ul className="list-disc list-inside space-y-1 text-gray-600">
                     <li>Basic computer skills</li>
                     <li>No prior programming experience required</li>
                     <li>Access to a computer with internet connection</li>
@@ -387,10 +395,10 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-semibold text-cyan-200 tracking-[0.16em] uppercase mb-2">
+                  <h3 className="text-sm font-semibold text-gray-800 tracking-[0.16em] uppercase mb-2">
                     Who This Course Is For
                   </h3>
-                  <p>
+                  <p className="text-gray-700">
                     This course is perfect for complete beginners who want to
                     start their journey in web development, as well as
                     professionals from other fields looking to transition into
@@ -403,8 +411,10 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
 
           {/* INSTRUCTOR */}
           {activeTab === 'instructor' && (
-            <div className="neo-card p-6">
-              <h2 className="neo-section-title mb-6">Meet Your Instructor</h2>
+            <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
+              <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-6">
+                Meet Your Instructor
+              </h2>
               <div className="space-y-6">
                 {instructors.map((instructor, index) => (
                   <div
@@ -413,36 +423,36 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
                   >
                     <div className="text-5xl">{instructor.image}</div>
                     <div>
-                      <h3 className="text-lg font-semibold text-[#545454]">
+                      <h3 className="text-lg font-semibold text-gray-900">
                         {instructor.name}
                       </h3>
-                      <p className="text-sm text-slate-400 mt-1">
+                      <p className="text-sm text-gray-600 mt-1">
                         {instructor.role}
                       </p>
-                      <p className="text-sm text-slate-300 mt-3">
+                      <p className="text-sm text-gray-700 mt-3">
                         {instructor.bio}
                       </p>
 
                       <div className="flex flex-wrap items-center gap-6 mt-4 text-sm">
                         <div className="text-center">
-                          <div className="text-xl font-bold text-cyan-300">
+                          <div className="text-xl font-bold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
                             4.8
                           </div>
-                          <div className="text-xs text-slate-400">
+                          <div className="text-xs text-gray-500">
                             Instructor Rating
                           </div>
                         </div>
                         <div className="text-center">
-                          <div className="text-xl font-bold text-cyan-300">
+                          <div className="text-xl font-bold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
                             12,450
                           </div>
-                          <div className="text-xs text-slate-400">
+                          <div className="text-xs text-gray-500">
                             Students
                           </div>
                         </div>
                         <div className="text-center">
-                          <div className="text-xl font-bold text-cyan-300">8</div>
-                          <div className="text-xs text-slate-400">Courses</div>
+                          <div className="text-xl font-bold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">8</div>
+                          <div className="text-xs text-gray-500">Courses</div>
                         </div>
                       </div>
                     </div>
@@ -454,16 +464,18 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
 
           {/* REVIEWS */}
           {activeTab === 'reviews' && (
-            <div className="neo-card p-6">
-              <h2 className="neo-section-title mb-6">Student Reviews</h2>
+            <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
+              <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-6">
+                Student Reviews
+              </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-cyan-300">4.8</div>
-                  <div className="flex justify-center mt-2 text-yellow-400">
+                  <div className="text-4xl font-bold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">4.8</div>
+                  <div className="flex justify-center mt-2 text-yellow-500">
                     {'★'.repeat(5)}
                   </div>
-                  <div className="text-xs text-slate-400 mt-1">
+                  <div className="text-xs text-gray-500 mt-1">
                     Course Rating
                   </div>
                 </div>
@@ -482,21 +494,21 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
                             key={i}
                             className={
                               i < rating.stars
-                                ? 'text-yellow-400'
-                                : 'text-slate-600'
+                                ? 'text-yellow-500'
+                                : 'text-gray-300'
                             }
                           >
                             ★
                           </span>
                         ))}
                       </div>
-                      <div className="flex-1 h-2 bg-slate-800 rounded-full">
+                      <div className="flex-1 h-2 bg-gray-200 rounded-full">
                         <div
-                          className="h-2 bg-yellow-400 rounded-full"
+                          className="h-2 bg-yellow-500 rounded-full"
                           style={{ width: `${rating.percentage}%` }}
                         />
                       </div>
-                      <span className="text-slate-400 w-8">
+                      <span className="text-gray-500 w-8">
                         {rating.percentage}%
                       </span>
                     </div>
@@ -504,7 +516,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
                 </div>
               </div>
 
-              <div className="space-y-6 text-sm text-slate-300">
+              <div className="space-y-6 text-sm text-gray-700">
                 {[
                   {
                     name: 'Alex Johnson',
@@ -533,15 +545,15 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
                 ].map((review, index) => (
                   <div
                     key={index}
-                    className="border-t border-slate-800 pt-6 first:border-t-0 first:pt-0"
+                    className="border-t border-gray-200 pt-6 first:border-t-0 first:pt-0"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center">
+                        <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
                           {review.avatar}
                         </div>
                         <div>
-                          <h4 className="font-medium text-[#545454]">
+                          <h4 className="font-medium text-gray-900">
                             {review.name}
                           </h4>
                           <div className="flex items-center gap-1 mt-1 text-xs">
@@ -551,22 +563,22 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
                                   key={i}
                                   className={
                                     i < review.rating
-                                      ? 'text-yellow-400'
-                                      : 'text-slate-600'
+                                      ? 'text-yellow-500'
+                                      : 'text-gray-300'
                                   }
                                 >
                                   ★
                                 </span>
                               ))}
                             </div>
-                            <span className="text-[#545454]0">
+                            <span className="text-gray-500">
                               {review.date}
                             </span>
                           </div>
                         </div>
                       </div>
                     </div>
-                    <p>{review.comment}</p>
+                    <p className="text-gray-700">{review.comment}</p>
                   </div>
                 ))}
               </div>
@@ -575,8 +587,10 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
 
           {/* RESOURCES */}
           {activeTab === 'resources' && (
-            <div className="neo-card p-6">
-              <h2 className="neo-section-title mb-6">Course Resources</h2>
+            <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
+              <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-6">
+                Course Resources
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
                   {
@@ -608,25 +622,25 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
                 ].map((resource, index) => (
                   <div
                     key={index}
-                    className="neo-mini-row flex items-start justify-between"
+                    className="flex items-start justify-between p-3 rounded-xl bg-white hover:bg-gray-100 border border-gray-300 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow-md"
                   >
                     <div className="flex items-start gap-3">
                       <div className="text-2xl">
                         {resource.type === 'pdf' ? '📄' : '📦'}
                       </div>
                       <div>
-                        <h3 className="font-medium text-[#545454]">
+                        <h3 className="font-medium text-gray-900">
                           {resource.title}
                         </h3>
-                        <p className="text-xs text-slate-400 mt-1">
+                        <p className="text-xs text-gray-600 mt-1">
                           {resource.description}
                         </p>
-                        <p className="text-[11px] text-[#545454]0 mt-2">
+                        <p className="text-[11px] text-gray-500 mt-2">
                           {resource.size}
                         </p>
                       </div>
                     </div>
-                    <button className="neo-btn neo-btn-active px-3 py-1 text-[10px]">
+                    <button className="px-3 py-1 text-[10px] rounded-lg bg-gradient-to-r from-cyan-600 to-purple-600 text-white shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all duration-200">
                       Download
                     </button>
                   </div>
@@ -642,15 +656,17 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
           {!course?.enrolled && (
             <button
               onClick={() => onEnroll && onEnroll(course._id)}
-              className="neo-btn neo-btn-active w-full py-4 text-base font-semibold justify-center"
+              className="w-full py-4 text-base font-semibold justify-center rounded-xl bg-gradient-to-r from-cyan-600 to-purple-600 text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-[1.02] transition-all duration-200 flex items-center gap-2"
             >
               Enroll Now
             </button>
           )}
 
           {/* Progress Card */}
-          <div className="neo-card p-6">
-            <h3 className="neo-section-title mb-4">Your Progress</h3>
+          <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
+            <h3 className="text-sm font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-4">
+              Your Progress
+            </h3>
             <div className="text-center">
               <div className="relative inline-block">
                 <svg className="w-28 h-28" viewBox="0 0 36 36">
@@ -659,7 +675,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
                       a 15.9155 15.9155 0 0 1 0 31.831
                       a 15.9155 15.9155 0 0 1 0 -31.831"
                     fill="none"
-                    stroke="#1f2937"
+                    stroke="#e5e7eb"
                     strokeWidth="3"
                   />
                   <path
@@ -667,67 +683,71 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
                       a 15.9155 15.9155 0 0 1 0 31.831
                       a 15.9155 15.9155 0 0 1 0 -31.831"
                     fill="none"
-                    stroke="#10B981"
+                    stroke="#10b981"
                     strokeWidth="3"
                     strokeDasharray={`${progress}, 100`}
                     strokeLinecap="round"
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-xl font-bold text-lime-300">
+                  <span className="text-xl font-bold bg-gradient-to-r from-lime-600 via-green-600 to-emerald-600 bg-clip-text text-transparent">
                     {progress}%
                   </span>
                 </div>
               </div>
-              <p className="text-xs text-slate-400 mt-2">
+              <p className="text-xs text-gray-500 mt-2">
                 {completedLessons} of {totalLessons} lessons completed
               </p>
             </div>
           </div>
 
           {/* Course Info */}
-          <div className="neo-card p-6">
-            <h3 className="neo-section-title mb-4">Course Info</h3>
-            <div className="space-y-2 text-xs text-slate-300">
+          <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
+            <h3 className="text-sm font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-4">
+              Course Info
+            </h3>
+            <div className="space-y-2 text-xs text-gray-700">
               <div className="flex justify-between">
-                <span className="text-slate-400">Duration</span>
+                <span className="text-gray-500">Duration</span>
                 <span className="font-medium">{courseDuration}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Lessons</span>
+                <span className="text-gray-500">Lessons</span>
                 <span className="font-medium">{totalLessons}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Level</span>
+                <span className="text-gray-500">Level</span>
                 <span className="font-medium">{courseLevel}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Category</span>
+                <span className="text-gray-500">Category</span>
                 <span className="font-medium">{courseCategory}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Last Updated</span>
+                <span className="text-gray-500">Last Updated</span>
                 <span className="font-medium">Jan 2025</span>
               </div>
             </div>
           </div>
 
           {/* Certificate */}
-          <div className="neo-card p-6">
-            <h3 className="neo-section-title mb-4">Certificate</h3>
-            <div className="text-center text-sm text-slate-300">
+          <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
+            <h3 className="text-sm font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-4">
+              Certificate
+            </h3>
+            <div className="text-center text-sm text-gray-700">
               <div className="text-4xl mb-3">🏆</div>
               <p className="mb-4">
                 Complete all lessons and assignments to unlock your course
                 certificate.
               </p>
-              <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                 <div
-                  className="bg-yellow-400 h-2 rounded-full"
+                  className="bg-gradient-to-r from-yellow-500 to-yellow-600 h-2 rounded-full shadow-md shadow-yellow-500/30"
                   style={{ width: `${Math.min(progress, 100)}%` }}
                 />
               </div>
-              <p className="text-xs text-slate-400 mt-2">
+              <p className="text-xs text-gray-500 mt-2">
                 {progress}% towards certificate
               </p>
             </div>
@@ -739,9 +759,3 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling }) =
 };
 
 export default CourseDetail;
-
-
-
-
-
-

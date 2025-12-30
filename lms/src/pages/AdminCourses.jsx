@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { adminAPI } from '../services/api';
+import React, { useState, useEffect } from "react";
+import { adminAPI } from "../services/api";
 
 const AdminCourses = ({ onCreateNew, onEdit }) => {
   const [courses, setCourses] = useState([]);
@@ -15,32 +15,39 @@ const AdminCourses = ({ onCreateNew, onEdit }) => {
       const response = await adminAPI.getAllCourses();
       setCourses(response.courses || []);
     } catch (error) {
-      console.error('Error fetching courses:', error);
+      console.error("Error fetching courses:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteCourse = async (courseId) => {
-    if (!confirm('⚡ Are you sure you want to delete this course? This will delete all related data.')) return;
+    if (
+      !confirm(
+        "⚡ Are you sure you want to delete this course? This will delete all related data."
+      )
+    )
+      return;
 
     try {
       await adminAPI.deleteCourse(courseId);
-      alert('Course deleted successfully');
+      alert("Course deleted successfully");
       fetchCourses();
     } catch (error) {
-      console.error('Error deleting course:', error);
-      alert('Failed to delete course');
+      console.error("Error deleting course:", error);
+      alert("Failed to delete course");
     }
   };
 
   const handleTogglePublish = async (courseId, currentStatus) => {
     try {
-      await adminAPI.updateCourse(courseId, { isPublished: !currentStatus });
+      await adminAPI.updateCourse(courseId, {
+        isPublished: !currentStatus,
+      });
       fetchCourses();
     } catch (error) {
-      console.error('Error updating course:', error);
-      alert('Failed to update course status');
+      console.error("Error updating course:", error);
+      alert("Failed to update course status");
     }
   };
 
@@ -48,17 +55,20 @@ const AdminCourses = ({ onCreateNew, onEdit }) => {
     <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
-        <div>
-           
-          <h1 className="text-2xl md:text-3xl font-extrabold   uppercase flex items-center gap-3">
-            Course Management
-            <span className="inline-flex h-[2px] flex-1   " />
-          </h1>
-        </div>
+        <h1 className="text-2xl md:text-3xl font-extrabold uppercase tracking-[0.16em] text-slate-700 flex items-center gap-3">
+          Course Management
+          <span className="h-[2px] flex-1 bg-gradient-to-r from-cyan-400 via-purple-500 to-transparent shadow-[0_0_16px_rgba(0,195,221,0.7)]" />
+        </h1>
 
         <button
           onClick={onCreateNew}
-          className="neo-btn neo-btn-active hidden sm:flex items-center justify-center gap-2 px-5 py-2.5 text-xs md:text-sm"
+          className="
+            hidden sm:flex items-center gap-2
+            px-5 py-2.5 rounded-lg
+            bg-purple-600 text-white
+            hover:bg-purple-700 transition
+            text-xs md:text-sm font-medium
+          "
         >
           <span>＋</span>
           <span>Create New Course</span>
@@ -69,7 +79,13 @@ const AdminCourses = ({ onCreateNew, onEdit }) => {
       <div className="sm:hidden">
         <button
           onClick={onCreateNew}
-          className="neo-btn neo-btn-active w-full flex items-center justify-center gap-2 px-4 py-2 text-[11px]"
+          className="
+            w-full flex items-center justify-center gap-2
+            px-4 py-2 rounded-lg
+            bg-purple-600 text-white
+            hover:bg-purple-700 transition
+            text-[11px] font-medium
+          "
         >
           <span>＋</span>
           <span>Create Course</span>
@@ -78,109 +94,138 @@ const AdminCourses = ({ onCreateNew, onEdit }) => {
 
       {/* Loading */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center h-64 text-slate-200">
-          <div className="neo-loader mb-3" />
-          <p className="text-xs md:text-sm tracking-[0.2em] uppercase text-cyan-300/80">
+        <div className="flex flex-col items-center justify-center h-64">
+          <div className="h-10 w-10 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mb-3" />
+          <p className="text-xs md:text-sm tracking-[0.2em] uppercase text-cyan-500">
             Fetching course matrix…
           </p>
         </div>
       ) : courses.length === 0 ? (
-        // Empty state
-        <div className="neo-card flex flex-col items-center justify-center text-center py-10">
-          <div className="text-5xl mb-3 drop-shadow-[0_0_18px_rgba(0,195,221,0.6)]">📚</div>
-          <h2 className="text-xl font-semibold tracking-[0.14em] uppercase">
+        /* Empty state */
+        <div className="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col items-center justify-center text-center py-10">
+          <div className="text-5xl mb-3">📚</div>
+          <h2 className="text-xl font-semibold tracking-[0.14em] uppercase text-slate-700">
             No Courses Deployed
           </h2>
-          <p className="text-sm mt-2 max-w-md">
-            Spin up your first course to activate the learning environment and start enrolling students.
+          <p className="text-sm mt-2 max-w-md text-slate-500">
+            Spin up your first course to activate the learning environment and
+            start enrolling students.
           </p>
           <button
             onClick={onCreateNew}
-            className="neo-btn neo-btn-active mt-6 px-6 py-2.5 text-xs md:text-sm flex items-center gap-2"
+            className="
+              mt-6 flex items-center gap-2
+              px-6 py-2.5 rounded-lg
+              bg-purple-600 text-white
+              hover:bg-purple-700 transition
+              text-xs md:text-sm font-medium
+            "
           >
             <span>＋</span>
             <span>Create Course</span>
           </button>
         </div>
       ) : (
-        // Courses grid
+        /* Courses grid */
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {courses.map((course) => (
             <div
               key={course._id}
-              className={`neo-course-card ${
-                course.isPublished ? 'neo-course-live' : 'neo-course-draft'
-              }`}
+              className={`
+                p-5 rounded-xl border shadow-sm
+                ${
+                  course.isPublished
+                    ? "bg-white border-green-200"
+                    : "bg-slate-50 border-slate-200"
+                }
+              `}
             >
               {/* Top row */}
               <div className="flex items-start justify-between mb-4 gap-4">
                 <div className="flex items-start gap-4">
-                  <div className="neo-course-icon">
+                  <div className="h-12 w-12 rounded-lg bg-purple-100 flex items-center justify-center">
                     <span className="text-3xl">
-                      {course.image || '📘'}
+                      {course.image || "📘"}
                     </span>
                   </div>
                   <div>
-                    <h3 className="text-base md:text-lg font-semibold">
+                    <h3 className="text-base md:text-lg font-semibold text-slate-800">
                       {course.title}
                     </h3>
-                    <p className="text-xs md:text-sm mt-1 line-clamp-2">
+                    <p className="text-xs md:text-sm mt-1 text-slate-500 line-clamp-2">
                       {course.description}
                     </p>
                   </div>
                 </div>
 
                 <button
-                  onClick={() => handleTogglePublish(course._id, course.isPublished)}
-                  className={`neo-publish-toggle ${
-                    course.isPublished ? 'neo-publish-on' : 'neo-publish-off'
-                  }`}
+                  onClick={() =>
+                    handleTogglePublish(course._id, course.isPublished)
+                  }
+                  className={`
+                    flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold
+                    ${
+                      course.isPublished
+                        ? "bg-green-100 text-green-700"
+                        : "bg-slate-200 text-slate-600"
+                    }
+                  `}
                 >
-                  <span className="neo-publish-dot" />
-                  <span className="neo-publish-label">
-                    {course.isPublished ? 'Published' : 'Draft'}
-                  </span>
+                  <span
+                    className={`h-2 w-2 rounded-full ${
+                      course.isPublished ? "bg-green-500" : "bg-slate-400"
+                    }`}
+                  />
+                  {course.isPublished ? "Published" : "Draft"}
                 </button>
               </div>
 
               {/* Badges */}
-              <div className="flex flex-wrap gap-2 mb-4">
+              <div className="flex flex-wrap gap-2 mb-4 text-xs">
                 {course.category && (
-                  <span className="neo-pill neo-pill-sky">
+                  <span className="px-2 py-0.5 rounded-full bg-sky-100 text-sky-700">
                     {course.category}
                   </span>
                 )}
                 {course.level && (
-                  <span className="neo-pill neo-pill-purple">
+                  <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">
                     {course.level}
                   </span>
                 )}
                 <span
-                  className={`neo-pill ${
-                    course.isPublished ? 'neo-pill-green' : 'neo-pill-gray'
+                  className={`px-2 py-0.5 rounded-full ${
+                    course.isPublished
+                      ? "bg-green-100 text-green-700"
+                      : "bg-gray-200 text-gray-600"
                   }`}
                 >
-                  {course.isPublished ? 'Live in Catalog' : 'Draft Mode'}
+                  {course.isPublished ? "Live in Catalog" : "Draft Mode"}
                 </span>
               </div>
 
               {/* Stats row */}
               <div className="grid grid-cols-3 gap-4 mb-4 text-xs md:text-sm">
                 <div>
-                  <p className="neo-stat-label">Duration</p>
-                  <p className="neo-stat-value">
-                    {course.duration || 'N/A'}
+                  <p className="text-slate-400 uppercase tracking-wide">
+                    Duration
+                  </p>
+                  <p className="font-semibold text-slate-700">
+                    {course.duration || "N/A"}
                   </p>
                 </div>
                 <div>
-                  <p className="neo-stat-label">Lessons</p>
-                  <p className="neo-stat-value">
+                  <p className="text-slate-400 uppercase tracking-wide">
+                    Lessons
+                  </p>
+                  <p className="font-semibold text-slate-700">
                     {course.lessons?.length || 0}
                   </p>
                 </div>
                 <div>
-                  <p className="neo-stat-label">Students</p>
-                  <p className="neo-stat-value">
+                  <p className="text-slate-400 uppercase tracking-wide">
+                    Students
+                  </p>
+                  <p className="font-semibold text-slate-700">
                     {course.enrolledStudents || 0}
                   </p>
                 </div>
@@ -190,13 +235,23 @@ const AdminCourses = ({ onCreateNew, onEdit }) => {
               <div className="flex flex-col sm:flex-row gap-2">
                 <button
                   onClick={() => handleDeleteCourse(course._id)}
-                  className="neo-danger-btn flex-1"
+                  className="
+                    flex-1 px-4 py-2 rounded-lg
+                    bg-red-600 text-white
+                    hover:bg-red-700 transition
+                    text-sm font-medium
+                  "
                 >
                   Delete Course
                 </button>
                 <button
                   onClick={() => onEdit(course)}
-                  className="neo-secondary-btn flex-1"
+                  className="
+                    flex-1 px-4 py-2 rounded-lg
+                    bg-slate-200 text-slate-700
+                    hover:bg-slate-300 transition
+                    text-sm font-medium
+                  "
                 >
                   Edit &amp; Configure
                 </button>

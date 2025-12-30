@@ -1,207 +1,14 @@
-// import React, { useState, useEffect } from 'react';
-// import { adminAPI } from '../services/api';
-
-// const AdminUsers = () => {
-//   const [users, setUsers] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [filters, setFilters] = useState({
-//     role: '',
-//     search: '',
-//     page: 1
-//   });
-
-//   useEffect(() => {
-//     fetchUsers();
-//   }, [filters]);
-
-//   const fetchUsers = async () => {
-//     try {
-//       setLoading(true);
-//       const response = await adminAPI.getUsers(filters);
-//       setUsers(response.users);
-//     } catch (error) {
-//       console.error('Error fetching users:', error);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const handleToggleActive = async (userId, currentStatus) => {
-//     try {
-//       await adminAPI.updateUser(userId, { isActive: !currentStatus });
-//       fetchUsers();
-//     } catch (error) {
-//       console.error('Error updating user:', error);
-//       alert('Failed to update user status');
-//     }
-//   };
-
-//   const handleChangeRole = async (userId, newRole) => {
-//     try {
-//       await adminAPI.updateUser(userId, { role: newRole });
-//       fetchUsers();
-//     } catch (error) {
-//       console.error('Error updating user role:', error);
-//       alert('Failed to update user role');
-//     }
-//   };
-
-//   const handleDeleteUser = async (userId) => {
-//     if (!confirm('Are you sure you want to delete this user?')) return;
-
-//     try {
-//       await adminAPI.deleteUser(userId);
-//       fetchUsers();
-//     } catch (error) {
-//       console.error('Error deleting user:', error);
-//       alert(error.message || 'Failed to delete user');
-//     }
-//   };
-
-//   return (
-//     <div className="space-y-6">
-//       <div className="flex items-center justify-between">
-//         <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-//       </div>
-
-//       {/* Filters */}
-//       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-//         <div className="flex flex-wrap gap-4">
-//           <input
-//             type="text"
-//             placeholder="Search by name or email..."
-//             className="flex-1 min-w-[200px] px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-//             value={filters.search}
-//             onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-//           />
-//           <select
-//             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-//             value={filters.role}
-//             onChange={(e) => setFilters({ ...filters, role: e.target.value })}
-//           >
-//             <option value="">All Roles</option>
-//             <option value="student">Students</option>
-//             <option value="admin">Admins</option>
-//           </select>
-//         </div>
-//       </div>
-
-//       {/* Users Table */}
-//       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-//         <div className="overflow-x-auto">
-//           <table className="w-full">
-//             <thead className="bg-gray-50 border-b border-gray-200">
-//               <tr>
-//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                   User
-//                 </th>
-//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                   Role
-//                 </th>
-//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                   Status
-//                 </th>
-//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                   Joined
-//                 </th>
-//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                   Actions
-//                 </th>
-//               </tr>
-//             </thead>
-//             <tbody className="bg-white divide-y divide-gray-200">
-//               {loading ? (
-//                 <tr>
-//                   <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
-//                     Loading...
-//                   </td>
-//                 </tr>
-//               ) : users.length === 0 ? (
-//                 <tr>
-//                   <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
-//                     No users found
-//                   </td>
-//                 </tr>
-//               ) : (
-//                 users.map((user) => (
-//                   <tr key={user._id}>
-//                     <td className="px-6 py-4 whitespace-nowrap">
-//                       <div className="flex items-center">
-//                         <div className="h-10 w-10 flex-shrink-0">
-//                           <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-semibold">
-//                             {user.name.charAt(0).toUpperCase()}
-//                           </div>
-//                         </div>
-//                         <div className="ml-4">
-//                           <div className="text-sm font-medium text-gray-900">{user.name}</div>
-//                           <div className="text-sm text-gray-500">{user.email}</div>
-//                         </div>
-//                       </div>
-//                     </td>
-//                     <td className="px-6 py-4 whitespace-nowrap">
-//                       <select
-//                         value={user.role}
-//                         onChange={(e) => handleChangeRole(user._id, e.target.value)}
-//                         className="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-purple-500"
-//                       >
-//                         <option value="student">Student</option>
-//                         <option value="admin">Admin</option>
-//                       </select>
-//                     </td>
-//                     <td className="px-6 py-4 whitespace-nowrap">
-//                       <span
-//                         className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-//                           user.isActive
-//                             ? 'bg-green-100 text-green-800'
-//                             : 'bg-red-100 text-red-800'
-//                         }`}
-//                       >
-//                         {user.isActive ? 'Active' : 'Inactive'}
-//                       </span>
-//                     </td>
-//                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-//                       {new Date(user.createdAt).toLocaleDateString()}
-//                     </td>
-//                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-//                       <button
-//                         onClick={() => handleToggleActive(user._id, user.isActive)}
-//                         className={`${
-//                           user.isActive ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'
-//                         }`}
-//                       >
-//                         {user.isActive ? 'Deactivate' : 'Activate'}
-//                       </button>
-//                       <button
-//                         onClick={() => handleDeleteUser(user._id)}
-//                         className="text-red-600 hover:text-red-900"
-//                       >
-//                         Delete
-//                       </button>
-//                     </td>
-//                   </tr>
-//                 ))
-//               )}
-//             </tbody>
-//           </table>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default AdminUsers;
-
-
-import React, { useState, useEffect } from 'react';
-import { adminAPI } from '../services/api';
+// src/components/admin/AdminUsers.jsx
+import React, { useState, useEffect } from "react";
+import { adminAPI } from "../services/api";
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    role: '',
-    search: '',
-    page: 1
+    role: "",
+    search: "",
+    page: 1,
   });
 
   useEffect(() => {
@@ -214,7 +21,7 @@ const AdminUsers = () => {
       const response = await adminAPI.getUsers(filters);
       setUsers(response.users || []);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error("Error fetching users:", error);
     } finally {
       setLoading(false);
     }
@@ -224,8 +31,8 @@ const AdminUsers = () => {
     try {
       await adminAPI.updateUser(userId, { isActive: !current });
       fetchUsers();
-    } catch (e) {
-      alert('⚠ Failed to update user status');
+    } catch {
+      alert("⚠ Failed to update user status");
     }
   };
 
@@ -234,17 +41,17 @@ const AdminUsers = () => {
       await adminAPI.updateUser(userId, { role });
       fetchUsers();
     } catch {
-      alert('⚠ Failed to update role');
+      alert("⚠ Failed to update role");
     }
   };
 
   const handleDeleteUser = async (userId) => {
-    if (!confirm('⚡ Are you sure you want to delete this user?')) return;
+    if (!confirm("⚡ Are you sure you want to delete this user?")) return;
     try {
       await adminAPI.deleteUser(userId);
       fetchUsers();
     } catch {
-      alert('⚠ Failed to delete user');
+      alert("⚠ Failed to delete user");
     }
   };
 
@@ -252,30 +59,43 @@ const AdminUsers = () => {
     <div className="space-y-8">
 
       {/* Page title */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-extrabold text-[#545454] tracking-[0.16em] uppercase flex items-center gap-3">
+      <div className="flex items-center gap-3">
+        <h1 className="text-3xl font-extrabold text-slate-700 uppercase tracking-[0.16em]">
           User Management
-          <span className="inline-flex h-[2px] flex-1 bg-gradient-to-r from-cyan-400 via-purple-500 to-transparent shadow-[0_0_16px_rgba(0,195,221,0.7)]" />
         </h1>
+        <span className="h-[2px] flex-1 bg-gradient-to-r from-cyan-400 via-purple-500 to-transparent shadow-[0_0_16px_rgba(0,195,221,0.7)]" />
       </div>
 
       {/* Filters */}
-      <div className="neo-card p-5">
+      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
         <div className="flex flex-wrap gap-4">
-          {/* search */}
           <input
             type="text"
             placeholder="Search name/email..."
-            className="neo-input flex-1 min-w-[200px]"
             value={filters.search}
-            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+            onChange={(e) =>
+              setFilters({ ...filters, search: e.target.value })
+            }
+            className="
+              flex-1 min-w-[200px]
+              px-4 py-2 rounded-lg
+              border border-slate-300
+              focus:ring-2 focus:ring-purple-500
+              focus:outline-none
+            "
           />
 
-          {/* role filter */}
           <select
-            className="neo-select"
             value={filters.role}
-            onChange={(e) => setFilters({ ...filters, role: e.target.value })}
+            onChange={(e) =>
+              setFilters({ ...filters, role: e.target.value })
+            }
+            className="
+              px-4 py-2 rounded-lg
+              border border-slate-300
+              focus:ring-2 focus:ring-purple-500
+              focus:outline-none
+            "
           >
             <option value="">All Roles</option>
             <option value="student">Students</option>
@@ -285,95 +105,124 @@ const AdminUsers = () => {
       </div>
 
       {/* Users Table */}
-      <div className="neo-card p-0 overflow-hidden">
-
+      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="neo-table w-full">
-            <thead>
-              <tr>
-                <th>User</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Joined</th>
-                <th>Actions</th>
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50 border-b border-slate-200">
+              <tr className="text-left uppercase tracking-wider text-xs text-slate-500">
+                <th className="px-6 py-3">User</th>
+                <th className="px-6 py-3">Role</th>
+                <th className="px-6 py-3">Status</th>
+                <th className="px-6 py-3">Joined</th>
+                <th className="px-6 py-3">Actions</th>
               </tr>
             </thead>
 
-            <tbody>
+            <tbody className="divide-y divide-slate-200">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="neo-table-loading">Loading Users…</td>
+                  <td colSpan={5} className="px-6 py-6 text-center text-slate-500">
+                    Loading Users…
+                  </td>
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="neo-table-empty">No users found</td>
+                  <td colSpan={5} className="px-6 py-6 text-center text-slate-500">
+                    No users found
+                  </td>
                 </tr>
-              ) : users.map((user) => (
-                <tr key={user._id}>
-                  <td>
-                    <div className="flex items-center gap-3">
-                      <div className="neo-avatar">
-                        {user.name.charAt(0).toUpperCase()}
+              ) : (
+                users.map((user) => (
+                  <tr key={user._id} className="hover:bg-slate-50">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-purple-100 text-purple-600 font-bold flex items-center justify-center">
+                          {user.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-800">
+                            {user.name}
+                          </p>
+                          <p className="text-slate-400 text-xs">
+                            {user.email}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="neo-name">{user.name}</p>
-                        <p className="neo-email">{user.email}</p>
-                      </div>
-                    </div>
-                  </td>
+                    </td>
 
-                  <td>
-                    <select
-                      className="neo-select-small"
-                      value={user.role}
-                      onChange={(e) => handleChangeRole(user._id, e.target.value)}
-                    >
-                      <option value="student">Student</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </td>
+                    <td className="px-6 py-4">
+                      <select
+                        value={user.role}
+                        onChange={(e) =>
+                          handleChangeRole(user._id, e.target.value)
+                        }
+                        className="
+                          px-2 py-1 rounded-md
+                          border border-slate-300
+                          text-xs
+                          focus:ring-2 focus:ring-purple-500
+                          focus:outline-none
+                        "
+                      >
+                        <option value="student">Student</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </td>
 
-                  <td>
-                    <span className={`neo-badge ${user.isActive ? 'neo-badge-green' : 'neo-badge-red'}`}>
-                      {user.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
+                          user.isActive
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {user.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </td>
 
-                  <td className="neo-date">
-                    {new Date(user.createdAt).toLocaleDateString()}
-                  </td>
+                    <td className="px-6 py-4 text-slate-500">
+                      {new Date(user.createdAt).toLocaleDateString()}
+                    </td>
 
-                  <td className="neo-actions">
-                    <button
-                      onClick={() => handleToggleActive(user._id, user.isActive)}
-                      className={`neo-btn px-3 py-1 text-xs ${user.isActive ? 'neo-btn-idle hover:bg-red-900/30' : 'neo-btn-idle hover:bg-emerald-900/30'}`}
-                    >
-                      {user.isActive ? '🔴 Deactivate' : '🟢 Activate'}
-                    </button>
+                    <td className="px-6 py-4 flex gap-2">
+                      <button
+                        onClick={() =>
+                          handleToggleActive(user._id, user.isActive)
+                        }
+                        className={`
+                          px-3 py-1 rounded-md text-xs font-medium
+                          transition-colors
+                          ${
+                            user.isActive
+                              ? "text-red-700 hover:bg-red-100"
+                              : "text-green-700 hover:bg-green-100"
+                          }
+                        `}
+                      >
+                        {user.isActive ? "🔴 Deactivate" : "🟢 Activate"}
+                      </button>
 
-                    <button
-                      onClick={() => handleDeleteUser(user._id)}
-                      className="neo-btn neo-btn-idle px-3 py-1 text-xs hover:bg-red-900/30"
-                    >
-                      🗑️ Delete
-                    </button>
-                  </td>
-
-                </tr>
-              ))}
+                      <button
+                        onClick={() => handleDeleteUser(user._id)}
+                        className="
+                          px-3 py-1 rounded-md text-xs font-medium
+                          text-red-700 hover:bg-red-100
+                          transition-colors
+                        "
+                      >
+                        🗑️ Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
-
       </div>
     </div>
   );
 };
 
 export default AdminUsers;
-
-
-
-
-
-

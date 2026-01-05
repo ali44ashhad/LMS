@@ -1,6 +1,42 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import robot from '../../assets/robot2.png';
+import { enrollmentAPI } from '../../services/api';
+
 const Sidebar = ({ activeTab, setActiveTab, userRole = 'student' }) => {
+  const [progressData, setProgressData] = useState({
+    overallProgress: 0,
+    completedCourses: 0,
+    totalCourses: 0
+  });
+
+  useEffect(() => {
+    if (userRole === 'student') {
+      fetchProgressData();
+    }
+  }, [userRole]);
+
+  const fetchProgressData = async () => {
+    try {
+      const response = await enrollmentAPI.getMy();
+      const enrollments = response.enrollments || [];
+      
+      const totalCourses = enrollments.length;
+      const completedCourses = enrollments.filter((e) => e.progress === 100).length;
+      const overallProgress = totalCourses > 0
+        ? Math.round(
+            enrollments.reduce((acc, e) => acc + (e.progress || 0), 0) / totalCourses
+          )
+        : 0;
+
+      setProgressData({
+        overallProgress,
+        completedCourses,
+        totalCourses
+      });
+    } catch (error) {
+      console.error('Error fetching progress data:', error);
+    }
+  };
   const adminMenuItems = [
     { id: 'admin-dashboard', label: 'Admin Dashboard', icon: '👨‍💼' },
     { id: 'admin-users', label: 'User Management', icon: '👥' },
@@ -61,14 +97,14 @@ const Sidebar = ({ activeTab, setActiveTab, userRole = 'student' }) => {
 
             <div className="mt-3">
               <div className="flex justify-between text-xs text-slate-600">
-                <span className="font-semibold">65% Complete</span>
-                <span>13 / 20 courses</span>
+                <span className="font-semibold">{progressData.overallProgress}% Complete</span>
+                <span>{progressData.completedCourses} / {progressData.totalCourses} courses</span>
               </div>
 
               <div className="mt-2 w-full bg-slate-200 rounded-full h-2">
                 <div
-                  className="h-2 bg-green-600 rounded-full"
-                  style={{ width: '65%' }}
+                  className="h-2 bg-green-600 rounded-full transition-all duration-300"
+                  style={{ width: `${progressData.overallProgress}%` }}
                 />
               </div>
             </div>

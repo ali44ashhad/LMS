@@ -40,15 +40,20 @@ const Courses = ({ onCourseSelect }) => {
     }
   };
 
-  const coursesWithProgress = courses.map((course) => {
+  const coursesWithProgress = courses.map((course, index) => {
     const enrollment = enrollments.find(
-      (e) => e.course._id === course._id
+      (e) => {
+        const enrollCourseId = e.course?._id || e.course?.id;
+        const courseId = course._id || course.id;
+        return enrollCourseId?.toString() === courseId?.toString();
+      }
     );
     return {
       ...course,
       enrolled: !!enrollment,
-      progress: enrollment?.progress || 0,
+      progress: enrollment?.progress ?? 0,
       lastAccessed: enrollment?.lastAccessed || null,
+      questIndex: index + 1,
     };
   });
 

@@ -12,6 +12,14 @@ router.post('/', protect, async (req, res) => {
   try {
     const { courseId } = req.body;
 
+    // Validate courseId format
+    if (!courseId || !courseId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid course ID format'
+      });
+    }
+
     // Check if course exists
     const course = await Course.findById(courseId);
     if (!course) {
@@ -71,6 +79,14 @@ router.get('/my', protect, async (req, res) => {
 // @access  Private
 router.put('/:id/progress', protect, async (req, res) => {
   try {
+    // Validate enrollment ID format
+    if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid enrollment ID format'
+      });
+    }
+
     const { progress, completedLessons } = req.body;
 
     const enrollment = await Enrollment.findOne({

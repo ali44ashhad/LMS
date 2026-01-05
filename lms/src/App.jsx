@@ -22,24 +22,76 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-        if (parsedUser.role === 'admin') {
-          setActiveTab('admin-dashboard');
+    const initializeAuth = async () => {
+      const token = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+      
+      // Both token and user must exist
+      if (token && storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          
+          // Verify token is still valid by calling /auth/me
+          try {
+            const currentUser = await authAPI.getCurrentUser();
+            if (currentUser.success && currentUser.user) {
+              // Update user data from server
+              const userData = {
+                ...currentUser.user,
+                _id: currentUser.user._id || currentUser.user.id
+              };
+              localStorage.setItem('user', JSON.stringify(userData));
+              setUser(userData);
+              if (userData.role === 'admin') {
+                setActiveTab('admin-dashboard');
+              }
+            } else {
+              // Token invalid, clear storage
+              authAPI.logout();
+              setUser(null);
+            }
+          } catch (error) {
+            // Token invalid or expired, clear storage
+            authAPI.logout();
+            setUser(null);
+          }
+        } catch (err) {
+          // Invalid user data, clear storage
+          authAPI.logout();
+          setUser(null);
         }
-      } catch (err) {
-        localStorage.removeItem('user');
+      } else {
+        // Missing token or user, clear storage
+        if (token || storedUser) {
+          authAPI.logout();
+        }
+        setUser(null);
       }
-    }
-    setLoading(false);
+      
+      setLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
   const handleLogin = (userData) => {
-    setUser(userData);
-    setActiveTab(userData.role === 'admin' ? 'admin-dashboard' : 'dashboard');
+    // Ensure user data is properly formatted
+    const formattedUser = {
+      ...userData,
+      _id: userData._id || userData.id
+    };
+    
+    // Ensure token and user are in localStorage (should already be set by Login component)
+    const token = localStorage.getItem('token');
+    if (token) {
+      localStorage.setItem('user', JSON.stringify(formattedUser));
+      setUser(formattedUser);
+      setActiveTab(formattedUser.role === 'admin' ? 'admin-dashboard' : 'dashboard');
+    } else {
+      // Token missing, clear and show error
+      authAPI.logout();
+      setUser(null);
+    }
   };
 
   const handleLogout = () => {

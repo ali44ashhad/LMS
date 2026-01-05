@@ -79,10 +79,18 @@ const Header = ({ user, onLogout }) => {
                   }`}
               >
                 <div className="h-7 w-7 md:h-8 md:w-8 rounded-full bg-slate-900 border border-cyan-400/60
-                  flex items-center justify-center shadow-[0_0_10px_rgba(0,195,221,0.6)]">
-                  <span className="text-cyan-200 font-semibold text-xs md:text-sm">
-                    {getInitials(user?.name)}
-                  </span>
+                  flex items-center justify-center overflow-hidden shadow-[0_0_10px_rgba(0,195,221,0.6)]">
+                  {user?.avatar ? (
+                    <img 
+                      src={user.avatar} 
+                      alt={user?.name || "Avatar"} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-cyan-200 font-semibold text-xs md:text-sm">
+                      {getInitials(user?.name)}
+                    </span>
+                  )}
                 </div>
 
                 {/* <div className="hidden sm:block text-left">

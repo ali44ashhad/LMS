@@ -17,9 +17,11 @@ const CoursePlayer = ({
   const [volume, setVolume] = useState(1);
   const [showNotes, setShowNotes] = useState(false);
   const [notes, setNotes] = useState("");
+  const [lessonCompleted, setLessonCompleted] = useState(false);
   const videoRef = useRef(null);
 
-  const { incrementProgress } = useProgress(course.id);
+  const courseId = course?._id || course?.id;
+  const { incrementProgress } = useProgress(courseId);
 
   const getVideoContent = () => {
     if (lesson.type === "quiz") {
@@ -59,11 +61,16 @@ const CoursePlayer = ({
     setCurrentTime(videoRef.current.currentTime);
     setDuration(videoRef.current.duration || 0);
 
+    // Mark lesson as complete when 90% watched (only once)
     if (
       videoRef.current.duration &&
-      videoRef.current.currentTime / videoRef.current.duration > 0.9
+      videoRef.current.currentTime / videoRef.current.duration > 0.9 &&
+      !lessonCompleted
     ) {
-      incrementProgress(1);
+      setLessonCompleted(true);
+      // Update local progress
+      incrementProgress(5);
+      // Call completion handler to sync with backend
       onComplete && onComplete();
     }
   };
@@ -84,8 +91,10 @@ const CoursePlayer = ({
     if (videoRef.current) videoRef.current.volume = v;
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    // Update local progress
     incrementProgress(5);
+    // Call completion handler to sync with backend
     onComplete && onComplete();
   };
 
@@ -108,7 +117,7 @@ const CoursePlayer = ({
         </div>
 
         <div className="text-right text-sm">
-          <div>Lesson {lesson.id} of 12</div>
+          <div>Lesson {course.lessons ? course.lessons.findIndex(l => (l._id || l.id) === (lesson._id || lesson.id)) + 1 : 1} of {course.lessons?.length || 1}</div>
           <div className="font-medium">
             {videoContent.type.toUpperCase()}
           </div>
@@ -123,16 +132,36 @@ const CoursePlayer = ({
             {videoContent.type === "video" && lesson.url ? (
               <>
                 {lesson.url.includes("youtube") ? (
-                  <iframe
-                    className="absolute inset-0 w-full h-full"
-                    src={lesson.url
-                      .replace("watch?v=", "embed/")
-                      .split("&")[0]}
-                    title={lesson.title}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
+                  <div className="relative w-full h-full">
+                    <iframe
+                      className="absolute inset-0 w-full h-full"
+                      src={lesson.url
+                        .replace("watch?v=", "embed/")
+                        .split("&")[0] + "?enablejsapi=1"}
+                      title={lesson.title}
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      id={`youtube-iframe-${lesson.id || lesson._id}`}
+                    />
+                    <div className="absolute bottom-0 left-0 right-0 bg-gray-900/90 p-4 text-white text-sm">
+                      <div className="flex items-center justify-between">
+                        <span>YouTube Video</span>
+                        <button
+                          onClick={() => {
+                            if (!lessonCompleted) {
+                              setLessonCompleted(true);
+                              incrementProgress(5);
+                              onComplete && onComplete();
+                            }
+                          }}
+                          className="px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700"
+                        >
+                          {lessonCompleted ? "✓ Completed" : "Mark as Complete"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 ) : (
                   <video
                     ref={videoRef}
@@ -300,15 +329,16 @@ const CoursePlayer = ({
           <div className="space-y-2">
             <button
               onClick={onPrevious}
-              disabled={lesson.id === 1}
-              className="w-full px-3 py-2 bg-lime-400 rounded-lg hover:bg-lime-500 disabled:opacity-50"
+              disabled={!onPrevious}
+              className="w-full px-3 py-2 bg-lime-400 rounded-lg hover:bg-lime-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               ← Previous Lesson
             </button>
 
             <button
               onClick={onNext}
-              className="w-full px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+              disabled={!onNext}
+              className="w-full px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next Lesson →
             </button>

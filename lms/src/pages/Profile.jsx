@@ -8,14 +8,43 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
   );
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState(null);
 
   const completedCourses = enrolledCourses.filter(
     (e) => e.progress === 100
   );
 
   useEffect(() => {
+    fetchUserData();
     fetchEnrolledCourses();
   }, []);
+
+  useEffect(() => {
+    // Set avatar preview if user has avatar
+    if (user?.avatar) {
+      setAvatarPreview(user.avatar);
+    }
+  }, [user]);
+
+  const fetchUserData = async () => {
+    try {
+      const response = await authAPI.getCurrentUser();
+      if (response && response.user) {
+        const updatedUser = { ...user, ...response.user };
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        onUserUpdate && onUserUpdate(updatedUser);
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      // Fallback to localStorage if API fails
+      const localUser = JSON.parse(localStorage.getItem("user") || "{}");
+      if (localUser && Object.keys(localUser).length > 0) {
+        setUser(localUser);
+      }
+    }
+  };
 
   const fetchEnrolledCourses = async () => {
     try {
@@ -29,26 +58,81 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
     }
   };
 
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+      
+      // Validate file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Image size should be less than 2MB');
+        return;
+      }
+
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        setAvatarPreview(base64String);
+        setUser({ ...user, avatar: base64String });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleUpdateProfile = async () => {
+    if (updating) return;
+    
     try {
+      setUpdating(true);
       const response = await authAPI.updateProfile({
         name: user.name,
         email: user.email,
         bio: user.bio || "",
         address: user.address || "",
         phone: user.phone || "",
+        avatar: user.avatar || "",
       });
 
-      const updatedUser = { ...user, ...response.user };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      setUser(updatedUser);
+      if (response && response.user) {
+        const updatedUser = { 
+          ...user, 
+          ...response.user,
+          // Ensure all fields are preserved
+          name: response.user.name || user.name,
+          email: response.user.email || user.email,
+          bio: response.user.bio !== undefined ? response.user.bio : (user.bio || ""),
+          address: response.user.address !== undefined ? response.user.address : (user.address || ""),
+          phone: response.user.phone !== undefined ? response.user.phone : (user.phone || ""),
+          avatar: response.user.avatar || user.avatar || "",
+          createdAt: response.user.createdAt || user.createdAt,
+        };
+        
+        // Update avatar preview
+        if (updatedUser.avatar) {
+          setAvatarPreview(updatedUser.avatar);
+        }
+        
+        // Update localStorage with complete user data
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        setUser(updatedUser);
 
-      onUserUpdate && onUserUpdate(updatedUser);
+        // Notify parent component
+        onUserUpdate && onUserUpdate(updatedUser);
 
-      alert("Profile updated successfully!");
+        alert("Profile updated successfully!");
+      } else {
+        throw new Error("Invalid response from server");
+      }
     } catch (error) {
       console.error("Error updating profile:", error);
-      alert("Failed to update profile");
+      alert("Failed to update profile: " + (error.message || "Unknown error"));
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -69,11 +153,32 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
         {/* SIDEBAR */}
         <aside className="lg:col-span-1">
           <div className="bg-white border border-slate-200 rounded-xl p-6 text-center shadow-sm">
-            <div className="mx-auto w-24 h-24 rounded-full bg-purple-100 border border-purple-300 flex items-center justify-center mb-4">
-              <span className="text-3xl font-bold text-purple-600 tracking-[0.12em]">
-                {user.name?.substring(0, 2).toUpperCase() || "US"}
-              </span>
-            </div>
+            <label className="cursor-pointer block">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                className="hidden"
+              />
+              <div className="relative mx-auto w-24 h-24 rounded-full bg-purple-100 border-2 border-purple-300 flex items-center justify-center mb-4 overflow-hidden hover:border-purple-500 transition-all group">
+                {avatarPreview ? (
+                  <img 
+                    src={avatarPreview} 
+                    alt={user.name || "Avatar"} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-3xl font-bold text-purple-600 tracking-[0.12em]">
+                    {user.name?.substring(0, 2).toUpperCase() || "US"}
+                  </span>
+                )}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <span className="text-white text-xs font-semibold">
+                    {avatarPreview ? "Change" : "Upload"}
+                  </span>
+                </div>
+              </div>
+            </label>
 
             <h2 className="text-lg font-semibold text-[#545454]">
               {user.name}
@@ -124,11 +229,55 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
                 Profile Information
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {[
-                  { label: "Full Name", key: "name", type: "text" },
-                  { label: "Email", key: "email", type: "email" },
-                ].map((field) => (
+              <div className="space-y-6">
+                {/* Avatar Upload Section */}
+                <div className="border-b border-slate-200 pb-6">
+                  <label className="block text-sm font-medium text-slate-600 mb-2">
+                    Profile Picture
+                  </label>
+                  <div className="flex items-center gap-4">
+                    <label className="cursor-pointer relative group">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarChange}
+                        className="hidden"
+                      />
+                      <div className="relative w-20 h-20 rounded-full bg-purple-100 border-2 border-purple-300 flex items-center justify-center overflow-hidden hover:border-purple-500 transition-all group-hover:opacity-90">
+                        {avatarPreview ? (
+                          <img 
+                            src={avatarPreview} 
+                            alt={user.name || "Avatar"} 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-xl font-bold text-purple-600">
+                            {user.name?.substring(0, 2).toUpperCase() || "US"}
+                          </span>
+                        )}
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <span className="text-white text-xs font-semibold">
+                            {avatarPreview ? "Change" : "Upload"}
+                          </span>
+                        </div>
+                      </div>
+                    </label>
+                    <div>
+                      <p className="text-sm text-slate-600 font-medium">
+                        Click on avatar to {avatarPreview ? "change" : "upload"} picture
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        JPG, PNG or GIF (max 2MB)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {[
+                    { label: "Full Name", key: "name", type: "text" },
+                    { label: "Email", key: "email", type: "email" },
+                  ].map((field) => (
                   <div key={field.key}>
                     <label className="block text-sm font-medium text-slate-600 mb-1">
                       {field.label}
@@ -176,14 +325,18 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
                     />
                   </div>
                 ))}
+                </div>
               </div>
 
               <div className="flex justify-end">
                 <button
                   onClick={handleUpdateProfile}
-                  className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+                  disabled={updating}
+                  className={`px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition ${
+                    updating ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                 >
-                  Save Changes
+                  {updating ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </div>

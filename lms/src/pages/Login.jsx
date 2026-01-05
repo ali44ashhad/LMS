@@ -32,8 +32,22 @@ const Login = ({ onLogin }) => {
         response = await authAPI.register(formData);
       }
 
-      if (response.success && response.user) {
-        onLogin(response.user);
+      if (response.success && response.user && response.token) {
+        // Ensure user object has _id field for consistency
+        const userData = {
+          ...response.user,
+          _id: response.user.id || response.user._id,
+          id: response.user.id || response.user._id
+        };
+        
+        // Ensure token and user are saved in localStorage (synchronous operation)
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('user', JSON.stringify(userData));
+        
+        // Call onLogin callback to update App state immediately
+        onLogin(userData);
+      } else {
+        setError('Registration/Login failed. Please try again.');
       }
     } catch (err) {
       setError(err.message || 'Authentication failed');
@@ -107,23 +121,7 @@ const Login = ({ onLogin }) => {
               placeholder="••••••••"
             />
           </div>
-
-          {!isLogin && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Role
-              </label>
-              <select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
-                <option value="student">Student</option>
-                <option value="teacher">Teacher</option>
-              </select>
-            </div>
-          )}
+ 
 
           <button
             type="submit"
@@ -158,9 +156,3 @@ const Login = ({ onLogin }) => {
 };
 
 export default Login;
-
-
-
-
-
-

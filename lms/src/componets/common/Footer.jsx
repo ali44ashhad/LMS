@@ -24,7 +24,7 @@ const Footer = () => {
       />
 
       {/* FOOTER TEXT */}
-      <div className="relative z-10 h-full flex items-center justify-center font-bold text-black">
+      <div className="relative z-10 h-full flex items-center justify-center font-bold text-slate-800 ">
         <span className="text-[10px] tracking-[0.35em] uppercase">
           Console Ready
         </span>

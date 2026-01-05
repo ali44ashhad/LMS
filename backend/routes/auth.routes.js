@@ -143,7 +143,7 @@ router.get('/me', protect, async (req, res) => {
 // @access  Private
 router.put('/profile', protect, async (req, res) => {
   try {
-    const { name, email, bio, address, phone } = req.body;
+    const { name, email, bio, address, phone, avatar } = req.body;
 
     const user = await User.findById(req.user.id);
 
@@ -171,6 +171,7 @@ router.put('/profile', protect, async (req, res) => {
     if (bio !== undefined) user.bio = bio;
     if (address !== undefined) user.address = address;
     if (phone !== undefined) user.phone = phone;
+    if (avatar !== undefined) user.avatar = avatar;
 
     await user.save();
 

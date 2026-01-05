@@ -5,9 +5,19 @@ export const useLocalStorage = (key, initialValue) => {
   const [storedValue, setStoredValue] = useState(() => {
     try {
       const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
+      // Handle null, undefined, or invalid JSON strings
+      if (!item || item === 'undefined' || item === 'null') {
+        return initialValue;
+      }
+      return JSON.parse(item);
     } catch (error) {
       console.error(`Error reading localStorage key "${key}":`, error);
+      // If parsing fails, remove the invalid value and return initial
+      try {
+        window.localStorage.removeItem(key);
+      } catch (e) {
+        // Ignore removal errors
+      }
       return initialValue;
     }
   });

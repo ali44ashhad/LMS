@@ -30,25 +30,25 @@ const seedData = async () => {
       role: 'admin'
     });
 
-    // Create Teachers
-    const teachers = await User.create([
+    // Create additional Admin users (for course creation)
+    const additionalAdmins = await User.create([
       {
         name: 'Sarah Johnson',
         email: 'sarah@lms.com',
-        password: 'Teacher@123',
-        role: 'teacher'
+        password: 'Admin@123',
+        role: 'admin'
       },
       {
         name: 'Michael Chen',
         email: 'michael@lms.com',
-        password: 'Teacher@123',
-        role: 'teacher'
+        password: 'Admin@123',
+        role: 'admin'
       },
       {
         name: 'Emma Wilson',
         email: 'emma@lms.com',
-        password: 'Teacher@123',
-        role: 'teacher'
+        password: 'Admin@123',
+        role: 'admin'
       }
     ]);
 
@@ -75,8 +75,8 @@ const seedData = async () => {
       {
         title: 'Web Development Fundamentals',
         description: 'Learn the fundamentals of modern web development including HTML, CSS, and JavaScript.',
-        instructor: teachers[0]._id,
-        instructorName: teachers[0].name,
+        instructor: additionalAdmins[0]._id,
+        instructorName: additionalAdmins[0].name,
         category: 'Development',
         level: 'Beginner',
         duration: '8 weeks',
@@ -109,8 +109,8 @@ const seedData = async () => {
       {
         title: 'Data Science Essentials',
         description: 'Master data analysis, visualization, and machine learning basics.',
-        instructor: teachers[1]._id,
-        instructorName: teachers[1].name,
+        instructor: additionalAdmins[1]._id,
+        instructorName: additionalAdmins[1].name,
         category: 'Data Science',
         level: 'Intermediate',
         duration: '10 weeks',
@@ -137,8 +137,8 @@ const seedData = async () => {
       {
         title: 'UI/UX Design Principles',
         description: 'Learn user-centered design principles and create engaging user experiences.',
-        instructor: teachers[2]._id,
-        instructorName: teachers[2].name,
+        instructor: additionalAdmins[2]._id,
+        instructorName: additionalAdmins[2].name,
         category: 'Design',
         level: 'Beginner',
         duration: '6 weeks',
@@ -273,9 +273,9 @@ const seedData = async () => {
     console.log('Admin:');
     console.log('  Email: admin@lms.com');
     console.log('  Password: Admin@123');
-    console.log('\nTeacher:');
+    console.log('\nAdditional Admin (for course creation):');
     console.log('  Email: sarah@lms.com');
-    console.log('  Password: Teacher@123');
+    console.log('  Password: Admin@123');
     console.log('\nStudent:');
     console.log('  Email: john@lms.com');
     console.log('  Password: Student@123');

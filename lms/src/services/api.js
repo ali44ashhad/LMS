@@ -16,10 +16,24 @@ const getAuthHeaders = () => {
 
 // Helper function to handle API responses
 const handleResponse = async (response) => {
-  const data = await response.json();
+  // Check if response has content and is JSON
+  const contentType = response.headers.get('content-type');
+  let data;
+  
+  if (contentType && contentType.includes('application/json')) {
+    try {
+      data = await response.json();
+    } catch (error) {
+      throw new Error('Failed to parse JSON response');
+    }
+  } else {
+    // Handle non-JSON responses (e.g., HTML error pages)
+    const text = await response.text();
+    throw new Error(text || `HTTP ${response.status}: ${response.statusText}`);
+  }
   
   if (!response.ok) {
-    throw new Error(data.message || 'Something went wrong');
+    throw new Error(data.message || data.error || 'Something went wrong');
   }
   
   return data;
@@ -33,7 +47,20 @@ export const authAPI = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userData)
     });
-    return handleResponse(response);
+    const data = await handleResponse(response);
+    
+    // Save token and user to localStorage after successful registration
+    if (data.success && data.token && data.user) {
+      localStorage.setItem('token', data.token);
+      // Ensure user object has _id field (backend returns id, convert to _id for consistency)
+      const user = {
+        ...data.user,
+        _id: data.user.id || data.user._id
+      };
+      localStorage.setItem('user', JSON.stringify(user));
+    }
+    
+    return data;
   },
 
   login: async (credentials) => {
@@ -44,9 +71,15 @@ export const authAPI = {
     });
     const data = await handleResponse(response);
     
-    if (data.token) {
+    // Save token and user to localStorage after successful login
+    if (data.success && data.token && data.user) {
       localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      // Ensure user object has _id field (backend returns id, convert to _id for consistency)
+      const user = {
+        ...data.user,
+        _id: data.user.id || data.user._id
+      };
+      localStorage.setItem('user', JSON.stringify(user));
     }
     
     return data;
@@ -65,7 +98,7 @@ export const authAPI = {
   },
 
   updateProfile: async (userData) => {
-    const response = await fetch(`${API_URL}/users/profile`, {
+    const response = await fetch(`${API_URL}/auth/profile`, {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify(userData)

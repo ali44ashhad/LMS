@@ -1,6 +1,6 @@
 import express from 'express';
 import Grade from '../models/Grade.model.js';
-import { protect } from '../middleware/auth.middleware.js';
+import { protect, authorize } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
@@ -12,7 +12,16 @@ router.get('/my', protect, async (req, res) => {
     const { courseId } = req.query;
     let query = { student: req.user.id };
 
-    if (courseId) query.course = courseId;
+    if (courseId) {
+      // Validate courseId format if provided
+      if (!courseId.match(/^[0-9a-fA-F]{24}$/)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid course ID format'
+        });
+      }
+      query.course = courseId;
+    }
 
     const grades = await Grade.find(query)
       .populate('course', 'title')
@@ -27,10 +36,18 @@ router.get('/my', protect, async (req, res) => {
 });
 
 // @route   GET /api/grades/course/:courseId
-// @desc    Get all grades for a course (Teacher/Admin)
-// @access  Private/Teacher/Admin
-router.get('/course/:courseId', protect, async (req, res) => {
+// @desc    Get all grades for a course (Admin only)
+// @access  Private/Admin
+router.get('/course/:courseId', protect, authorize('admin'), async (req, res) => {
   try {
+    // Validate courseId format
+    if (!req.params.courseId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid course ID format'
+      });
+    }
+
     const grades = await Grade.find({ course: req.params.courseId })
       .populate('student', 'name email')
       .populate('assignment', 'title')

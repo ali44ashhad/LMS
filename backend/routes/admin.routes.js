@@ -99,6 +99,14 @@ router.get('/users', async (req, res) => {
 // @access  Private/Admin
 router.put('/users/:id', async (req, res) => {
   try {
+    // Validate user ID format
+    if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid user ID format'
+      });
+    }
+
     const { isActive, role } = req.body;
 
     const user = await User.findById(req.params.id);
@@ -126,6 +134,14 @@ router.put('/users/:id', async (req, res) => {
 // @access  Private/Admin
 router.delete('/users/:id', async (req, res) => {
   try {
+    // Validate user ID format
+    if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid user ID format'
+      });
+    }
+
     const user = await User.findById(req.params.id);
 
     if (!user) {
@@ -183,6 +199,14 @@ router.get('/courses', async (req, res) => {
 // @access  Private/Admin
 router.put('/courses/:id', async (req, res) => {
   try {
+    // Validate course ID format
+    if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid course ID format'
+      });
+    }
+
     let course = await Course.findById(req.params.id);
 
     if (!course) {
@@ -208,6 +232,14 @@ router.put('/courses/:id', async (req, res) => {
 // @access  Private/Admin
 router.delete('/courses/:id', async (req, res) => {
   try {
+    // Validate course ID format
+    if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid course ID format'
+      });
+    }
+
     const course = await Course.findById(req.params.id);
 
     if (!course) {

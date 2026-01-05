@@ -66,7 +66,7 @@ const CourseGrid = ({ courses, onCourseSelect }) => {
               </span>
             </div>
 
-            <div className="flex justify-between items-center">
+            {/* <div className="flex justify-between items-center">
               <div className="flex items-center space-x-1">
                 <span>⭐ {course.rating || 0}</span>
                 <span>
@@ -78,7 +78,7 @@ const CourseGrid = ({ courses, onCourseSelect }) => {
                   )
                 </span>
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* DESCRIPTION + ACTION */}

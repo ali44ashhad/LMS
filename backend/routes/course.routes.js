@@ -32,11 +32,42 @@ router.get('/', async (req, res) => {
   }
 });
 
+// @route   GET /api/courses/my/enrolled
+// @desc    Get enrolled courses for logged in user
+// @access  Private
+// NOTE: This route must come before /:id to avoid route conflicts
+router.get('/my/enrolled', protect, async (req, res) => {
+  try {
+    const enrollments = await Enrollment.find({ student: req.user.id })
+      .populate('course')
+      .sort('-lastAccessed');
+
+    const courses = enrollments.map(enrollment => ({
+      ...enrollment.course._doc,
+      progress: enrollment.progress,
+      lastAccessed: enrollment.lastAccessed,
+      enrolled: true
+    }));
+
+    res.json({ success: true, count: courses.length, courses });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // @route   GET /api/courses/:id
 // @desc    Get single course
 // @access  Public
 router.get('/:id', async (req, res) => {
   try {
+    // Validate MongoDB ObjectId format
+    if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid course ID format'
+      });
+    }
+
     const course = await Course.findById(req.params.id)
       .populate('instructor', 'name email avatar');
 
@@ -55,8 +86,8 @@ router.get('/:id', async (req, res) => {
 
 // @route   POST /api/courses
 // @desc    Create new course
-// @access  Private/Teacher/Admin
-router.post('/', protect, authorize('teacher', 'admin'), async (req, res) => {
+// @access  Private/Admin
+router.post('/', protect, authorize('admin'), async (req, res) => {
   try {
     req.body.instructor = req.user.id;
     req.body.instructorName = req.user.name;
@@ -71,9 +102,17 @@ router.post('/', protect, authorize('teacher', 'admin'), async (req, res) => {
 
 // @route   PUT /api/courses/:id
 // @desc    Update course
-// @access  Private/Teacher/Admin
-router.put('/:id', protect, authorize('teacher', 'admin'), async (req, res) => {
+// @access  Private/Admin
+router.put('/:id', protect, authorize('admin'), async (req, res) => {
   try {
+    // Validate MongoDB ObjectId format
+    if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid course ID format'
+      });
+    }
+
     let course = await Course.findById(req.params.id);
 
     if (!course) {
@@ -107,6 +146,14 @@ router.put('/:id', protect, authorize('teacher', 'admin'), async (req, res) => {
 // @access  Private/Admin
 router.delete('/:id', protect, authorize('admin'), async (req, res) => {
   try {
+    // Validate MongoDB ObjectId format
+    if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid course ID format'
+      });
+    }
+
     const course = await Course.findById(req.params.id);
 
     if (!course) {
@@ -119,28 +166,6 @@ router.delete('/:id', protect, authorize('admin'), async (req, res) => {
     await course.deleteOne();
 
     res.json({ success: true, message: 'Course deleted' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-// @route   GET /api/courses/my/enrolled
-// @desc    Get enrolled courses for logged in user
-// @access  Private
-router.get('/my/enrolled', protect, async (req, res) => {
-  try {
-    const enrollments = await Enrollment.find({ student: req.user.id })
-      .populate('course')
-      .sort('-lastAccessed');
-
-    const courses = enrollments.map(enrollment => ({
-      ...enrollment.course._doc,
-      progress: enrollment.progress,
-      lastAccessed: enrollment.lastAccessed,
-      enrolled: true
-    }));
-
-    res.json({ success: true, count: courses.length, courses });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

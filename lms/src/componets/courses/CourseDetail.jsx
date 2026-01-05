@@ -40,47 +40,29 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
   // Modules - Support both lessons array from backend and modules structure
   const modules = (() => {
     if (course.lessons && Array.isArray(course.lessons) && course.lessons.length > 0) {
-      // Group lessons by module based on order field (modules are grouped by order ranges: 0-99, 100-199, etc.)
-      const sortedLessons = [...course.lessons].sort((a, b) => (a.order || 0) - (b.order || 0));
+      // Group lessons by moduleId - each lesson should have moduleId and moduleName
       const moduleMap = new Map();
       
-      sortedLessons.forEach((lesson, idx) => {
+      course.lessons.forEach((lesson, idx) => {
         const lessonId = lesson._id || lesson.id;
         const isCompleted = completedLessons.includes(lessonId) || 
                            completedLessons.some(id => id?.toString() === lessonId?.toString());
         
-        // Determine module index from order (every 100 lessons is a module)
-        const moduleIndex = Math.floor((lesson.order || idx) / 100);
+        // Use moduleId from lesson, or create a default one
+        const moduleId = lesson.moduleId || 'default-module-0';
+        const moduleName = lesson.moduleName || `Module 1`;
         
         // Initialize module if it doesn't exist
-        if (!moduleMap.has(moduleIndex)) {
-          // Try to extract module title from description (format: "Module X: Module Title" or just module description)
-          let moduleTitle = `Module ${moduleIndex + 1}`;
-          if (lesson.description) {
-            // Try pattern: "Module X: Module Title"
-            const moduleMatch = lesson.description.match(/Module\s+\d+:\s*(.+)/i);
-            if (moduleMatch) {
-              moduleTitle = moduleMatch[1].trim();
-            } else {
-              // If description doesn't match pattern, check if it contains module info
-              // Sometimes description is just the module title
-              const descTrim = lesson.description.trim();
-              if (descTrim && !descTrim.toLowerCase().includes('lesson') && descTrim.length > 3) {
-                // Use description as module title if it seems like a title
-                moduleTitle = descTrim;
-              }
-            }
-          }
-          
-          moduleMap.set(moduleIndex, {
-            id: moduleIndex + 1,
-            title: moduleTitle,
+        if (!moduleMap.has(moduleId)) {
+          moduleMap.set(moduleId, {
+            id: moduleId,
+            title: moduleName,
             duration: 'Self-paced',
             lessons: []
           });
         }
         
-        moduleMap.get(moduleIndex).lessons.push({
+        moduleMap.get(moduleId).lessons.push({
           id: lessonId || idx + 1,
           _id: lessonId,
           title: lesson.title || `Lesson ${idx + 1}`,

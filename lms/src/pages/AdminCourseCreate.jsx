@@ -35,7 +35,54 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
     type: 'pdf'
   });
 
+  const [editingModuleId, setEditingModuleId] = useState(null);
   const isEditMode = !!(course && course._id);
+
+  // Group lessons by moduleId to recreate module structure
+  const groupLessonsByModule = (lessons) => {
+    const moduleMap = new Map();
+    
+    lessons.forEach((lesson, idx) => {
+      const moduleId = lesson.moduleId || 'default-module-0';
+      const moduleName = lesson.moduleName || 'Module 1';
+      
+      if (!moduleMap.has(moduleId)) {
+        moduleMap.set(moduleId, {
+          id: moduleId || (Date.now() + Math.random()),
+          title: moduleName,
+          description: lesson.description || '',
+          videos: [],
+          files: [],
+          quiz: null,
+          assignment: null
+        });
+      }
+      
+      const module = moduleMap.get(moduleId);
+      
+      // Add video to module
+      if (lesson.videoUrl) {
+        module.videos.push({
+          id: lesson._id || (Date.now() + Math.random()),
+          title: lesson.title || '',
+          url: lesson.videoUrl,
+          duration: lesson.duration || ''
+        });
+      }
+      
+      // Add files to module
+      if (lesson.resources && Array.isArray(lesson.resources)) {
+        lesson.resources.forEach((resource) => {
+          module.files.push({
+            ...resource,
+            id: resource._id || resource.id || (Date.now() + Math.random())
+          });
+        });
+      }
+    });
+    
+    return Array.from(moduleMap.values());
+  };
 
   useEffect(() => {
     if (course) {
@@ -47,29 +94,7 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
         duration: course.duration || '',
         image: course.image || '📚',
         isPublished: course.isPublished || false,
-        modules: course.lessons
-          ? course.lessons.map((lesson) => ({
-              id: Date.now() + Math.random(),
-              title: lesson.title || '',
-              description: lesson.description || '',
-              videos: lesson.videoUrl
-                ? [
-                    {
-                      id: Date.now() + Math.random(),
-                      title: lesson.title,
-                      url: lesson.videoUrl,
-                      duration: lesson.duration || ''
-                    }
-                  ]
-                : [],
-              files: (lesson.resources || []).map((r) => ({
-                ...r,
-                id: Date.now() + Math.random()
-              })),
-              quiz: null,
-              assignment: null
-            }))
-          : []
+        modules: course.lessons ? groupLessonsByModule(course.lessons) : []
       });
     }
   }, [course]);
@@ -110,10 +135,23 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
 
   const addModule = () => {
     if (currentModule.title) {
-      setCourseData((prev) => ({
-        ...prev,
-        modules: [...prev.modules, { ...currentModule, id: Date.now() }]
-      }));
+      if (editingModuleId) {
+        // Update existing module
+        setCourseData((prev) => ({
+          ...prev,
+          modules: prev.modules.map((m) =>
+            m.id === editingModuleId ? { ...currentModule, id: m.id } : m
+          )
+        }));
+        setEditingModuleId(null);
+        alert('Module updated successfully!');
+      } else {
+        // Add new module
+        setCourseData((prev) => ({
+          ...prev,
+          modules: [...prev.modules, { ...currentModule, id: Date.now() }]
+        }));
+      }
       setCurrentModule({
         title: '',
         description: '',
@@ -122,6 +160,17 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
         quiz: null,
         assignment: null
       });
+    }
+  };
+
+  // Edit module
+  const editModule = (moduleId) => {
+    const moduleToEdit = courseData.modules.find(m => m.id === moduleId);
+    if (moduleToEdit) {
+      setCurrentModule(JSON.parse(JSON.stringify(moduleToEdit)));
+      setEditingModuleId(moduleId);
+      // Scroll to module builder
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -144,6 +193,8 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
           videoUrl: video.url,
           duration: video.duration,
           order: moduleIndex * 100 + videoIndex,
+          moduleId: `module-${moduleIndex}`,
+          moduleName: module.title || `Module ${moduleIndex + 1}`,
           resources: module.files.map((file) => ({
             title: file.title,
             url: file.url,
@@ -337,9 +388,9 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
         {/* Current Module Builder */}
         <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
           <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-4 flex items-center justify-between gap-3">
-            Module Builder
+            {editingModuleId ? 'Edit Module' : 'Module Builder'}
             <span className="text-[10px] md:text-xs text-gray-500 tracking-[0.18em] uppercase">
-              Stage {courseData.modules.length + 1}
+              {editingModuleId ? 'Editing Module' : `Stage ${courseData.modules.length + 1}`}
             </span>
           </h2>
 
@@ -517,14 +568,35 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
               )}
             </div>
 
-            <button
-              type="button"
-              onClick={addModule}
-              disabled={!currentModule.title}
-              className="w-full mt-3 px-4 py-3 rounded-lg bg-white hover:bg-gray-100 border border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-gray-700"
-            >
-              Add Module to Course
-            </button>
+            <div className="flex gap-3 mt-3">
+              <button
+                type="button"
+                onClick={addModule}
+                disabled={!currentModule.title}
+                className="flex-1 px-4 py-3 rounded-lg bg-gradient-to-r from-cyan-600 to-purple-600 text-white shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {editingModuleId ? 'Update Module' : 'Add Module to Course'}
+              </button>
+              {editingModuleId && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingModuleId(null);
+                    setCurrentModule({
+                      title: '',
+                      description: '',
+                      videos: [],
+                      files: [],
+                      quiz: null,
+                      assignment: null
+                    });
+                  }}
+                  className="px-4 py-3 rounded-lg bg-gray-300 hover:bg-gray-400 text-gray-700 transition-all duration-200"
+                >
+                  Cancel Edit
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -552,13 +624,22 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
                       <span>📄 {module.files.length} files</span>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => removeModule(module.id)}
-                    className="text-red-500 hover:text-red-600 text-[11px] transition-colors"
-                  >
-                    Remove
-                  </button>
+                  <div className="flex gap-2 items-center">
+                    <button
+                      type="button"
+                      onClick={() => editModule(module.id)}
+                      className="px-3 py-1.5 text-[11px] rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeModule(module.id)}
+                      className="text-red-500 hover:text-red-600 text-[11px] transition-colors"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

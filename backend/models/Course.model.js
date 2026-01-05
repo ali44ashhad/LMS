@@ -50,6 +50,14 @@ const courseSchema = new mongoose.Schema({
     videoUrl: String,
     duration: String,
     order: Number,
+    moduleId: {
+      type: String,
+      required: false
+    },
+    moduleName: {
+      type: String,
+      required: false
+    },
     resources: [{
       title: String,
       url: String,

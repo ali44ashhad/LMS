@@ -63,11 +63,11 @@ const Dashboard = ({ onCourseSelect }) => {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
         <div>
-          {user.role !== "admin" && (
+          {/* {user.role !== "admin" && (
             <p className="text-[11px] uppercase tracking-[0.3em] text-cyan-500/80 mb-1">
               Player Console
             </p>
-          )}
+          )} */}
           <h1 className="text-2xl md:text-3xl text-[#545454] font-extrabold tracking-[0.18em] uppercase">
             Dashboard
           </h1>

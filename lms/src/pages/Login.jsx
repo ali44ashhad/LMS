@@ -141,15 +141,7 @@ const Login = ({ onLogin }) => {
           </button>
         </div>
 
-        {isLogin && (
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-600 mb-2 font-medium">Demo Credentials:</p>
-            <div className="space-y-1 text-xs text-gray-500">
-              <p>Admin: admin@lms.com / Admin@123</p>
-              <p>Student: john@lms.com / Student@123</p>
-            </div>
-          </div>
-        )}
+         
       </div>
     </div>
   );

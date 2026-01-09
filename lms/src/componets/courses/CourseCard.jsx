@@ -136,7 +136,7 @@ const CourseCard = ({ course, onSelect }) => {
               transition-colors
               uppercase tracking-[0.18em]
             ">
-              Resume Quest
+              Resume Course
             </button>
           </div>
         </>

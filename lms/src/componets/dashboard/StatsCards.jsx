@@ -75,9 +75,9 @@ const StatsCards = ({ stats }) => {
               {stat.tag || "Stat"}
             </span>
 
-            <span className="text-[9px] text-slate-400 tracking-[0.18em] uppercase hidden md:inline">
+            {/* <span className="text-[9px] text-slate-400 tracking-[0.18em] uppercase hidden md:inline">
               Slot {index + 1}
-            </span>
+            </span> */}
           </div>
         </div>
       ))}

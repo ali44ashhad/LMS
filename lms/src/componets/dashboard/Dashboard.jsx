@@ -23,7 +23,7 @@ const Dashboard = ({ courses, announcements, stats, onCourseSelect }) => {
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold text-gray-800">Continue Learning</h2>
-              <button className="text-purple-600 hover:text-purple-500 font-medium">
+              <button className="text-cyan-600 hover:text-[#99DBFF] font-medium">
                 View All
               </button>
             </div>
@@ -48,7 +48,7 @@ const Dashboard = ({ courses, announcements, stats, onCourseSelect }) => {
                           <span className={`px-2 py-1 rounded-full text-xs ${
                             course.level === 'Beginner' ? 'bg-green-100 text-green-800' :
                             course.level === 'Intermediate' ? 'bg-cyan-100 text-cyan-800' :
-                            'bg-purple-100 text-purple-800'
+                            'bg-[#C0EAFF] text-purple-800'
                           }`}>
                             {course.level}
                           </span>
@@ -74,7 +74,7 @@ const Dashboard = ({ courses, announcements, stats, onCourseSelect }) => {
                   {course.lastAccessed && (
                     <div className="mt-4 flex items-center justify-between">
                       <span className="text-sm text-gray-500">Last accessed {course.lastAccessed}</span>
-                      <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium">
+                      <button className="px-4 py-2 bg-[#6ED6EE] text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium">
                         Continue
                       </button>
                     </div>
@@ -98,12 +98,12 @@ const Dashboard = ({ courses, announcements, stats, onCourseSelect }) => {
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Announcements</h3>
             <div className="space-y-4">
               {announcements.map(announcement => (
-                <div key={announcement.id} className="border-l-4 border-purple-500 pl-4 py-1">
+                <div key={announcement.id} className="border-l-4 border-[#99DBFF] pl-4 py-1">
                   <h4 className="font-medium text-gray-900">{announcement.title}</h4>
                   <p className="text-sm text-gray-600 mt-1">{announcement.content}</p>
                   <div className="flex items-center justify-between mt-2">
                     <span className="text-xs text-gray-500">{announcement.date}</span>
-                    <span className="text-xs text-purple-600">{announcement.author}</span>
+                    <span className="text-xs text-cyan-600">{announcement.author}</span>
                   </div>
                 </div>
               ))}

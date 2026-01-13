@@ -145,14 +145,14 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
         </p>
         <h1 className="text-3xl md:text-4xl font-extrabold text-[#545454] tracking-[0.14em] uppercase flex items-center gap-3">
           Profile
-          <span className="flex-1 h-[2px] bg-gradient-to-r from-purple-400 via-cyan-400 to-transparent" />
+          <span className="flex-1 h-[2px] bg-gradient-to-r from-[#4DBDFF] via-cyan-400 to-transparent" />
         </h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
         {/* SIDEBAR */}
         <aside className="lg:col-span-1">
-          <div className="bg-white border border-slate-200 rounded-xl p-6 text-center shadow-sm">
+          <div className="bg-white border border-[#8AD5FF] rounded-xl p-6 text-center shadow-sm">
             <label className="cursor-pointer block">
               <input
                 type="file"
@@ -160,7 +160,7 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
                 onChange={handleAvatarChange}
                 className="hidden"
               />
-              <div className="relative mx-auto w-24 h-24 rounded-full bg-purple-100 border-2 border-purple-300 flex items-center justify-center mb-4 overflow-hidden hover:border-purple-500 transition-all group">
+              <div className="relative mx-auto w-24 h-24 rounded-full bg-[#C0EAFF] border-2 border-[#8AD5FF] flex items-center justify-center mb-4 overflow-hidden hover:border-[#99DBFF] transition-all group">
                 {avatarPreview ? (
                   <img 
                     src={avatarPreview} 
@@ -168,7 +168,7 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span className="text-3xl font-bold text-purple-600 tracking-[0.12em]">
+                  <span className="text-3xl font-bold text-cyan-600 tracking-[0.12em]">
                     {user.name?.substring(0, 2).toUpperCase() || "US"}
                   </span>
                 )}
@@ -207,7 +207,7 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
                     className={`w-full flex items-center gap-2 px-4 py-2 rounded-md text-xs uppercase tracking-[0.16em] font-semibold transition
                       ${
                         isActive
-                          ? "bg-purple-600 text-white"
+                          ? "bg-[#6ED6EE] text-white"
                           : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                       }`}
                   >
@@ -224,14 +224,14 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
         <section className="lg:col-span-3 space-y-8">
           {/* PROFILE TAB */}
           {activeTab === "profile" && (
-            <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-6">
+            <div className="bg-white border border-[#8AD5FF] rounded-xl p-6 shadow-sm space-y-6">
               <h3 className="text-xl font-semibold text-[#545454]">
                 Profile Information
               </h3>
 
               <div className="space-y-6">
                 {/* Avatar Upload Section */}
-                <div className="border-b border-slate-200 pb-6">
+                <div className="border-b border-[#8AD5FF] pb-6">
                   <label className="block text-sm font-medium text-slate-600 mb-2">
                     Profile Picture
                   </label>
@@ -243,7 +243,7 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
                         onChange={handleAvatarChange}
                         className="hidden"
                       />
-                      <div className="relative w-20 h-20 rounded-full bg-purple-100 border-2 border-purple-300 flex items-center justify-center overflow-hidden hover:border-purple-500 transition-all group-hover:opacity-90">
+                      <div className="relative w-20 h-20 rounded-full bg-[#C0EAFF] border-2 border-[#8AD5FF] flex items-center justify-center overflow-hidden hover:border-[#99DBFF] transition-all group-hover:opacity-90">
                         {avatarPreview ? (
                           <img 
                             src={avatarPreview} 
@@ -251,7 +251,7 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <span className="text-xl font-bold text-purple-600">
+                          <span className="text-xl font-bold text-cyan-600">
                             {user.name?.substring(0, 2).toUpperCase() || "US"}
                           </span>
                         )}
@@ -288,7 +288,7 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
                       onChange={(e) =>
                         setUser({ ...user, [field.key]: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                      className="w-full px-3 py-2 border border-[#1EAAFF] rounded-lg focus:ring-2 focus:ring-[#99DBFF] outline-none"
                     />
                   </div>
                 ))}
@@ -303,7 +303,7 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
                     onChange={(e) =>
                       setUser({ ...user, bio: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                    className="w-full px-3 py-2 border border-[#1EAAFF] rounded-lg focus:ring-2 focus:ring-[#99DBFF] outline-none"
                   />
                 </div>
 
@@ -321,7 +321,7 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
                       onChange={(e) =>
                         setUser({ ...user, [field.key]: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                      className="w-full px-3 py-2 border border-[#1EAAFF] rounded-lg focus:ring-2 focus:ring-[#99DBFF] outline-none"
                     />
                   </div>
                 ))}
@@ -332,7 +332,7 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
                 <button
                   onClick={handleUpdateProfile}
                   disabled={updating}
-                  className={`px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition ${
+                  className={`px-6 py-2 bg-[#6ED6EE] text-white rounded-lg hover:bg-purple-700 transition ${
                     updating ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                 >
@@ -344,7 +344,7 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
 
           {/* COURSES TAB */}
           {activeTab === "courses" && (
-            <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <div className="bg-white border border-[#8AD5FF] rounded-xl p-6 shadow-sm">
               <h3 className="text-xl font-semibold text-[#545454] mb-6">
                 My Courses
               </h3>
@@ -363,7 +363,7 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
                       onClick={() =>
                         onCourseSelect && onCourseSelect(enroll.course)
                       }
-                      className="flex items-center justify-between p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition"
+                      className="flex items-center justify-between p-4 border border-[#8AD5FF] rounded-lg cursor-pointer hover:bg-slate-50 transition"
                     >
                       <div className="flex items-center gap-4">
                         <div className="text-3xl">
@@ -399,7 +399,7 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 text-center">
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-2xl font-bold text-purple-600">
+                  <div className="text-2xl font-bold text-cyan-600">
                     {enrolledCourses.length}
                   </div>
                   <div className="text-sm text-slate-600">

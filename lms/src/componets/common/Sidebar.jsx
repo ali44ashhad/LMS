@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import robot from '../../assets/robot2.png';
+import robot from '../../assets/robot.png';
 import { enrollmentAPI } from '../../services/api';
 
 const Sidebar = ({ activeTab, setActiveTab, userRole = 'student' }) => {
@@ -52,11 +52,11 @@ const Sidebar = ({ activeTab, setActiveTab, userRole = 'student' }) => {
   const menuItems = userRole === 'admin' ? adminMenuItems : studentMenuItems;
 
   return (
-    <aside className="w-full md:w-64 bg-[#CEECF7] text-slate-700 border-r border-slate-300 md:min-h-screen">
+    <aside className="w-full md:w-64 bg-[#E7F6FE] text-slate-700 border-r border-[#1EAAFF] md:min-h-screen">
       <nav className="mt-4 md:mt-8">
         {userRole === 'admin' && (
           <div className="px-4 mb-4">
-            <div className="bg-purple-100 text-purple-700 rounded-lg text-sm text-center py-2 font-semibold">
+            <div className="bg-[#C0EAFF] text-gray-700 rounded-lg text-sm text-center py-2 font-semibold">
               Admin Panel
             </div>
           </div>
@@ -74,8 +74,8 @@ const Sidebar = ({ activeTab, setActiveTab, userRole = 'student' }) => {
     transition border
     ${
       isActive
-        ? 'bg-white shadow text-slate-900 border-slate-300'
-        : 'bg-white/40 border-slate-300 hover:bg-white/70'
+        ? 'bg-white shadow text-slate-900 border-[#1EAAFF]'
+        : 'bg-white/40 border-[#1EAAFF] hover:bg-white/70'
     }`}
 >
 
@@ -90,7 +90,7 @@ const Sidebar = ({ activeTab, setActiveTab, userRole = 'student' }) => {
 
       {userRole === 'student' && (
         <div className="hidden md:block mt-10 px-4">
-          <div className="bg-white rounded-xl p-4 border border-slate-300">
+          <div className="bg-white rounded-xl p-4 border border-[#1EAAFF]">
             <h3 className="text-sm font-semibold text-slate-600 uppercase tracking-wide">
               Overall Progress
             </h3>

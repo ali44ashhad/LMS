@@ -30,18 +30,18 @@ const CourseCard = ({ course, onSelect }) => {
       className="
         cursor-pointer p-4 md:p-5 rounded-xl
         bg-white/80 backdrop-blur
-        border border-slate-200
+        border border-[#8AD5FF]
         shadow-sm hover:shadow-md
         transition-all duration-200
       "
     >
       {/* Top ribbon */}
       <div className="flex items-center justify-between mb-3 text-[10px] md:text-xs">
-        <span className="px-2 py-0.5 rounded-full border border-slate-300 text-slate-500 uppercase tracking-wider">
+        <span className="px-2 py-0.5 rounded-full border border-[#1EAAFF] text-slate-500 uppercase tracking-wider">
           Quest {course.questIndex || "#"}
         </span>
         {course.category && (
-          <span className="px-2 py-0.5 rounded-full border border-slate-300 text-slate-500 uppercase tracking-wider">
+          <span className="px-2 py-0.5 rounded-full border border-[#1EAAFF] text-slate-500 uppercase tracking-wider">
             {course.category}
           </span>
         )}
@@ -75,7 +75,7 @@ const CourseCard = ({ course, onSelect }) => {
                       ? "bg-lime-500/15 text-lime-600 border-lime-400/60"
                       : course.level === "Intermediate"
                       ? "bg-cyan-500/15 text-cyan-600 border-cyan-400/60"
-                      : "bg-purple-500/15 text-purple-600 border-purple-400/60"
+                      : "bg-[#99DBFF]/15 text-cyan-600 border-[#4DBDFF]/60"
                   }
                 `}
               >
@@ -131,7 +131,7 @@ const CourseCard = ({ course, onSelect }) => {
 
             <button className="
               px-3 py-1 rounded-md
-              bg-purple-600 text-white
+              bg-[#6ED6EE] text-white
               hover:bg-purple-700
               transition-colors
               uppercase tracking-[0.18em]
@@ -152,7 +152,7 @@ const CourseCard = ({ course, onSelect }) => {
 
           <button className="
             px-3 py-1 rounded-md
-            bg-purple-600 text-white
+            bg-[#6ED6EE] text-white
             hover:bg-purple-700
             transition-colors
             uppercase tracking-[0.18em]

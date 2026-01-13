@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import CourseDetail from "../componets/courses/CourseDetail";
 import CoursePlayer from "../componets/courses/CoursePlayer";
-import { enrollmentAPI } from "../services/api";
+import { enrollmentAPI, courseAPI } from "../services/api";
 
 const CourseDetailPage = ({ course, onBack, onEnrollSuccess }) => {
   const [currentLesson, setCurrentLesson] = useState(null);
@@ -10,13 +10,100 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess }) => {
   const [enrolling, setEnrolling] = useState(false);
   const [enrollment, setEnrollment] = useState(null);
   const [completedLessons, setCompletedLessons] = useState([]);
+  const [currentCourse, setCurrentCourse] = useState(null);
+  const [loadingCourse, setLoadingCourse] = useState(false);
+  const [lastFetchTime, setLastFetchTime] = useState(null);
 
-  const courseId = course?._id || course?.id;
+  const courseId = course?._id || course?.id || currentCourse?._id || currentCourse?.id;
+  
+  // Fetch latest course data from server when component mounts or courseId changes
+  useEffect(() => {
+    const fetchCourse = async () => {
+      if (!courseId) {
+        console.log("CourseDetailPage: No courseId available");
+        return;
+      }
+      
+      try {
+        setLoadingCourse(true);
+        console.log("CourseDetailPage: Fetching course with ID:", courseId);
+        const response = await courseAPI.getById(courseId);
+        console.log("CourseDetailPage: API Response:", response);
+        
+        if (response && response.course) {
+          console.log("CourseDetailPage: Setting course data:", response.course.description?.substring(0, 50));
+          setCurrentCourse(response.course);
+          setLastFetchTime(Date.now());
+        } else if (response && response.success && response.course) {
+          // Alternative response structure
+          console.log("CourseDetailPage: Setting course data (alt structure)");
+          setCurrentCourse(response.course);
+          setLastFetchTime(Date.now());
+        } else {
+          console.warn("CourseDetailPage: Unexpected response structure:", response);
+          // Fallback to prop course if API response is unexpected
+          if (course) {
+            setCurrentCourse(course);
+          }
+        }
+      } catch (error) {
+        console.error("CourseDetailPage: Error fetching course:", error);
+        // If fetch fails, use the prop course as fallback
+        if (course) {
+          console.log("CourseDetailPage: Using fallback course from prop");
+          setCurrentCourse(course);
+        }
+      } finally {
+        setLoadingCourse(false);
+      }
+    };
+
+    fetchCourse();
+  }, [courseId]);
+
+  // Set initial course from prop only if we don't have fetched data yet
+  useEffect(() => {
+    if (course && !currentCourse && !lastFetchTime) {
+      // Only use prop course as initial fallback before fetch completes
+      setCurrentCourse(course);
+    }
+  }, [course]);
+  
+  // Refresh course data when page becomes visible (user switches back to tab)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && courseId && lastFetchTime) {
+        // Refresh if more than 30 seconds have passed since last fetch
+        const timeSinceLastFetch = Date.now() - lastFetchTime;
+        if (timeSinceLastFetch > 30000) {
+          console.log("CourseDetailPage: Page visible, refreshing course data");
+          const fetchCourse = async () => {
+            try {
+              const response = await courseAPI.getById(courseId);
+              if (response && response.course) {
+                setCurrentCourse(response.course);
+                setLastFetchTime(Date.now());
+              }
+            } catch (error) {
+              console.error("CourseDetailPage: Error refreshing course:", error);
+            }
+          };
+          fetchCourse();
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [courseId, lastFetchTime]);
   
   // Get all lessons from course
   const allLessons = React.useMemo(() => {
-    if (course?.lessons && Array.isArray(course.lessons)) {
-      return course.lessons.map((lesson, idx) => ({
+    const courseData = currentCourse || course;
+    if (courseData?.lessons && Array.isArray(courseData.lessons)) {
+      return courseData.lessons.map((lesson, idx) => ({
         id: lesson._id || lesson.id || idx + 1,
         _id: lesson._id || lesson.id,
         title: lesson.title || `Lesson ${idx + 1}`,
@@ -28,7 +115,7 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess }) => {
       }));
     }
     return [];
-  }, [course]);
+  }, [currentCourse, course]);
 
   // Fetch enrollment data when course loads
   useEffect(() => {
@@ -131,15 +218,30 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess }) => {
       const updatedCompletedLessons = isAlreadyCompleted
         ? completedLessons
         : [...completedLessons, lessonId];
-      
-      // Calculate new progress
-      const newProgress = Math.round((updatedCompletedLessons.length / totalLessons) * 100);
+
+      // Build a set of valid lesson IDs for this course to avoid counting old/invalid IDs
+      const validLessonIdSet = new Set(
+        allLessons
+          .map(l => (l._id || l.id))
+          .filter(Boolean)
+          .map(id => id.toString())
+      );
+
+      // Count only those completed lessons that belong to the current course lessons
+      const effectiveCompletedCount = updatedCompletedLessons.reduce((count, id) => {
+        const idStr = id?.toString();
+        return validLessonIdSet.has(idStr) ? count + 1 : count;
+      }, 0);
+
+      // Calculate new progress and clamp between 0 and 100
+      const rawProgress = (effectiveCompletedCount / totalLessons) * 100;
+      const newProgress = Math.max(0, Math.min(100, Math.round(rawProgress)));
       
       console.log("Updating progress:", {
         enrollmentId: enrollment._id,
         lessonId,
         totalLessons,
-        completedCount: updatedCompletedLessons.length,
+        completedCount: effectiveCompletedCount,
         newProgress
       });
       
@@ -167,12 +269,11 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess }) => {
       // Refresh enrollment data to ensure sync
       await refreshEnrollment();
       
-      // Auto-navigate to next lesson if available
-      if (currentLessonIndex < allLessons.length - 1) {
-        setTimeout(() => {
-          handleNextLesson();
-        }, 1500);
-      }
+      // Show success message
+      alert("Lesson marked as complete!");
+      
+      // REMOVED: Auto-navigation to next lesson
+      // User should manually navigate to next lesson when ready
     } catch (error) {
       console.error("Error updating lesson completion:", error);
       alert("Failed to update progress. Please try again.");
@@ -200,11 +301,26 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess }) => {
     setCurrentLesson(null);
   };
 
+  if (loadingCourse) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-500">Loading course details...</div>
+      </div>
+    );
+  }
+
   if (isPlaying && currentLesson) {
+    // Check if current lesson is already completed
+    const currentLessonId = currentLesson._id || currentLesson.id;
+    const isCurrentLessonCompleted = completedLessons.some(
+      id => id?.toString() === currentLessonId?.toString()
+    );
+    
     return (
       <CoursePlayer
-        course={course}
+        course={currentCourse || course}
         lesson={currentLesson}
+        isCompleted={isCurrentLessonCompleted}
         onComplete={handleLessonComplete}
         onNext={handleNextLesson}
         onPrevious={handlePreviousLesson}
@@ -215,7 +331,7 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess }) => {
 
   return (
     <CourseDetail
-      course={course}
+      course={currentCourse || course}
       onBack={onBack}
       onLessonSelect={handleLessonSelect}
       onEnroll={handleEnroll}

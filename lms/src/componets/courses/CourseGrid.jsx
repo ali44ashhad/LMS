@@ -59,7 +59,7 @@ const CourseGrid = ({ courses, onCourseSelect }) => {
                     ? "bg-green-100 text-green-800"
                     : course.level === "Intermediate"
                     ? "bg-cyan-100 text-cyan-800"
-                    : "bg-purple-100 text-purple-800"
+                    : "bg-[#C0EAFF] text-purple-800"
                 }`}
               >
                 {course.level}
@@ -83,9 +83,10 @@ const CourseGrid = ({ courses, onCourseSelect }) => {
 
           {/* DESCRIPTION + ACTION */}
           <div className="mt-4 md:mt-6">
-            <p className="text-gray-700 text-xs md:text-sm mb-3 md:mb-4 line-clamp-2">
-              {course.description}
-            </p>
+            <div 
+              className="text-gray-700 text-xs md:text-sm mb-3 md:mb-4 line-clamp-2 prose prose-sm max-w-none"
+              dangerouslySetInnerHTML={{ __html: course.description || '' }}
+            />
 
             <button
               onClick={() => onCourseSelect(course)}
@@ -96,7 +97,7 @@ const CourseGrid = ({ courses, onCourseSelect }) => {
                 text-sm md:text-base
                 font-medium
                 rounded-lg
-                bg-purple-600
+                bg-[#6ED6EE]
                 text-white
                 hover:bg-purple-700
                 transition-colors

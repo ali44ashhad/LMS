@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { courseAPI, adminAPI } from '../services/api';
+import Quill from 'quill';
+import 'quill/dist/quill.snow.css';
 
 const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
   const [loading, setLoading] = useState(false);
@@ -37,6 +39,10 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
 
   const [editingModuleId, setEditingModuleId] = useState(null);
   const isEditMode = !!(course && course._id);
+  const quillRef = useRef(null);
+  const quillInstanceRef = useRef(null);
+  const isQuillChangeRef = useRef(false);
+  const isInitializingRef = useRef(false);
 
   // Group lessons by moduleId to recreate module structure
   const groupLessonsByModule = (lessons) => {
@@ -231,7 +237,106 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
     }
   };
 
-  const canSubmit = courseData.title && courseData.description && courseData.duration && courseData.modules.length > 0;
+  // Initialize Quill editor
+  useEffect(() => {
+    // Only initialize if ref exists
+    if (!quillRef.current) {
+      return;
+    }
+
+    // Check if Quill is already initialized in this container (handles StrictMode double render)
+    if (quillRef.current.querySelector('.ql-toolbar') || quillInstanceRef.current || isInitializingRef.current) {
+      return;
+    }
+
+    // Set flag to prevent duplicate initialization
+    isInitializingRef.current = true;
+
+    // Clear any existing content in the ref
+    quillRef.current.innerHTML = '';
+
+    let quill;
+    try {
+      quill = new Quill(quillRef.current, {
+      theme: 'snow',
+      placeholder: 'Describe what students will learn in this course...',
+      modules: {
+        toolbar: [
+          [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          [{ 'script': 'sub'}, { 'script': 'super' }],
+          [{ 'indent': '-1'}, { 'indent': '+1' }],
+          [{ 'color': [] }, { 'background': [] }],
+          [{ 'align': [] }],
+          ['link', 'image'],
+          ['clean']
+        ]
+      },
+      formats: [
+        'header', 'bold', 'italic', 'underline', 'strike',
+        'list', 'bullet', 'script', 'indent',
+        'color', 'background', 'align',
+        'link', 'image'
+      ]
+      });
+    } catch (error) {
+      console.error('Error initializing Quill:', error);
+      return;
+    }
+
+    // Set initial content if editing
+    if (courseData.description) {
+      quill.root.innerHTML = courseData.description;
+    }
+
+    // Listen for text changes
+    quill.on('text-change', () => {
+      const content = quill.root.innerHTML;
+      isQuillChangeRef.current = true;
+      setCourseData(prev => ({ ...prev, description: content }));
+    });
+
+    quillInstanceRef.current = quill;
+    isInitializingRef.current = false;
+
+    // Cleanup function
+    return () => {
+      isInitializingRef.current = false;
+      if (quillInstanceRef.current && quillRef.current) {
+        // Remove event listeners
+        quillInstanceRef.current.off('text-change');
+        // Clear the container
+        if (quillRef.current) {
+          quillRef.current.innerHTML = '';
+        }
+        // Clear the instance
+        quillInstanceRef.current = null;
+      }
+    };
+  }, []);
+
+  // Update Quill content when courseData.description changes externally (not from Quill)
+  useEffect(() => {
+    if (quillInstanceRef.current && !isQuillChangeRef.current) {
+      const currentContent = quillInstanceRef.current.root.innerHTML;
+      // Only update if the description is different from current content
+      if (courseData.description !== currentContent) {
+        quillInstanceRef.current.root.innerHTML = courseData.description || '';
+      }
+    }
+    // Reset the flag after processing
+    isQuillChangeRef.current = false;
+  }, [courseData.description]);
+
+  // Helper function to check if description has actual content (not just empty HTML tags)
+  const hasDescriptionContent = (html) => {
+    if (!html) return false;
+    const text = html.replace(/<[^>]*>/g, '').trim();
+    return text.length > 0;
+  };
+
+  const canSubmit = courseData.title && hasDescriptionContent(courseData.description) && courseData.duration && courseData.modules.length > 0;
 
   return (
     <div className="space-y-8 p-4">
@@ -243,7 +348,7 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
           </p>
           <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-[0.16em] uppercase flex items-center gap-3">
             {isEditMode ? 'Edit Course' : 'Create New Course'}
-            <span className="inline-flex h-[2px] flex-1 bg-gradient-to-r from-cyan-400 via-purple-500 to-transparent" />
+            <span className="inline-flex h-[2px] flex-1 bg-gradient-to-r from-cyan-400 via-[#99DBFF] to-transparent" />
           </h1>
         </div>
 
@@ -260,7 +365,7 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
       <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
         {/* Course Basic Info */}
         <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
-          <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-4">
+          <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-4">
             Course Information
           </h2>
 
@@ -351,7 +456,7 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
                   }
                   className={`relative inline-flex h-6 w-14 items-center rounded-full transition-colors ${
                     courseData.isPublished 
-                      ? 'bg-gradient-to-r from-cyan-600 to-purple-600' 
+                      ? 'bg-gradient-to-r from-cyan-600 to-cyan-600' 
                       : 'bg-gray-300'
                   }`}
                 >
@@ -374,20 +479,42 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
             <label className="block text-xs font-semibold text-gray-700 uppercase tracking-[0.18em] mb-2">
               Description *
             </label>
-            <textarea
-              required
-              rows={3}
-              value={courseData.description}
-              onChange={(e) => setCourseData({ ...courseData, description: e.target.value })}
-              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 placeholder-gray-400"
-              placeholder="Describe what students will learn in this course..."
-            />
+            <div className="bg-white border border-gray-300 rounded-lg overflow-hidden" id="quill-editor-container">
+              <div ref={quillRef} className="text-gray-900" style={{ minHeight: '200px' }} />
+            </div>
+            <style>{`
+              #quill-editor-container .ql-container {
+                min-height: 150px;
+                font-size: 14px;
+              }
+              #quill-editor-container .ql-editor {
+                min-height: 150px;
+              }
+              #quill-editor-container .ql-editor.ql-blank::before {
+                color: #9ca3af;
+                font-style: normal;
+              }
+              #quill-editor-container .ql-toolbar {
+                border-top: 1px solid #ccc;
+                border-left: 1px solid #ccc;
+                border-right: 1px solid #ccc;
+                border-bottom: none;
+                border-radius: 0.5rem 0.5rem 0 0;
+              }
+              #quill-editor-container .ql-container {
+                border-bottom: 1px solid #ccc;
+                border-left: 1px solid #ccc;
+                border-right: 1px solid #ccc;
+                border-top: none;
+                border-radius: 0 0 0.5rem 0.5rem;
+              }
+            `}</style>
           </div>
         </div>
 
         {/* Current Module Builder */}
         <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
-          <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-4 flex items-center justify-between gap-3">
+          <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-4 flex items-center justify-between gap-3">
             {editingModuleId ? 'Edit Module' : 'Module Builder'}
             <span className="text-[10px] md:text-xs text-gray-500 tracking-[0.18em] uppercase">
               {editingModuleId ? 'Editing Module' : `Stage ${courseData.modules.length + 1}`}
@@ -459,7 +586,7 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
                   <button
                     type="button"
                     onClick={addVideo}
-                    className="px-3 py-2 text-[11px] rounded-lg bg-gradient-to-r from-cyan-600 to-purple-600 text-white shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all duration-200"
+                    className="px-3 py-2 text-[11px] rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all duration-200"
                   >
                     Add
                   </button>
@@ -573,7 +700,7 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
                 type="button"
                 onClick={addModule}
                 disabled={!currentModule.title}
-                className="flex-1 px-4 py-3 rounded-lg bg-gradient-to-r from-cyan-600 to-purple-600 text-white shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-3 rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {editingModuleId ? 'Update Module' : 'Add Module to Course'}
               </button>
@@ -603,7 +730,7 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
         {/* Added Modules */}
         {courseData.modules.length > 0 && (
           <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
-            <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-4">
+            <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-4">
               Course Modules ({courseData.modules.length})
             </h2>
 
@@ -651,7 +778,7 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
           <button
             type="submit"
             disabled={loading || !canSubmit}
-            className="flex-1 justify-center py-3 text-xs md:text-sm rounded-xl bg-gradient-to-r from-cyan-600 to-purple-600 text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-cyan-500/30"
+            className="flex-1 justify-center py-3 text-xs md:text-sm rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-cyan-500/30"
           >
             {loading
               ? isEditMode

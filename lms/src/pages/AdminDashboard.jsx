@@ -36,13 +36,13 @@ const AdminDashboard = () => {
       {/* Title */}
       <h1 className="text-2xl md:text-3xl font-extrabold text-slate-700 tracking-[0.16em] uppercase flex items-center gap-3">
         Admin Dashboard
-        <span className="h-[2px] flex-1 bg-orange-400" />
+        <span className="flex-1 h-[2px] bg-gradient-to-r from-[#4DBDFF] via-cyan-400 to-transparent" />
       </h1>
 
       {/* Stats grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
         {/* Total Students */}
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
+        <div className="bg-white border border-[#8AD5FF] rounded-xl shadow-sm p-5">
           <div className="flex items-center justify-between mb-3">
             <span className="px-2 py-0.5 text-xs uppercase tracking-wider rounded-full bg-slate-100 text-slate-600">
               Users
@@ -59,7 +59,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Total Courses */}
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
+        <div className="bg-white border border-[#8AD5FF] rounded-xl shadow-sm p-5">
           <div className="flex items-center justify-between mb-3">
             <span className="px-2 py-0.5 text-xs uppercase tracking-wider rounded-full bg-slate-100 text-slate-600">
               Content
@@ -79,7 +79,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Enrollments */}
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
+        <div className="bg-white border border-[#8AD5FF] rounded-xl shadow-sm p-5">
           <div className="flex items-center justify-between mb-3">
             <span className="px-2 py-0.5 text-xs uppercase tracking-wider rounded-full bg-slate-100 text-slate-600">
               Engagement

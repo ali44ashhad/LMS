@@ -49,7 +49,7 @@ const Dashboard = ({ onCourseSelect }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="bg-white border border-slate-200 rounded-lg px-6 py-4 shadow-sm">
+        <div className="bg-white border border-[#8AD5FF] rounded-lg px-6 py-4 shadow-sm">
           <p className="text-slate-500 text-xs md:text-sm tracking-[0.22em] uppercase">
             Initializing Dashboard Systems...
           </p>
@@ -77,11 +77,11 @@ const Dashboard = ({ onCourseSelect }) => {
         </div>
 
         <div className="flex items-center gap-2 text-[10px] md:text-xs">
-          <span className="px-3 py-1 rounded-full border border-slate-300 text-slate-500 uppercase tracking-[0.16em] flex items-center gap-2">
+          <span className="px-3 py-1 rounded-full border border-[#1EAAFF] text-slate-500 uppercase tracking-[0.16em] flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-lime-400 animate-pulse" />
             Sync: {stats.averageProgress}% Complete
           </span>
-          <span className="px-3 py-1 rounded-full border border-slate-300 text-slate-500 uppercase tracking-[0.16em] hidden sm:inline">
+          <span className="px-3 py-1 rounded-full border border-[#1EAAFF] text-slate-500 uppercase tracking-[0.16em] hidden sm:inline">
             🎯 XP: {stats.completedCourses * 120}
           </span>
         </div>
@@ -93,7 +93,7 @@ const Dashboard = ({ onCourseSelect }) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         {/* LEFT */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white border border-slate-200 rounded-lg shadow-sm p-4 md:p-6">
+          <div className="bg-white border border-[#8AD5FF] rounded-lg shadow-sm p-4 md:p-6">
             <div className="flex justify-between items-center mb-4 md:mb-5">
               <div>
                 <h1 className="text-lg md:text-xl font-semibold tracking-[0.16em] uppercase text-[#545454]">
@@ -105,7 +105,7 @@ const Dashboard = ({ onCourseSelect }) => {
               </div>
 
               {recentCourses.length > 0 && (
-                <span className="px-3 py-1 rounded-full border border-slate-300 text-[10px] uppercase tracking-[0.16em] text-slate-500">
+                <span className="px-3 py-1 rounded-full border border-[#1EAAFF] text-[10px] uppercase tracking-[0.16em] text-slate-500">
                   {recentCourses.length} Courses Tracked
                 </span>
               )}
@@ -138,7 +138,7 @@ const Dashboard = ({ onCourseSelect }) => {
 
         {/* RIGHT */}
         <div className="space-y-4 md:space-y-6">
-          <div className="bg-white border border-slate-200 rounded-lg shadow-sm p-4 md:p-6">
+          <div className="bg-white border border-[#8AD5FF] rounded-lg shadow-sm p-4 md:p-6">
             <h3 className="text-base md:text-lg font-semibold tracking-[0.16em] uppercase text-[#545454] mb-3 md:mb-4">
               Progress Monitor
             </h3>

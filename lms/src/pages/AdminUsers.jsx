@@ -63,11 +63,11 @@ const AdminUsers = () => {
         <h1 className="text-3xl font-extrabold text-slate-700 uppercase tracking-[0.16em]">
           User Management
         </h1>
-        <span className="h-[2px] flex-1 bg-gradient-to-r from-cyan-400 via-purple-500 to-transparent shadow-[0_0_16px_rgba(0,195,221,0.7)]" />
+        <span className="flex-1 h-[2px] bg-gradient-to-r from-[#4DBDFF] via-[#99DBFF] to-transparent" />
       </div>
 
       {/* Filters */}
-      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+      <div className="bg-white border border-[#8AD5FF] rounded-xl p-5 shadow-sm">
         <div className="flex flex-wrap gap-4">
           <input
             type="text"
@@ -79,8 +79,8 @@ const AdminUsers = () => {
             className="
               flex-1 min-w-[200px]
               px-4 py-2 rounded-lg
-              border border-slate-300
-              focus:ring-2 focus:ring-purple-500
+              border border-[#1EAAFF]
+              focus:ring-2 focus:ring-[#99DBFF]
               focus:outline-none
             "
           />
@@ -92,8 +92,8 @@ const AdminUsers = () => {
             }
             className="
               px-4 py-2 rounded-lg
-              border border-slate-300
-              focus:ring-2 focus:ring-purple-500
+              border border-[#1EAAFF]
+              focus:ring-2 focus:ring-[#99DBFF]
               focus:outline-none
             "
           >
@@ -105,10 +105,10 @@ const AdminUsers = () => {
       </div>
 
       {/* Users Table */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#8AD5FF] rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 border-b border-slate-200">
+            <thead className="bg-slate-50 border-b border-[#8AD5FF]">
               <tr className="text-left uppercase tracking-wider text-xs text-slate-500">
                 <th className="px-6 py-3">User</th>
                 <th className="px-6 py-3">Role</th>
@@ -136,7 +136,7 @@ const AdminUsers = () => {
                   <tr key={user._id} className="hover:bg-slate-50">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-purple-100 text-purple-600 font-bold flex items-center justify-center">
+                        <div className="h-10 w-10 rounded-full bg-[#C0EAFF] text-cyan-600 font-bold flex items-center justify-center">
                           {user.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
@@ -158,9 +158,9 @@ const AdminUsers = () => {
                         }
                         className="
                           px-2 py-1 rounded-md
-                          border border-slate-300
+                          border border-[#1EAAFF]
                           text-xs
-                          focus:ring-2 focus:ring-purple-500
+                          focus:ring-2 focus:ring-[#99DBFF]
                           focus:outline-none
                         "
                       >

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import logo from "../../assets/logo.png";
+import logo from "../../assets/logo.jpeg";
 
 const Header = ({ user, onLogout }) => {
   const [showDropdown, setShowDropdown] = useState(false);
@@ -15,19 +15,9 @@ const Header = ({ user, onLogout }) => {
       .slice(0, 2);
   };
 
-  const getRoleBadgeColor = (role) => {
-    switch (role) {
-      case "admin":
-        return "bg-purple-600/20 text-purple-100 border border-purple-400/70";
-      case "teacher":
-        return "bg-lime-500/20 text-lime-100 border border-lime-400/70";
-      default:
-        return "bg-cyan-500/20 text-cyan-100 border border-cyan-400/70";
-    }
-  };
 
   return (
-    <header className="sticky top-0 z-50 bg-[#5C67E3]">
+    <header className="sticky top-0 z-50 bg-[#1EAAFF]">
       <div className="max-w-full mx-auto px-2">
         <div className="flex justify-between items-center h-14 md:h-16">
           {/* LOGO */}
@@ -35,7 +25,7 @@ const Header = ({ user, onLogout }) => {
             <img
               src={logo}
               alt="Tranga Pods Logo"
-              className="h-8 sm:h-10 w-auto object-contain"
+              className="h-8 sm:h-10 w-auto rounded-lg object-contain"
             />
           </div>
 
@@ -62,11 +52,11 @@ const Header = ({ user, onLogout }) => {
                 type="text"
                 placeholder="Search modules..."
                 className="w-48 lg:w-64 pl-9 pr-3 py-1.5 md:py-2 text-xs md:text-sm
-                  rounded-lg bg-white/90 border border-slate-300
+                  rounded-lg bg-white/90 border border-[#1EAAFF]
                   focus:outline-none focus:ring-2 focus:ring-cyan-400"
               />
             </div>
-
+ 
             {/* USER MENU */}
             <div className="relative">
               <button
@@ -110,7 +100,7 @@ const Header = ({ user, onLogout }) => {
               {/* DROPDOWN */}
             {showDropdown && (
   <div
-    className="absolute right-0 mt-2 w-48 bg-[#5C67E3]
+    className="absolute right-0 mt-2 w-48 bg-[#1EAAFF]
     border border-white/20 rounded-xl
     shadow-[0_10px_30px_rgba(0,0,0,0.35)] z-50"
   >

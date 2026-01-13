@@ -56,8 +56,8 @@ const AdminCourses = ({ onCreateNew, onEdit }) => {
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl md:text-3xl font-extrabold uppercase tracking-[0.16em] text-slate-700 flex items-center gap-3">
-          Course Management
-          <span className="h-[2px] flex-1 bg-gradient-to-r from-cyan-400 via-purple-500 to-transparent shadow-[0_0_16px_rgba(0,195,221,0.7)]" />
+            Course Management
+            <span className="flex-1 h-[2px] bg-gradient-to-r from-[#4DBDFF] via-cyan-400 to-transparent" />
         </h1>
 
         <button
@@ -65,8 +65,8 @@ const AdminCourses = ({ onCreateNew, onEdit }) => {
           className="
             hidden sm:flex items-center gap-2
             px-5 py-2.5 rounded-lg
-            bg-purple-600 text-white
-            hover:bg-purple-700 transition
+            bg-[#6ED6EE] text-white
+            hover:bg-[#4DBDFF] transition
             text-xs md:text-sm font-medium
           "
         >
@@ -82,7 +82,7 @@ const AdminCourses = ({ onCreateNew, onEdit }) => {
           className="
             w-full flex items-center justify-center gap-2
             px-4 py-2 rounded-lg
-            bg-purple-600 text-white
+            bg-[#6ED6EE] text-white
             hover:bg-purple-700 transition
             text-[11px] font-medium
           "
@@ -95,14 +95,14 @@ const AdminCourses = ({ onCreateNew, onEdit }) => {
       {/* Loading */}
       {loading ? (
         <div className="flex flex-col items-center justify-center h-64">
-          <div className="h-10 w-10 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mb-3" />
+          <div className="h-10 w-10 border-4 border-cyan-600 border-t-transparent rounded-full animate-spin mb-3" />
           <p className="text-xs md:text-sm tracking-[0.2em] uppercase text-cyan-500">
             Fetching course matrix…
           </p>
         </div>
       ) : courses.length === 0 ? (
         /* Empty state */
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col items-center justify-center text-center py-10">
+        <div className="bg-white border border-[#8AD5FF] rounded-xl shadow-sm flex flex-col items-center justify-center text-center py-10">
           <div className="text-5xl mb-3">📚</div>
           <h2 className="text-xl font-semibold tracking-[0.14em] uppercase text-slate-700">
             No Courses Deployed
@@ -116,7 +116,7 @@ const AdminCourses = ({ onCreateNew, onEdit }) => {
             className="
               mt-6 flex items-center gap-2
               px-6 py-2.5 rounded-lg
-              bg-purple-600 text-white
+              bg-[#6ED6EE] text-white
               hover:bg-purple-700 transition
               text-xs md:text-sm font-medium
             "
@@ -135,15 +135,15 @@ const AdminCourses = ({ onCreateNew, onEdit }) => {
                 p-5 rounded-xl border shadow-sm
                 ${
                   course.isPublished
-                    ? "bg-white border-green-200"
-                    : "bg-slate-50 border-slate-200"
+                    ? "bg-white border-[#8AD5FF]"
+                    : "bg-slate-50 border-[#8AD5FF]"
                 }
               `}
             >
               {/* Top row */}
               <div className="flex items-start justify-between mb-4 gap-4">
                 <div className="flex items-start gap-4">
-                  <div className="h-12 w-12 rounded-lg bg-purple-100 flex items-center justify-center">
+                  <div className="h-12 w-12 rounded-lg bg-[#C0EAFF] flex items-center justify-center">
                     <span className="text-3xl">
                       {course.image || "📘"}
                     </span>
@@ -152,9 +152,10 @@ const AdminCourses = ({ onCreateNew, onEdit }) => {
                     <h3 className="text-base md:text-lg font-semibold text-slate-800">
                       {course.title}
                     </h3>
-                    <p className="text-xs md:text-sm mt-1 text-slate-500 line-clamp-2">
-                      {course.description}
-                    </p>
+                    <div 
+                      className="text-xs md:text-sm mt-1 text-slate-500 line-clamp-2 prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: course.description || '' }}
+                    />
                   </div>
                 </div>
 
@@ -188,7 +189,7 @@ const AdminCourses = ({ onCreateNew, onEdit }) => {
                   </span>
                 )}
                 {course.level && (
-                  <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">
+                  <span className="px-2 py-0.5 rounded-full bg-[#C0EAFF] text-purple-700">
                     {course.level}
                   </span>
                 )}

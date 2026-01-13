@@ -9,8 +9,8 @@ const Footer = () => {
       <div
         className="
           absolute inset-0
-          bg-[#CEECF7]
-          border-t border-purple-400/40
+          bg-[#E7F6FE]
+          border-t border-[#1EAAFF]
           shadow-[0_-8px_30px_rgba(15,23,42,0.9)]
           [clip-path:polygon(
             0_0,

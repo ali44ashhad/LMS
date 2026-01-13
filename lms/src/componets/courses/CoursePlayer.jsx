@@ -1,10 +1,11 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useProgress } from "../../hooks/useProgress";
 import { formatTime } from "../../utils/helpers";
 
 const CoursePlayer = ({
   course,
   lesson,
+  isCompleted = false,
   onComplete,
   onNext,
   onPrevious,
@@ -17,11 +18,21 @@ const CoursePlayer = ({
   const [volume, setVolume] = useState(1);
   const [showNotes, setShowNotes] = useState(false);
   const [notes, setNotes] = useState("");
-  const [lessonCompleted, setLessonCompleted] = useState(false);
+  const [lessonCompleted, setLessonCompleted] = useState(isCompleted);
   const videoRef = useRef(null);
 
   const courseId = course?._id || course?.id;
   const { incrementProgress } = useProgress(courseId);
+
+  // Update lessonCompleted when lesson or isCompleted prop changes
+  useEffect(() => {
+    setLessonCompleted(isCompleted);
+    // Reset video state when lesson changes
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+      setCurrentTime(0);
+    }
+  }, [isCompleted, lesson?._id, lesson?.id]);
 
   const getVideoContent = () => {
     if (lesson.type === "quiz") {
@@ -61,18 +72,9 @@ const CoursePlayer = ({
     setCurrentTime(videoRef.current.currentTime);
     setDuration(videoRef.current.duration || 0);
 
-    // Mark lesson as complete when 90% watched (only once)
-    if (
-      videoRef.current.duration &&
-      videoRef.current.currentTime / videoRef.current.duration > 0.9 &&
-      !lessonCompleted
-    ) {
-      setLessonCompleted(true);
-      // Update local progress
-      incrementProgress(5);
-      // Call completion handler to sync with backend
-      onComplete && onComplete();
-    }
+    // REMOVED: Automatic completion on 90% watch
+    // Lessons should only be marked as complete when user explicitly clicks "Mark as Complete" button
+    // This prevents automatic completion when navigating to next lesson
   };
 
   const handleSeek = (time) => {
@@ -144,7 +146,7 @@ const CoursePlayer = ({
                       allowFullScreen
                       id={`youtube-iframe-${lesson.id || lesson._id}`}
                     />
-                    <div className="absolute bottom-0 left-0 right-0 bg-gray-900/90 p-4 text-white text-sm">
+                    {/* <div className="absolute bottom-0 left-0 right-0 bg-gray-900/90 p-4 text-white text-sm">
                       <div className="flex items-center justify-between">
                         <span>YouTube Video</span>
                         <button
@@ -155,12 +157,12 @@ const CoursePlayer = ({
                               onComplete && onComplete();
                             }
                           }}
-                          className="px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700"
+                          className="px-4 py-2 bg-[#6ED6EE] rounded-lg hover:bg-purple-700"
                         >
                           {lessonCompleted ? "✓ Completed" : "Mark as Complete"}
                         </button>
                       </div>
-                    </div>
+                    </div> */}
                   </div>
                 ) : (
                   <video
@@ -258,7 +260,7 @@ const CoursePlayer = ({
                   </p>
                   <button
                     onClick={handleComplete}
-                    className="px-6 py-3 bg-purple-600 rounded-lg hover:bg-purple-700"
+                    className="px-6 py-3 bg-[#6ED6EE] rounded-lg hover:bg-purple-700"
                   >
                     Start Quiz
                   </button>
@@ -276,7 +278,7 @@ const CoursePlayer = ({
                   </p>
                   <button
                     onClick={handleComplete}
-                    className="px-6 py-3 bg-purple-600 rounded-lg hover:bg-purple-700"
+                    className="px-6 py-3 bg-[#6ED6EE] rounded-lg hover:bg-purple-700"
                   >
                     Start Assignment
                   </button>
@@ -293,16 +295,31 @@ const CoursePlayer = ({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={4}
-                className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-purple-500"
+                className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-[#99DBFF]"
               />
               <div className="flex justify-end mt-3">
-                <button className="px-4 py-2 bg-purple-600 text-white rounded-lg">
+                <button className="px-4 py-2 bg-[#6ED6EE] text-white rounded-lg">
                   Save Notes
                 </button>
               </div>
             </div>
           )}
-
+ {/* Mark as Complete Button */}
+ <div className="p-6 border-t">
+              {lessonCompleted ? (
+                <div className="flex items-center gap-2 text-green-600 font-semibold">
+                  <span>✓</span>
+                  <span>Lesson Completed</span>
+                </div>
+              ) : (
+                <button
+                  onClick={handleComplete}
+                  className="w-full px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition-colors"
+                >
+                  Mark as Complete
+                </button>
+              )}
+            </div>
           {/* DESCRIPTION */}
           <div className="p-6">
             <h2 className="text-xl font-semibold mb-4">
@@ -319,6 +336,8 @@ const CoursePlayer = ({
               <li>Apply knowledge</li>
               <li>Develop problem-solving skills</li>
             </ul>
+            
+           
           </div>
         </div>
 
@@ -338,7 +357,7 @@ const CoursePlayer = ({
             <button
               onClick={onNext}
               disabled={!onNext}
-              className="w-full px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 bg-[#6ED6EE] text-white rounded-lg hover:bg-[#1EAAFF] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next Lesson →
             </button>
@@ -441,7 +460,7 @@ export default CoursePlayer;
 
 //           <button
 //             onClick={() => setShowPlayer(true)}
-//             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+//             className="px-4 py-2 bg-[#6ED6EE] text-white rounded-lg hover:bg-purple-700"
 //           >
 //             Open Video
 //           </button>
@@ -473,7 +492,7 @@ export default CoursePlayer;
 //             </button>
 //             <button
 //               onClick={onNext}
-//               className="px-4 py-2 bg-purple-600 text-white rounded"
+//               className="px-4 py-2 bg-[#6ED6EE] text-white rounded"
 //             >
 //               Next Lesson →
 //             </button>

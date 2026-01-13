@@ -37,7 +37,7 @@ const StatsCards = ({ stats }) => {
           key={stat.id}
           className="
             bg-white
-            border border-slate-200
+            border border-[#8AD5FF]
             rounded-xl
             p-3 md:p-4
             shadow-sm
@@ -66,7 +66,7 @@ const StatsCards = ({ stats }) => {
               px-2 py-0.5
               rounded-full
               border
-              border-slate-300
+              border-[#1EAAFF]
               text-[10px]
               uppercase
               tracking-[0.16em]

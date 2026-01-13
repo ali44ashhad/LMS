@@ -76,7 +76,7 @@ const Grades = () => {
           Grades
         </h1>
         <div className="text-right">
-          <div className="text-2xl font-bold text-purple-600">
+          <div className="text-2xl font-bold text-cyan-600">
             GPA: {calculateGPA()}
           </div>
           <p className="text-sm text-gray-600">
@@ -109,7 +109,7 @@ const Grades = () => {
         </div>
 
         <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="text-2xl font-bold text-purple-600">
+          <div className="text-2xl font-bold text-cyan-600">
             {averageScore}%
           </div>
           <p className="text-gray-600">Average Score</p>

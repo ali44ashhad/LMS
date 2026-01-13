@@ -54,7 +54,7 @@ const ProgressChart = ({ courses = [] }) => {
                   bg-gradient-to-r
                   from-lime-400
                   via-cyan-400
-                  to-purple-400
+                  to-[#4DBDFF]
                   transition-all
                   duration-300
                 "

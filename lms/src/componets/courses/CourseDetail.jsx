@@ -6,6 +6,8 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
   const [expandedModules, setExpandedModules] = useState(new Set());
   const courseId = course?._id || course?.id;
   const { progress, loading: progressLoading } = useProgress(courseId);
+  const [showFullDescription, setShowFullDescription] = useState(false);
+
 
   const toggleModule = (moduleId) => {
     setExpandedModules(prev => {
@@ -211,94 +213,128 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
               <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500">
                 Course Progress
               </p>
-              <div className="text-2xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <div className="text-2xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent">
                 {displayProgress}%
               </div>
               <div className="w-32 h-2 bg-gray-200 rounded-full mt-2 overflow-hidden">
                 <div
-                  className="h-2 rounded-full bg-gradient-to-r from-lime-500 via-cyan-500 to-purple-500 shadow-[0_0_10px_rgba(0,195,221,0.4)]"
+                  className="h-2 rounded-full bg-gradient-to-r from-lime-500 via-cyan-500 to-[#99DBFF] shadow-[0_0_10px_rgba(0,195,221,0.4)]"
                   style={{ width: `${Math.min(displayProgress, 100)}%` }}
                 />
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col lg:flex-row items-start justify-between gap-6">
-            <div className="flex items-start gap-4 md:gap-6 flex-1">
-              <div className="text-5xl md:text-6xl">{courseImage}</div>
-              <div className="space-y-3">
-                <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-[0.08em]">
-                  {courseTitle}
-                </h1>
-                <p className="text-sm text-gray-600">{courseInstructor}</p>
-                <p className="text-sm md:text-[15px] text-gray-700 max-w-2xl">
-                  {courseDescription}
-                </p>
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+  {/* Left Content */}
+  <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6 flex-1">
+    {/* Course Icon / Image */}
+    <div className="text-4xl sm:text-5xl md:text-6xl shrink-0">
+      {courseImage}
+    </div>
 
-                <div className="flex flex-wrap items-center gap-3 mt-2 text-[11px] text-gray-600">
-                  <span className="px-2.5 py-1 rounded-full bg-cyan-100 text-cyan-700 border border-cyan-200">
-                    {courseLevel} Level
-                  </span>
-                  <span className="px-2.5 py-1 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
-                    {courseCategory}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    ⏱️ <span>{courseDuration}</span>
-                  </span>
-                  <span className="flex items-center gap-1">
-                    🎯 <span>{totalLessons} Lessons</span>
-                  </span>
-                  {/* <span className="flex items-center gap-1">
-                    ⭐
-                    <span>
-                      {courseRating} ({courseStudents} students)
-                    </span>
-                  </span> */}
-                </div>
-              </div>
-            </div>
+    {/* Text Content */}
+    <div className="space-y-3 w-full">
+      <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-900 tracking-[0.08em]">
+        {courseTitle}
+      </h1>
 
-            {/* Circular Progress HUD */}
-            <div className="hidden lg:flex flex-col items-center justify-center">
-              <div className="relative inline-block">
-                <svg className="w-28 h-28" viewBox="0 0 36 36">
-                  <path
-                    d="M18 2.0845
-                      a 15.9155 15.9155 0 0 1 0 31.831
-                      a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="#e5e7eb"
-                    strokeWidth="3"
-                  />
-                  <path
-                    d="M18 2.0845
-                      a 15.9155 15.9155 0 0 1 0 31.831
-                      a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="url(#grad)"
-                    strokeWidth="3"
-                    strokeDasharray={`${displayProgress}, 100`}
-                    strokeLinecap="round"
-                  />
-                  <defs>
-                    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#10b981" />
-                      <stop offset="50%" stopColor="#3b82f6" />
-                      <stop offset="100%" stopColor="#8b5cf6" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
-                    {displayProgress}%
-                  </span>
-                </div>
-              </div>
-              <p className="text-xs text-gray-500 mt-2">
-                {completedLessonsCount} / {totalLessons} lessons
-              </p>
-            </div>
-          </div>
+      <p className="text-xs sm:text-sm text-gray-600">
+        {courseInstructor}
+      </p>
+
+      {/* Description with See More */}
+{/* Description with inline See More */}
+<div className="relative">
+  <div
+    className={`text-sm md:text-[15px] text-gray-700 prose prose-sm max-w-none break-words
+      ${!showFullDescription ? "line-clamp-4" : ""}`}
+    dangerouslySetInnerHTML={{ __html: courseDescription }}
+  />
+
+  {!showFullDescription && (
+    <button
+      onClick={() => setShowFullDescription(true)}
+      className="absolute bottom-0 right-0 bg-white pl-2 text-xs font-semibold text-blue-600 hover:text-blue-700"
+    >
+      … See more
+    </button>
+  )}
+
+  {showFullDescription && (
+    <button
+      onClick={() => setShowFullDescription(false)}
+      className="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-700"
+    >
+      See less
+    </button>
+  )}
+</div>
+
+
+
+      {/* Tags */}
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2 text-[11px] sm:text-xs text-gray-600">
+        <span className="px-2.5 py-1 rounded-full bg-cyan-100 text-cyan-700 border border-cyan-200">
+          {courseLevel} Level
+        </span>
+        <span className="px-2.5 py-1 rounded-full bg-white text-gray-900 border border-gray-300">
+          {courseCategory}
+        </span>
+        <span className="flex items-center gap-1">
+          ⏱️ <span>{courseDuration}</span>
+        </span>
+        <span className="flex items-center gap-1">
+          🎯 <span>{totalLessons} Lessons</span>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  {/* Progress HUD */}
+  <div className="flex lg:flex-col items-center justify-center gap-3 lg:gap-2 self-start lg:self-auto">
+    <div className="relative inline-block">
+      <svg className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28" viewBox="0 0 36 36">
+        <path
+          d="M18 2.0845
+            a 15.9155 15.9155 0 0 1 0 31.831
+            a 15.9155 15.9155 0 0 1 0 -31.831"
+          fill="none"
+          stroke="#e5e7eb"
+          strokeWidth="3"
+        />
+        <path
+          d="M18 2.0845
+            a 15.9155 15.9155 0 0 1 0 31.831
+            a 15.9155 15.9155 0 0 1 0 -31.831"
+          fill="none"
+          stroke="url(#grad)"
+          strokeWidth="3"
+          strokeDasharray={`${displayProgress}, 100`}
+          strokeLinecap="round"
+        />
+        <defs>
+          <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#10b981" />
+            <stop offset="50%" stopColor="#3b82f6" />
+            <stop offset="100%" stopColor="#8b5cf6" />
+          </linearGradient>
+        </defs>
+      </svg>
+
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-sm sm:text-base md:text-lg font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent">
+          {displayProgress}%
+        </span>
+      </div>
+    </div>
+
+    <p className="text-[10px] sm:text-xs text-gray-500 text-center">
+      {completedLessonsCount} / {totalLessons} lessons
+    </p>
+  </div>
+</div>
+
         </div>
 
         {/* TABS */}
@@ -311,7 +347,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-3 py-2 text-[10px] md:text-xs rounded-lg transition-all duration-200 ${
                   isActive
-                    ? 'bg-gradient-to-r from-cyan-600 to-purple-600 text-white shadow-md shadow-cyan-500/20'
+                    ? 'bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-md shadow-cyan-500/20'
                     : 'bg-white hover:bg-gray-100 text-gray-700 hover:text-gray-900 border border-gray-300'
                 }`}
               >
@@ -330,7 +366,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
           {activeTab === 'curriculum' && (
             <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 overflow-hidden">
               <div className="p-5 border-b border-gray-200">
-                <h1 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-[0.16em] uppercase">
+                <h1 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent tracking-[0.16em] uppercase">
                   Course Content
                 </h1>
                 <p className="text-xs text-gray-500 mt-1">
@@ -446,7 +482,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
                                   className={`px-3 py-1 text-[10px] rounded-lg transition-all duration-200 flex-shrink-0 ${
                                     lesson.completed
                                       ? 'bg-white hover:bg-gray-100 text-gray-700 hover:text-gray-900 border border-gray-300'
-                                      : 'bg-gradient-to-r from-cyan-600 to-purple-600 text-white shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/40'
+                                      : 'bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/40'
                                   }`}
                                 >
                                   {lesson.completed ? 'Review' : 'Start'}
@@ -466,7 +502,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
           {/* OVERVIEW */}
           {activeTab === 'overview' && (
             <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
-              <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-4">
+              <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-4">
                 Course Overview
               </h2>
               <div className="space-y-6 text-sm text-gray-700">
@@ -531,7 +567,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
           {/* INSTRUCTOR */}
           {activeTab === 'instructor' && (
             <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
-              <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-6">
+              <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-6">
                 Meet Your Instructor
               </h2>
               <div className="space-y-6">
@@ -554,7 +590,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
 
                       <div className="flex flex-wrap items-center gap-6 mt-4 text-sm">
                         <div className="text-center">
-                          <div className="text-xl font-bold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
+                          <div className="text-xl font-bold bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent">
                             4.8
                           </div>
                           <div className="text-xs text-gray-500">
@@ -562,7 +598,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
                           </div>
                         </div>
                         <div className="text-center">
-                          <div className="text-xl font-bold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
+                          <div className="text-xl font-bold bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent">
                             12,450
                           </div>
                           <div className="text-xs text-gray-500">
@@ -570,7 +606,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
                           </div>
                         </div>
                         <div className="text-center">
-                          <div className="text-xl font-bold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">8</div>
+                          <div className="text-xl font-bold bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent">8</div>
                           <div className="text-xs text-gray-500">Courses</div>
                         </div>
                       </div>
@@ -584,13 +620,13 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
           {/* REVIEWS */}
           {activeTab === 'reviews' && (
             <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
-              <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-6">
+              <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-6">
                 Student Reviews
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="text-center">
-                  <div className="text-4xl font-bold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">4.8</div>
+                  <div className="text-4xl font-bold bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent">4.8</div>
                   <div className="flex justify-center mt-2 text-yellow-500">
                     {'★'.repeat(5)}
                   </div>
@@ -707,7 +743,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
           {/* RESOURCES */}
           {activeTab === 'resources' && (
             <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
-              <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-6">
+              <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-6">
                 Course Resources
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -759,7 +795,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
                         </p>
                       </div>
                     </div>
-                    <button className="px-3 py-1 text-[10px] rounded-lg bg-gradient-to-r from-cyan-600 to-purple-600 text-white shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all duration-200">
+                    <button className="px-3 py-1 text-[10px] rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all duration-200">
                       Download
                     </button>
                   </div>
@@ -783,7 +819,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
             <button
               onClick={() => onEnroll && onEnroll(course._id)}
               disabled={enrolling}
-              className={`w-full py-4 text-base font-semibold justify-center rounded-xl bg-gradient-to-r from-cyan-600 to-purple-600 text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-[1.02] transition-all duration-200 flex items-center gap-2 ${
+              className={`w-full py-4 text-base font-semibold justify-center rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-[1.02] transition-all duration-200 flex items-center gap-2 ${
                 enrolling ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
@@ -793,7 +829,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
 
           {/* Progress Card */}
           <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
-            <h3 className="text-sm font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-4">
+            <h3 className="text-sm font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-4">
               Your Progress
             </h3>
             <div className="text-center">
@@ -832,7 +868,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
 
           {/* Course Info */}
           <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
-            <h3 className="text-sm font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-4">
+            <h3 className="text-sm font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-4">
               Course Info
             </h3>
             <div className="space-y-2 text-xs text-gray-700">
@@ -861,7 +897,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
 
           {/* Certificate */}
           <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
-            <h3 className="text-sm font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-4">
+            <h3 className="text-sm font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-4">
               Certificate
             </h3>
             <div className="text-center text-sm text-gray-700">

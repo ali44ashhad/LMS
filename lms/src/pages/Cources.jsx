@@ -115,7 +115,7 @@ const Courses = ({ onCourseSelect }) => {
             className="
               w-full
               px-4 py-2
-              border border-slate-300
+              border border-[#1EAAFF]
               rounded-lg
               text-sm
               focus:outline-none
@@ -143,8 +143,8 @@ const Courses = ({ onCourseSelect }) => {
                   transition
                   ${
                     isActive
-                      ? "bg-purple-600 text-white border-purple-600"
-                      : "bg-white text-slate-600 border-slate-300 hover:bg-slate-100"
+                      ? "bg-[#6ED6EE] text-white border-cyan-600"
+                      : "bg-white text-slate-600 border-[#1EAAFF] hover:bg-slate-100"
                   }
                 `}
               >

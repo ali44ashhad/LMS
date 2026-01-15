@@ -2,18 +2,53 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import connectDB from './config/db.js';
-
-// Import routes
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import courseRoutes from './routes/course.routes.js';
 import enrollmentRoutes from './routes/enrollment.routes.js';
 import adminRoutes from './routes/admin.routes.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
 
-// Load env variables
+// Load env variables FIRST
 dotenv.config();
 
 const app = express();
+
+// CRITICAL: Handle OPTIONS requests at the absolute top level
+// This must be before ANY other middleware
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    try {
+      const origin = req.headers.origin;
+      const allowedOrigins = [
+        'https://courses.cyfi.nestatoys.com',
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'http://localhost:3000',
+        process.env.FRONTEND_URL
+      ].filter(Boolean).map(o => o && o.replace(/\/$/, ''));
+      
+      const normalizedOrigin = origin ? origin.replace(/\/$/, '') : null;
+      const isAllowed = normalizedOrigin && allowedOrigins.includes(normalizedOrigin);
+      
+      if (isAllowed) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
+        res.setHeader('Access-Control-Max-Age', '86400');
+      }
+      
+      return res.status(204).end();
+    } catch (error) {
+      console.error('OPTIONS handler error:', error);
+      return res.status(204).end();
+    }
+  }
+  next();
+});
 
 // Lazy database connection (only connect when needed, not for OPTIONS)
 let dbConnected = false;
@@ -34,16 +69,22 @@ const ensureDBConnection = async () => {
   }
 };
 
-// CORS Configuration
-const allowedOrigins = [
-  'https://courses.cyfi.nestatoys.com',
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://localhost:3000',
-  process.env.FRONTEND_URL
-]
-  .filter(Boolean)
-  .map(origin => origin.replace(/\/$/, '')); // Remove trailing slashes
+// CORS Configuration - wrapped in try-catch to prevent initialization errors
+let allowedOrigins = [];
+try {
+  allowedOrigins = [
+    'https://courses.cyfi.nestatoys.com',
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:3000',
+    process.env.FRONTEND_URL
+  ]
+    .filter(Boolean)
+    .map(origin => origin.replace(/\/$/, '')); // Remove trailing slashes
+} catch (error) {
+  console.error('Error setting up CORS origins:', error);
+  allowedOrigins = ['https://courses.cyfi.nestatoys.com'];
+}
 
 console.log('🌐 CORS Allowed Origins:', allowedOrigins);
 console.log('🌐 FRONTEND_URL from env:', process.env.FRONTEND_URL);
@@ -80,41 +121,29 @@ const corsOptions = {
   optionsSuccessStatus: 204
 };
 
-// Manual CORS headers middleware (FIRST - runs before everything, even DB connection)
+// Set CORS headers for non-OPTIONS requests (OPTIONS already handled above)
 app.use((req, res, next) => {
-  try {
-    const origin = req.headers.origin;
-    const normalizedOrigin = origin ? origin.replace(/\/$/, '') : null;
-    
-    // Check if origin is allowed (normalized comparison)
-    const isAllowed = normalizedOrigin && allowedOrigins.includes(normalizedOrigin);
-    
-    if (isAllowed) {
-      res.setHeader('Access-Control-Allow-Origin', origin); // Use original origin, not normalized
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
-      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
-      res.setHeader('Access-Control-Expose-Headers', 'Authorization');
-      res.setHeader('Access-Control-Max-Age', '86400');
+  if (req.method !== 'OPTIONS') {
+    try {
+      const origin = req.headers.origin;
+      const normalizedOrigin = origin ? origin.replace(/\/$/, '') : null;
+      const isAllowed = normalizedOrigin && allowedOrigins.includes(normalizedOrigin);
+      
+      if (isAllowed) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
+        res.setHeader('Access-Control-Expose-Headers', 'Authorization');
+      }
+    } catch (error) {
+      console.error('CORS headers error:', error);
     }
-    
-    // Handle preflight OPTIONS requests IMMEDIATELY (before any other processing)
-    if (req.method === 'OPTIONS') {
-      return res.status(204).end();
-    }
-    
-    next();
-  } catch (error) {
-    console.error('CORS middleware error:', error);
-    // Still try to respond to OPTIONS even if there's an error
-    if (req.method === 'OPTIONS') {
-      return res.status(204).end();
-    }
-    next(error);
   }
+  next();
 });
 
-// Apply CORS middleware (as backup - but manual middleware handles it first)
+// Apply CORS middleware (as backup)
 app.use(cors(corsOptions));
 
 // Request logging middleware (for debugging) - skip for OPTIONS to reduce noise
@@ -129,20 +158,22 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve uploaded files statically
-import path from 'path';
-import { fileURLToPath } from 'url';
-import fs from 'fs';
+// Serve uploaded files statically (only if not in serverless)
+try {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+  if (!process.env.VERCEL) {
+    const uploadsDir = path.join(__dirname, 'uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    app.use('/uploads', express.static(uploadsDir));
+  }
+} catch (error) {
+  console.warn('Could not set up static file serving:', error.message);
+  // Continue without static file serving - not critical for API
 }
-
-app.use('/uploads', express.static(uploadsDir));
 
 // Middleware to ensure DB connection for non-OPTIONS requests
 app.use(async (req, res, next) => {
@@ -196,8 +227,8 @@ app.use((err, req, res, next) => {
 });
 
 // Export for Vercel serverless functions
-// Vercel expects a handler function
-const handler = app;
+// Vercel expects the default export to be the handler
+export default app;
 
 // Only start server if not in Vercel environment
 const PORT = process.env.PORT || 5000;
@@ -210,7 +241,3 @@ if (!process.env.VERCEL) {
 } else {
   console.log('🚀 Running on Vercel');
 }
-
-// Export both app and handler for compatibility
-export { app, handler };
-export default app;

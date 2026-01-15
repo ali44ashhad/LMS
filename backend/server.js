@@ -13,10 +13,26 @@ import adminRoutes from './routes/admin.routes.js';
 // Load env variables
 dotenv.config();
 
-// Connect to database
-connectDB();
-
 const app = express();
+
+// Lazy database connection (only connect when needed, not for OPTIONS)
+let dbConnected = false;
+const ensureDBConnection = async () => {
+  if (!dbConnected) {
+    try {
+      await connectDB();
+      dbConnected = true;
+    } catch (error) {
+      console.error('Database connection error:', error);
+      // Don't exit process in serverless - let requests handle the error
+      if (process.env.VERCEL) {
+        console.warn('Running on Vercel - continuing without DB connection');
+      } else {
+        throw error;
+      }
+    }
+  }
+};
 
 // CORS Configuration
 const allowedOrigins = [
@@ -64,54 +80,48 @@ const corsOptions = {
   optionsSuccessStatus: 204
 };
 
-// Manual CORS headers middleware (FIRST - runs before everything)
+// Manual CORS headers middleware (FIRST - runs before everything, even DB connection)
 app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  const normalizedOrigin = origin ? origin.replace(/\/$/, '') : null;
-  
-  console.log(`🔍 Request: ${req.method} ${req.path}, Origin: ${origin || 'none'}`);
-  console.log(`📋 Allowed origins:`, allowedOrigins);
-  
-  // Check if origin is allowed (normalized comparison)
-  const isAllowed = normalizedOrigin && allowedOrigins.includes(normalizedOrigin);
-  
-  if (isAllowed) {
-    console.log(`✅ Setting CORS headers for allowed origin: ${origin}`);
-    res.setHeader('Access-Control-Allow-Origin', origin); // Use original origin, not normalized
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
-    res.setHeader('Access-Control-Expose-Headers', 'Authorization');
-    res.setHeader('Access-Control-Max-Age', '86400');
-  } else if (origin) {
-    console.warn(`⚠️ Origin not in allowed list: ${origin}`);
-    console.warn(`   Normalized: ${normalizedOrigin}`);
-    console.warn(`   Allowed: ${allowedOrigins.join(', ')}`);
-  }
-  
-  // Handle preflight OPTIONS requests IMMEDIATELY
-  if (req.method === 'OPTIONS') {
-    console.log(`✈️ Handling OPTIONS preflight request`);
+  try {
+    const origin = req.headers.origin;
+    const normalizedOrigin = origin ? origin.replace(/\/$/, '') : null;
+    
+    // Check if origin is allowed (normalized comparison)
+    const isAllowed = normalizedOrigin && allowedOrigins.includes(normalizedOrigin);
+    
     if (isAllowed) {
-      return res.status(204).end();
-    } else {
-      // Still respond to OPTIONS even if origin not allowed (but without CORS headers)
+      res.setHeader('Access-Control-Allow-Origin', origin); // Use original origin, not normalized
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
+      res.setHeader('Access-Control-Expose-Headers', 'Authorization');
+      res.setHeader('Access-Control-Max-Age', '86400');
+    }
+    
+    // Handle preflight OPTIONS requests IMMEDIATELY (before any other processing)
+    if (req.method === 'OPTIONS') {
       return res.status(204).end();
     }
+    
+    next();
+  } catch (error) {
+    console.error('CORS middleware error:', error);
+    // Still try to respond to OPTIONS even if there's an error
+    if (req.method === 'OPTIONS') {
+      return res.status(204).end();
+    }
+    next(error);
   }
-  
-  next();
 });
 
-// Apply CORS middleware (as backup)
+// Apply CORS middleware (as backup - but manual middleware handles it first)
 app.use(cors(corsOptions));
 
-// Explicitly handle OPTIONS requests for all routes with same CORS config
-app.options('*', cors(corsOptions));
-
-// Request logging middleware (for debugging)
+// Request logging middleware (for debugging) - skip for OPTIONS to reduce noise
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path} - Origin: ${req.headers.origin || 'none'}`);
+  if (req.method !== 'OPTIONS') {
+    console.log(`${req.method} ${req.path} - Origin: ${req.headers.origin || 'none'}`);
+  }
   next();
 });
 
@@ -133,6 +143,23 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 app.use('/uploads', express.static(uploadsDir));
+
+// Middleware to ensure DB connection for non-OPTIONS requests
+app.use(async (req, res, next) => {
+  // Skip DB connection for OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+  
+  // Ensure DB connection for other requests
+  try {
+    await ensureDBConnection();
+  } catch (error) {
+    console.error('Failed to connect to database:', error);
+    // Continue anyway - routes will handle the error
+  }
+  next();
+});
 
 // Routes
 app.use('/api/auth', authRoutes);

@@ -22,27 +22,56 @@ const app = express();
 const allowedOrigins = [
   'https://courses.cyfi.nestatoys.com',
   'http://localhost:5173',
+  'http://localhost:5174',
   'http://localhost:3000',
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
-app.use(cors({
+console.log('🌐 CORS Allowed Origins:', allowedOrigins);
+
+// CORS configuration function
+const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or Postman)
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.includes(origin)) {
+      console.log(`✅ CORS allowed for origin: ${origin}`);
       callback(null, true);
     } else {
-      console.warn(`CORS blocked request from origin: ${origin}`);
+      console.warn(`❌ CORS blocked request from origin: ${origin}`);
+      console.log('Allowed origins:', allowedOrigins);
       callback(new Error('CORS not allowed for this origin'));
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  maxAge: 3600
-}));
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With',
+    'Accept',
+    'Origin',
+    'Access-Control-Request-Method',
+    'Access-Control-Request-Headers'
+  ],
+  exposedHeaders: ['Authorization'],
+  maxAge: 86400, // 24 hours
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+};
+
+// Apply CORS middleware
+app.use(cors(corsOptions));
+
+// Explicitly handle OPTIONS requests for all routes with same CORS config
+app.options('*', cors(corsOptions));
+
+// Request logging middleware (for debugging)
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path} - Origin: ${req.headers.origin || 'none'}`);
+  next();
+});
 
 // Middleware
 app.use(express.json());
@@ -77,7 +106,19 @@ app.get('/api/health', (req, res) => {
 
 // Error handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('Error:', err.message);
+  console.error('Stack:', err.stack);
+  
+  // Handle CORS errors specifically
+  if (err.message && err.message.includes('CORS')) {
+    return res.status(403).json({
+      success: false,
+      message: 'CORS: Origin not allowed',
+      origin: req.headers.origin,
+      allowedOrigins: allowedOrigins
+    });
+  }
+  
   res.status(err.status || 500).json({
     success: false,
     message: err.message || 'Internal Server Error',

@@ -8,8 +8,7 @@ Complete backend API for the Learning Management System (LMS).
 - 👥 Role-based Access Control (Student, Admin)
 - 📚 Course Management
 - 🎓 Enrollment & Progress Tracking
-- 📈 Grades Management
-- 👨‍💼 Admin Panel APIs
+- ‍💼 Admin Panel APIs
 
 ## Tech Stack
 
@@ -47,7 +46,17 @@ MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/lms
 JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
 JWT_EXPIRE=7d
 NODE_ENV=development
+
+# Cloudinary Configuration (for file uploads)
+CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 ```
+
+**Note:** To get Cloudinary credentials:
+1. Sign up at [cloudinary.com](https://cloudinary.com)
+2. Go to Dashboard
+3. Copy your `Cloud Name`, `API Key`, and `API Secret`
 
 5. Seed the database with sample data:
 ```bash
@@ -100,10 +109,6 @@ After running the seed script:
 - `GET /api/enrollments/my` - Get my enrollments
 - `PUT /api/enrollments/:id/progress` - Update progress
 
-### Grades
-- `GET /api/grades/my` - Get my grades
-- `GET /api/grades/course/:courseId` - Get course grades (Admin)
-
 ### Admin
 - `GET /api/admin/stats` - Get dashboard statistics
 - `GET /api/admin/users` - Get all users with filters
@@ -141,7 +146,7 @@ Authorization: Bearer <your_jwt_token>
 
 ## User Roles
 
-1. **Student**: Can enroll in courses, track progress, view grades
+1. **Student**: Can enroll in courses and track progress
 2. **Admin**: Full access to all resources, user management, and analytics
 
 ## Project Structure
@@ -153,14 +158,12 @@ backend/
 ├── models/
 │   ├── User.model.js      # User schema
 │   ├── Course.model.js    # Course schema
-│   ├── Enrollment.model.js # Enrollment schema
-│   └── Grade.model.js     # Grade schema
+│   └── Enrollment.model.js # Enrollment schema
 ├── routes/
 │   ├── auth.routes.js     # Authentication routes
 │   ├── user.routes.js     # User routes
 │   ├── course.routes.js   # Course routes
 │   ├── enrollment.routes.js # Enrollment routes
-│   ├── grade.routes.js    # Grade routes
 │   └── admin.routes.js    # Admin routes
 ├── middleware/
 │   └── auth.middleware.js # Authentication & authorization middleware

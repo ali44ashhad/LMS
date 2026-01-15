@@ -186,24 +186,6 @@ export const enrollmentAPI = {
   }
 };
 
-// Grade APIs
-export const gradeAPI = {
-  getMy: async (courseId = null) => {
-    const query = courseId ? `?courseId=${courseId}` : '';
-    const response = await fetch(`${API_URL}/grades/my${query}`, {
-      headers: getAuthHeaders()
-    });
-    return handleResponse(response);
-  },
-
-  getByCourse: async (courseId) => {
-    const response = await fetch(`${API_URL}/grades/course/${courseId}`, {
-      headers: getAuthHeaders()
-    });
-    return handleResponse(response);
-  }
-};
-
 // User APIs
 export const userAPI = {
   getProfile: async () => {
@@ -288,6 +270,21 @@ export const adminAPI = {
       headers: getAuthHeaders()
     });
     return handleResponse(response);
+  },
+
+  uploadFile: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_URL}/admin/upload`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+    return handleResponse(response);
   }
 };
 
@@ -295,7 +292,6 @@ export default {
   auth: authAPI,
   courses: courseAPI,
   enrollments: enrollmentAPI,
-  grades: gradeAPI,
   users: userAPI,
   admin: adminAPI
 };

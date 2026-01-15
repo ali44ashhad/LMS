@@ -58,11 +58,14 @@ const courseSchema = new mongoose.Schema({
       type: String,
       required: false
     },
-    resources: [{
-      title: String,
-      url: String,
-      type: String
-    }]
+    resources: {
+      type: [{
+        title: { type: String, required: false },
+        url: { type: String, required: false },
+        type: { type: String, required: false, default: 'pdf' }
+      }],
+      default: []
+    }
   }],
   rating: {
     type: Number,

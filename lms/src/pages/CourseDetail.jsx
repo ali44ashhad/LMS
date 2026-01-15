@@ -112,6 +112,7 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess }) => {
         url: lesson.videoUrl,
         description: lesson.description,
         order: lesson.order || idx + 1,
+        resources: lesson.resources || [], // Include resources from backend
       }));
     }
     return [];
@@ -146,6 +147,7 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess }) => {
   const refreshEnrollment = async () => {
     if (!courseId) return;
     try {
+      console.log('Refreshing enrollment for courseId:', courseId);
       const response = await enrollmentAPI.getMy();
       const foundEnrollment = response.enrollments?.find(
         (e) => {
@@ -154,6 +156,10 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess }) => {
         }
       );
       if (foundEnrollment) {
+        console.log('Enrollment refreshed:', {
+          progress: foundEnrollment.progress,
+          completedLessons: foundEnrollment.completedLessons
+        });
         setEnrollment(foundEnrollment);
         setCompletedLessons(foundEnrollment.completedLessons || []);
       }
@@ -245,6 +251,15 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess }) => {
         newProgress
       });
       
+      // Update local state BEFORE making API call
+      setCompletedLessons(updatedCompletedLessons);
+      setEnrollment({ 
+        ...enrollment, 
+        progress: newProgress, 
+        completedLessons: updatedCompletedLessons,
+        lastAccessed: new Date()
+      });
+
       // Update backend
       const response = await enrollmentAPI.updateProgress(enrollment._id, {
         progress: newProgress,
@@ -255,18 +270,9 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess }) => {
         throw new Error("Failed to update progress on server");
       }
       
-      // Update local state
-      setCompletedLessons(updatedCompletedLessons);
-      setEnrollment({ 
-        ...enrollment, 
-        progress: newProgress, 
-        completedLessons: updatedCompletedLessons,
-        lastAccessed: new Date()
-      });
-      
       console.log("Lesson completed and progress updated successfully:", newProgress);
       
-      // Refresh enrollment data to ensure sync
+      // Refresh enrollment data to ensure sync and get latest state from server
       await refreshEnrollment();
       
       // Show success message

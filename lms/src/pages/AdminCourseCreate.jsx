@@ -28,14 +28,23 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
   const [currentVideo, setCurrentVideo] = useState({
     title: '',
     url: '',
-    duration: ''
+    duration: '',
+    description: ''
   });
+  const [editingVideoId, setEditingVideoId] = useState(null);
+  const [videoDescEditing, setVideoDescEditing] = useState(null);
+  const videoQuillRefs = useRef({});
+  const videoQuillInstances = useRef({});
+  const videoQuillChangeRef = useRef({});
+  const videoQuillInitializingRef = useRef({});
 
   const [currentFile, setCurrentFile] = useState({
     title: '',
     url: '',
-    type: 'pdf'
+    type: 'pdf',
+    file: null
   });
+  const [uploadingFile, setUploadingFile] = useState(false);
 
   const [editingModuleId, setEditingModuleId] = useState(null);
   const isEditMode = !!(course && course._id);
@@ -56,7 +65,7 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
         moduleMap.set(moduleId, {
           id: moduleId || (Date.now() + Math.random()),
           title: moduleName,
-          description: lesson.description || '',
+          description: '', // Module description, not lesson description
           videos: [],
           files: [],
           quiz: null,
@@ -72,17 +81,37 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
           id: lesson._id || (Date.now() + Math.random()),
           title: lesson.title || '',
           url: lesson.videoUrl,
-          duration: lesson.duration || ''
+          duration: lesson.duration || '',
+          description: lesson.description || ''
         });
       }
       
       // Add files to module
-      if (lesson.resources && Array.isArray(lesson.resources)) {
-        lesson.resources.forEach((resource) => {
+      if (lesson.resources) {
+        let resourcesArray = [];
+        
+        // Handle if resources is a string (shouldn't happen, but be defensive)
+        if (typeof lesson.resources === 'string') {
+          try {
+            resourcesArray = JSON.parse(lesson.resources);
+          } catch (e) {
+            console.warn('Failed to parse resources string:', e);
+            resourcesArray = [];
+          }
+        } else if (Array.isArray(lesson.resources)) {
+          resourcesArray = lesson.resources;
+        }
+        
+        resourcesArray.forEach((resource) => {
+          // Only add if resource is a valid object
+          if (resource && typeof resource === 'object' && resource.title && resource.url) {
           module.files.push({
-            ...resource,
+              title: String(resource.title || ''),
+              url: String(resource.url || ''),
+              type: String(resource.type || 'pdf'),
             id: resource._id || resource.id || (Date.now() + Math.random())
           });
+          }
         });
       }
     });
@@ -107,12 +136,36 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
 
   const addVideo = () => {
     if (currentVideo.title && currentVideo.url) {
-      setCurrentModule((prev) => ({
-        ...prev,
-        videos: [...prev.videos, { ...currentVideo, id: Date.now() }]
-      }));
-      setCurrentVideo({ title: '', url: '', duration: '' });
+      if (editingVideoId !== null) {
+        // Update existing video
+        setCurrentModule((prev) => ({
+          ...prev,
+          videos: prev.videos.map((v) =>
+            v.id === editingVideoId ? { ...currentVideo, id: editingVideoId } : v
+          )
+        }));
+        setEditingVideoId(null);
+      } else {
+        // Add new video
+        setCurrentModule((prev) => ({
+          ...prev,
+          videos: [...prev.videos, { ...currentVideo, id: Date.now() }]
+        }));
+      }
+      setCurrentVideo({ title: '', url: '', duration: '', description: '' });
     }
+  };
+
+  const editVideo = (video) => {
+    setCurrentVideo(video);
+    setEditingVideoId(video.id);
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const cancelEditVideo = () => {
+    setCurrentVideo({ title: '', url: '', duration: '', description: '' });
+    setEditingVideoId(null);
   };
 
   const removeVideo = (videoId) => {
@@ -122,13 +175,87 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
     }));
   };
 
+  const handleFileSelect = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    console.log('File selected:', {
+      name: file.name,
+      size: file.size,
+      type: file.type
+    });
+
+    // Validate file type
+    if (file.type !== 'application/pdf') {
+      alert('Please select a PDF file');
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File size should be less than 10MB');
+      return;
+    }
+
+    setUploadingFile(true);
+    try {
+      console.log('Starting file upload...');
+      const response = await adminAPI.uploadFile(file);
+      
+      console.log('Upload response:', response);
+      
+      if (response.success && response.file) {
+        // Cloudinary returns a full URL (secure_url)
+        const fileUrl = response.file.url;
+        
+        // Verify it's a valid Cloudinary URL or HTTP(S) URL
+        if (!fileUrl || fileUrl.startsWith('file://')) {
+          console.error('Invalid file URL returned:', fileUrl);
+          alert('File upload failed: Invalid URL returned. Please check your Cloudinary configuration.');
+          setUploadingFile(false);
+          return;
+        }
+        
+        console.log('File uploaded successfully:', fileUrl);
+        
+        setCurrentFile({
+          title: file.name.replace('.pdf', ''),
+          url: fileUrl,
+          type: 'pdf',
+          file: file
+        });
+      } else {
+        alert('Failed to upload file. Please try again.');
+        console.error('Upload failed:', response);
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      alert('Failed to upload file: ' + (error.message || 'Unknown error'));
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
   const addFile = () => {
     if (currentFile.title && currentFile.url) {
+      // Create a clean file object without any extra properties
+      const cleanFile = {
+        title: String(currentFile.title).trim(),
+        url: String(currentFile.url).trim(),
+        type: String(currentFile.type || 'pdf').trim(),
+        id: Date.now()
+      };
+      
       setCurrentModule((prev) => ({
         ...prev,
-        files: [...prev.files, { ...currentFile, id: Date.now() }]
+        files: [...prev.files, cleanFile]
       }));
-      setCurrentFile({ title: '', url: '', type: 'pdf' });
+      setCurrentFile({ title: '', url: '', type: 'pdf', file: null });
+      // Reset file input
+      const fileInput = document.getElementById('file-upload-input');
+      if (fileInput) fileInput.value = '';
+    } else {
+      alert('Please upload a PDF file first');
     }
   };
 
@@ -192,24 +319,225 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
     setLoading(true);
 
     try {
-      const lessons = courseData.modules.flatMap((module, moduleIndex) =>
-        module.videos.map((video, videoIndex) => ({
-          title: video.title,
-          description: module.description || `Module ${moduleIndex + 1}: ${module.title}`,
-          videoUrl: video.url,
-          duration: video.duration,
-          order: moduleIndex * 100 + videoIndex,
-          moduleId: `module-${moduleIndex}`,
-          moduleName: module.title || `Module ${moduleIndex + 1}`,
-          resources: module.files.map((file) => ({
-            title: file.title,
-            url: file.url,
-            type: file.type
-          }))
-        }))
-      );
+      // DEBUG: Log the initial state
+      console.log('=== INITIAL STATE DEBUG ===');
+      console.log('CourseData modules:', courseData.modules);
+      courseData.modules.forEach((module, idx) => {
+        console.log(`Module ${idx} files:`, module.files);
+        console.log(`Module ${idx} files type:`, typeof module.files);
+        console.log(`Module ${idx} files isArray:`, Array.isArray(module.files));
+        if (module.files && module.files.length > 0) {
+          console.log(`Module ${idx} first file:`, module.files[0]);
+          console.log(`Module ${idx} first file type:`, typeof module.files[0]);
+        }
+      });
+      console.log('=== END INITIAL STATE DEBUG ===');
 
-      const coursePayload = {
+      const lessons = courseData.modules.flatMap((module, moduleIndex) => {
+        // Ensure module.files is an array
+        let moduleFiles = [];
+        if (module && module.files) {
+          if (Array.isArray(module.files)) {
+            moduleFiles = module.files;
+          } else if (typeof module.files === 'string') {
+            // If files is a string, try to parse it
+            try {
+              const parsed = JSON.parse(module.files);
+              moduleFiles = Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+              console.warn('Failed to parse module.files string:', e);
+              moduleFiles = [];
+            }
+          }
+        }
+        
+        // Ensure module.videos is an array
+        const moduleVideos = Array.isArray(module.videos) ? module.videos : [];
+        
+        return moduleVideos.map((video, videoIndex) => {
+          // Build resources array from module files - create completely fresh objects
+          // CRITICAL: Never push strings, only plain objects
+          const resources = [];
+          
+          if (Array.isArray(moduleFiles) && moduleFiles.length > 0) {
+            moduleFiles.forEach((file, fileIndex) => {
+              try {
+                // Skip invalid entries - be very strict
+                if (!file) {
+                  console.warn(`Module ${moduleIndex}, Video ${videoIndex}, File ${fileIndex}: File is null/undefined`);
+                  return;
+                }
+                
+                // CRITICAL: If file is a string, this is an error - log and skip
+                if (typeof file === 'string') {
+                  console.error(`CRITICAL ERROR: Module ${moduleIndex}, Video ${videoIndex}, File ${fileIndex} is a STRING!`, file.substring(0, 100));
+                  // Don't try to parse - just skip it
+                  return;
+                }
+                
+                // Skip arrays - we only want objects
+                if (Array.isArray(file)) {
+                  console.error(`CRITICAL ERROR: Module ${moduleIndex}, Video ${videoIndex}, File ${fileIndex} is an ARRAY!`, file);
+                  return;
+                }
+                
+                // Must be a plain object
+                if (!file || typeof file !== 'object') {
+                  console.error(`CRITICAL ERROR: Module ${moduleIndex}, Video ${videoIndex}, File ${fileIndex} is not an object!`, typeof file, file);
+                  return;
+                }
+                
+                // Extract values directly - don't use file object directly
+                const fileTitle = file.title;
+                const fileUrl = file.url;
+                const fileType = file.type;
+                
+                // Validate that title and url are strings
+                if (!fileTitle || !fileUrl) {
+                  console.warn(`Module ${moduleIndex}, Video ${videoIndex}, File ${fileIndex}: Missing title or url`);
+                  return;
+                }
+                
+                if (typeof fileTitle !== 'string' || typeof fileUrl !== 'string') {
+                  console.error(`CRITICAL ERROR: Module ${moduleIndex}, Video ${videoIndex}, File ${fileIndex}: Title or URL is not a string!`, {
+                    titleType: typeof fileTitle,
+                    urlType: typeof fileUrl
+                  });
+                  return;
+                }
+                
+                // Create a completely new object with only the required fields
+                // NEVER use JSON.stringify or any string conversion here
+                const newResource = {
+                  title: fileTitle.trim(),
+                  url: fileUrl.trim(),
+                  type: (fileType && typeof fileType === 'string') ? fileType.trim() : 'pdf'
+                };
+                
+                // Final validation before pushing
+                if (typeof newResource.title === 'string' && typeof newResource.url === 'string' && typeof newResource.type === 'string') {
+                  resources.push(newResource);
+                } else {
+                  console.error(`CRITICAL ERROR: Created invalid resource object!`, newResource);
+                }
+              } catch (error) {
+                console.error(`Module ${moduleIndex}, Video ${videoIndex}, File ${fileIndex}: Error processing file`, error);
+              }
+            });
+          }
+          
+          // Final validation - ensure resources is an array of plain objects
+          const validatedResources = resources
+            .filter(r => {
+              const isValid = r && typeof r === 'object' && !Array.isArray(r);
+              if (!isValid) {
+                console.warn(`Module ${moduleIndex}, Video ${videoIndex}: Filtering out invalid resource:`, typeof r, r);
+              }
+              return isValid;
+            })
+            .map(r => {
+              // Create completely fresh object
+              const cleanObj = {
+                title: String(r.title || '').trim(),
+                url: String(r.url || '').trim(),
+                type: String(r.type || 'pdf').trim()
+              };
+              
+              // Verify the object is valid
+              if (typeof cleanObj.title !== 'string' || typeof cleanObj.url !== 'string') {
+                console.error(`Module ${moduleIndex}, Video ${videoIndex}: Invalid resource object created!`, cleanObj);
+                return null;
+              }
+              
+              return cleanObj;
+            })
+            .filter(r => r !== null); // Remove any nulls
+          
+          // DEBUG: Log resources before creating lesson
+          if (validatedResources.length > 0) {
+            console.log(`Module ${moduleIndex}, Video ${videoIndex} resources:`, validatedResources);
+            console.log(`First resource type:`, typeof validatedResources[0]);
+            console.log(`First resource:`, validatedResources[0]);
+          }
+          
+          // Create lesson object with validated resources array
+          const lesson = {
+            title: String(video.title || ''),
+            description: String(video.description || ''),
+            videoUrl: String(video.url || ''),
+            duration: String(video.duration || ''),
+            order: Number(moduleIndex * 100 + videoIndex),
+            moduleId: String(`module-${moduleIndex}`),
+            moduleName: String(module.title || `Module ${moduleIndex + 1}`),
+            resources: validatedResources // Already validated array
+          };
+          
+          // Final check before returning
+          if (!Array.isArray(lesson.resources)) {
+            console.error(`Lesson ${moduleIndex}-${videoIndex}: Resources is not an array!`, typeof lesson.resources, lesson.resources);
+            lesson.resources = [];
+          }
+          
+          // Verify each resource element is an object
+          lesson.resources.forEach((r, rIdx) => {
+            if (typeof r !== 'object' || Array.isArray(r) || typeof r === 'string') {
+              console.error(`Lesson ${moduleIndex}-${videoIndex}, Resource ${rIdx} is invalid!`, typeof r, r);
+            }
+          });
+          
+          return lesson;
+        });
+      });
+
+      // Single pass validation - ensure all lessons have properly formatted resources
+      const validatedLessons = lessons.map(lesson => {
+        // Process resources - ensure it's always an array of objects
+        let safeResources = [];
+        
+        if (lesson.resources) {
+          // Handle if resources is accidentally a string
+          if (typeof lesson.resources === 'string') {
+            try {
+              const parsed = JSON.parse(lesson.resources);
+              lesson.resources = Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+              lesson.resources = [];
+            }
+          }
+          
+          // Process as array
+          if (Array.isArray(lesson.resources)) {
+            safeResources = lesson.resources
+              .filter(r => {
+                // Skip anything that's not a plain object
+                if (!r || typeof r !== 'object' || Array.isArray(r) || typeof r === 'string') {
+                  return false;
+                }
+                // Only include objects with required fields
+                return r.title && r.url;
+              })
+              .map(r => ({
+                title: String(r.title || '').trim(),
+                url: String(r.url || '').trim(),
+                type: String(r.type || 'pdf').trim()
+              }));
+          }
+        }
+        
+        // Return clean lesson object
+        return {
+          title: String(lesson.title || ''),
+          description: String(lesson.description || ''),
+          videoUrl: String(lesson.videoUrl || ''),
+          duration: String(lesson.duration || ''),
+          order: Number(lesson.order || 0),
+          moduleId: String(lesson.moduleId || ''),
+          moduleName: String(lesson.moduleName || ''),
+          resources: safeResources
+        };
+      });
+
+      const finalPayload = {
         title: courseData.title,
         description: courseData.description,
         category: courseData.category,
@@ -217,14 +545,298 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
         duration: courseData.duration,
         image: courseData.image,
         isPublished: courseData.isPublished,
-        lessons
+        lessons: validatedLessons
+      };
+      
+      // Final validation - ensure resources is always an array of plain objects
+      const finalValidatedPayload = {
+        ...finalPayload,
+        lessons: finalPayload.lessons.map((lesson, idx) => {
+          // Start with empty array
+          let finalResources = [];
+          
+          // Only process if resources exists and is truthy
+          if (lesson.resources) {
+            // If resources is a string, try to parse it once
+            let resourcesArray = lesson.resources;
+            if (typeof resourcesArray === 'string') {
+              try {
+                resourcesArray = JSON.parse(resourcesArray);
+              } catch (e) {
+                console.error(`Lesson ${idx}: Failed to parse resources string`, e);
+                resourcesArray = [];
+              }
+            }
+            
+            // Ensure it's an array
+            if (Array.isArray(resourcesArray)) {
+              // Process each element
+              finalResources = resourcesArray
+                .map((r, rIdx) => {
+                  // If element is a string, try to parse it
+                  if (typeof r === 'string') {
+                    try {
+                      const parsed = JSON.parse(r);
+                      // If parsed is an array, take first object or return null
+                      if (Array.isArray(parsed) && parsed.length > 0) {
+                        r = parsed[0]; // Take first object from array
+                      } else if (parsed && typeof parsed === 'object') {
+                        r = parsed;
+                      } else {
+                        return null;
+                      }
+                    } catch (e) {
+                      console.error(`Lesson ${idx}, Resource ${rIdx}: Failed to parse string resource`, e);
+                      return null;
+                    }
+                  }
+                  
+                  // Must be a plain object (not array, not null, not string)
+                  if (r && typeof r === 'object' && !Array.isArray(r)) {
+                    // Create fresh object with only required fields
+                    return {
+                      title: String(r.title || '').trim(),
+                      url: String(r.url || '').trim(),
+                      type: String(r.type || 'pdf').trim()
+                    };
+                  }
+                  
+                  return null;
+                })
+                .filter(r => r !== null && r.title && r.url); // Remove nulls and invalid objects
+            }
+          }
+          
+          // Return lesson with validated resources
+          return {
+            title: String(lesson.title || ''),
+            description: String(lesson.description || ''),
+            videoUrl: String(lesson.videoUrl || ''),
+            duration: String(lesson.duration || ''),
+            order: Number(lesson.order || 0),
+            moduleId: String(lesson.moduleId || ''),
+            moduleName: String(lesson.moduleName || ''),
+            resources: finalResources // Always an array of objects
+          };
+        })
       };
 
+      // Final safety check - ensure all resources are arrays of objects
+      // This is critical - we must ensure resources is NEVER a string
+      const safePayload = {
+        ...finalValidatedPayload,
+        lessons: finalValidatedPayload.lessons.map((lesson, lessonIdx) => {
+          // Start with empty array
+          let safeResources = [];
+          
+          // If resources exists, process it
+          if (lesson.resources) {
+            // If resources is a string, this is a critical error - log it
+            if (typeof lesson.resources === 'string') {
+              console.error(`CRITICAL: Lesson ${lessonIdx} resources is a STRING!`, lesson.resources.substring(0, 200));
+              // Try to parse it
+              try {
+                const parsed = JSON.parse(lesson.resources);
+                if (Array.isArray(parsed)) {
+                  lesson.resources = parsed;
+                } else {
+                  lesson.resources = [];
+                }
+              } catch (e) {
+                console.error(`Failed to parse resources string for lesson ${lessonIdx}`, e);
+                lesson.resources = [];
+              }
+            }
+            
+            // Now process as array
+            if (Array.isArray(lesson.resources)) {
+              safeResources = lesson.resources
+                .map((r, rIdx) => {
+                  // If element is a string, this is an error
+                  if (typeof r === 'string') {
+                    console.error(`CRITICAL: Lesson ${lessonIdx}, Resource ${rIdx} is a STRING!`, r.substring(0, 200));
+                    // Try to parse it
+                    try {
+                      const parsed = JSON.parse(r);
+                      if (Array.isArray(parsed) && parsed.length > 0) {
+                        r = parsed[0];
+                      } else if (parsed && typeof parsed === 'object') {
+                        r = parsed;
+                      } else {
+                        return null;
+                      }
+                    } catch (e) {
+                      console.error(`Failed to parse resource string`, e);
+                      return null;
+                    }
+                  }
+                  
+                  // Must be a plain object
+                  if (r && typeof r === 'object' && !Array.isArray(r)) {
+                    return {
+                      title: String(r.title || '').trim(),
+                      url: String(r.url || '').trim(),
+                      type: String(r.type || 'pdf').trim()
+                    };
+                  }
+                  
+                  return null;
+                })
+                .filter(r => r !== null && r.title && r.url);
+            }
+          }
+          
+          // Final validation - ensure resources is an array
+          if (!Array.isArray(safeResources)) {
+            console.error(`CRITICAL: Lesson ${lessonIdx} safeResources is not an array!`, typeof safeResources);
+            safeResources = [];
+          }
+          
+          return {
+            title: String(lesson.title || ''),
+            description: String(lesson.description || ''),
+            videoUrl: String(lesson.videoUrl || ''),
+            duration: String(lesson.duration || ''),
+            order: Number(lesson.order || 0),
+            moduleId: String(lesson.moduleId || ''),
+            moduleName: String(lesson.moduleName || ''),
+            resources: safeResources // Always an array
+          };
+        })
+      };
+
+      // CRITICAL: Completely rebuild resources array from scratch
+      // This ensures NO strings can get through
+      const readyToSendPayload = {
+        title: safePayload.title,
+        description: safePayload.description,
+        category: safePayload.category,
+        level: safePayload.level,
+        duration: safePayload.duration,
+        image: safePayload.image,
+        isPublished: safePayload.isPublished,
+        lessons: safePayload.lessons.map((lesson, idx) => {
+          // Start with completely fresh resources array
+          const finalResources = [];
+          
+          // Only process if resources exists
+          if (lesson.resources) {
+            // If resources is a string, this is a critical error
+            if (typeof lesson.resources === 'string') {
+              console.error(`CRITICAL ERROR: Lesson ${idx} resources is a STRING!`, lesson.resources.substring(0, 200));
+              // Don't try to parse - just skip it
+            } 
+            // If it's an array, process each element
+            else if (Array.isArray(lesson.resources)) {
+              lesson.resources.forEach((r, rIdx) => {
+                // CRITICAL: If element is a string, log and skip completely
+                if (typeof r === 'string') {
+                  console.error(`CRITICAL ERROR: Lesson ${idx}, Resource ${rIdx} element is STRING!`, r.substring(0, 200));
+                  return; // Skip this element
+                }
+                
+                // Must be a plain object (not array, not null, not string)
+                if (r && typeof r === 'object' && !Array.isArray(r)) {
+                  // Extract values and create fresh object
+                  const title = r.title;
+                  const url = r.url;
+                  const type = r.type;
+                  
+                  // Only add if title and url are valid strings
+                  if (title && url && typeof title === 'string' && typeof url === 'string') {
+                    finalResources.push({
+                      title: title.trim(),
+                      url: url.trim(),
+                      type: (type && typeof type === 'string') ? type.trim() : 'pdf'
+                    });
+                  }
+                }
+              });
+            }
+          }
+          
+          // Return lesson with ONLY the validated resources
+          return {
+            title: String(lesson.title || ''),
+            description: String(lesson.description || ''),
+            videoUrl: String(lesson.videoUrl || ''),
+            duration: String(lesson.duration || ''),
+            order: Number(lesson.order || 0),
+            moduleId: String(lesson.moduleId || ''),
+            moduleName: String(lesson.moduleName || ''),
+            resources: finalResources // Always an array of objects, never strings
+          };
+        })
+      };
+
+      // Debug: Log final payload structure
+      console.log('=== FINAL PAYLOAD DEBUG ===');
+      console.log('First lesson resources:', readyToSendPayload.lessons[0]?.resources);
+      console.log('Resources is array:', Array.isArray(readyToSendPayload.lessons[0]?.resources));
+      if (readyToSendPayload.lessons[0]?.resources?.length > 0) {
+        console.log('First resource element:', readyToSendPayload.lessons[0].resources[0]);
+        console.log('First resource element type:', typeof readyToSendPayload.lessons[0].resources[0]);
+        console.log('First resource element keys:', Object.keys(readyToSendPayload.lessons[0].resources[0]));
+        console.log('First resource element JSON:', JSON.stringify(readyToSendPayload.lessons[0].resources[0]));
+      }
+      
+      // Test JSON serialization
+      try {
+        const testString = JSON.stringify(readyToSendPayload.lessons[0]?.resources);
+        console.log('Resources JSON stringified:', testString);
+        const testParsed = JSON.parse(testString);
+        console.log('Resources parsed back:', testParsed);
+        console.log('Parsed is array:', Array.isArray(testParsed));
+        if (testParsed.length > 0) {
+          console.log('Parsed first element type:', typeof testParsed[0]);
+        }
+      } catch (e) {
+        console.error('JSON serialization test failed:', e);
+      }
+      
+      // FINAL CRITICAL CHECK: Verify NO strings in resources arrays
+      readyToSendPayload.lessons.forEach((lesson, idx) => {
+        if (lesson.resources && Array.isArray(lesson.resources)) {
+          lesson.resources.forEach((r, rIdx) => {
+            if (typeof r === 'string') {
+              console.error(`CRITICAL: Lesson ${idx}, Resource ${rIdx} is STRING before sending!`, r.substring(0, 200));
+              throw new Error(`Resource ${rIdx} in lesson ${idx} is a string! This should never happen.`);
+            }
+            if (!r || typeof r !== 'object' || Array.isArray(r)) {
+              console.error(`CRITICAL: Lesson ${idx}, Resource ${rIdx} is invalid!`, typeof r, r);
+              throw new Error(`Resource ${rIdx} in lesson ${idx} is invalid!`);
+            }
+          });
+        }
+      });
+      
+      // Test the actual JSON that will be sent
+      try {
+        const jsonString = JSON.stringify(readyToSendPayload);
+        const parsedBack = JSON.parse(jsonString);
+        console.log('JSON round-trip test passed');
+        
+        // Check parsed version
+        if (parsedBack.lessons && parsedBack.lessons[0]?.resources) {
+          const firstResource = parsedBack.lessons[0].resources[0];
+          console.log('After JSON round-trip, first resource type:', typeof firstResource);
+          if (typeof firstResource === 'string') {
+            console.error('CRITICAL: After JSON round-trip, first resource is a STRING!', firstResource.substring(0, 200));
+            throw new Error('JSON serialization is corrupting the data!');
+          }
+        }
+      } catch (e) {
+        console.error('JSON round-trip test failed:', e);
+        throw e;
+      }
+      
+      console.log('=== END DEBUG ===');
+
       if (isEditMode) {
-        await adminAPI.updateCourse(course._id, coursePayload);
+        await adminAPI.updateCourse(course._id, readyToSendPayload);
         alert('Course updated successfully!');
       } else {
-        await courseAPI.create(coursePayload);
+        await courseAPI.create(readyToSendPayload);
         alert('Course created successfully!');
       }
 
@@ -335,6 +947,88 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
     const text = html.replace(/<[^>]*>/g, '').trim();
     return text.length > 0;
   };
+
+  // Initialize Quill editor for video description
+  useEffect(() => {
+    if (!videoQuillRefs.current['video-desc']) {
+      return;
+    }
+
+    const refElement = videoQuillRefs.current['video-desc'];
+    
+    // Check if already initialized
+    if (refElement.querySelector('.ql-toolbar') || videoQuillInstances.current['video-desc'] || videoQuillInitializingRef.current['video-desc']) {
+      return;
+    }
+
+    videoQuillInitializingRef.current['video-desc'] = true;
+    refElement.innerHTML = '';
+
+    let quill;
+    try {
+      quill = new Quill(refElement, {
+        theme: 'snow',
+        placeholder: 'Describe what students will learn in this video...',
+        modules: {
+          toolbar: [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            [{ 'indent': '-1'}, { 'indent': '+1' }],
+            [{ 'color': [] }, { 'background': [] }],
+            ['link'],
+            ['clean']
+          ]
+        },
+        formats: [
+          'header', 'bold', 'italic', 'underline', 'strike',
+          'list', 'bullet', 'indent',
+          'color', 'background',
+          'link'
+        ]
+      });
+    } catch (error) {
+      console.error('Error initializing video Quill:', error);
+      return;
+    }
+
+    // Set initial content
+    if (currentVideo.description) {
+      quill.root.innerHTML = currentVideo.description;
+    }
+
+    // Listen for changes
+    quill.on('text-change', () => {
+      const content = quill.root.innerHTML;
+      videoQuillChangeRef.current['video-desc'] = true;
+      setCurrentVideo(prev => ({ ...prev, description: content }));
+    });
+
+    videoQuillInstances.current['video-desc'] = quill;
+    videoQuillInitializingRef.current['video-desc'] = false;
+
+    return () => {
+      videoQuillInitializingRef.current['video-desc'] = false;
+      if (videoQuillInstances.current['video-desc'] && videoQuillRefs.current['video-desc']) {
+        videoQuillInstances.current['video-desc'].off('text-change');
+        if (videoQuillRefs.current['video-desc']) {
+          videoQuillRefs.current['video-desc'].innerHTML = '';
+        }
+        videoQuillInstances.current['video-desc'] = null;
+      }
+    };
+  }, [currentVideo.description]);
+
+  // Update video Quill content when currentVideo.description changes externally
+  useEffect(() => {
+    if (videoQuillInstances.current['video-desc'] && !videoQuillChangeRef.current['video-desc']) {
+      const currentContent = videoQuillInstances.current['video-desc'].root.innerHTML;
+      if (currentVideo.description !== currentContent) {
+        videoQuillInstances.current['video-desc'].root.innerHTML = currentVideo.description || '';
+      }
+    }
+    videoQuillChangeRef.current['video-desc'] = false;
+  }, [currentVideo.description]);
 
   const canSubmit = courseData.title && hasDescriptionContent(courseData.description) && courseData.duration && courseData.modules.length > 0;
 
@@ -586,35 +1280,100 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
                   <button
                     type="button"
                     onClick={addVideo}
-                    className="px-3 py-2 text-[11px] rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all duration-200"
+                    className={`px-3 py-2 text-[11px] rounded-lg text-white shadow-md transition-all duration-200 ${
+                      editingVideoId !== null
+                        ? 'bg-gradient-to-r from-amber-600 to-amber-600 shadow-amber-500/20 hover:shadow-amber-500/40'
+                        : 'bg-gradient-to-r from-cyan-600 to-cyan-600 shadow-cyan-500/20 hover:shadow-cyan-500/40'
+                    }`}
                   >
-                    Add
+                    {editingVideoId !== null ? 'Update' : 'Add'}
                   </button>
+                  {editingVideoId !== null && (
+                    <button
+                      type="button"
+                      onClick={cancelEditVideo}
+                      className="px-3 py-2 text-[11px] rounded-lg bg-gradient-to-r from-red-500 to-red-500 text-white shadow-md shadow-red-500/20 hover:shadow-red-500/40 transition-all duration-200"
+                    >
+                      Cancel
+                    </button>
+                  )}
                 </div>
               </div>
 
+              <div className="mb-3">
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-[0.18em] mb-2">
+                  Video Description
+                </label>
+                <div className="bg-white border border-gray-300 rounded-lg overflow-hidden" id="quill-video-desc-container">
+                  <div ref={el => videoQuillRefs.current['video-desc'] = el} className="text-gray-900" style={{ minHeight: '150px' }} />
+                </div>
+                <style>{`
+                  #quill-video-desc-container .ql-container {
+                    min-height: 120px;
+                    font-size: 14px;
+                  }
+                  #quill-video-desc-container .ql-editor {
+                    min-height: 120px;
+                  }
+                  #quill-video-desc-container .ql-editor.ql-blank::before {
+                    color: #9ca3af;
+                    font-style: normal;
+                  }
+                  #quill-video-desc-container .ql-toolbar {
+                    border-top: 1px solid #ccc;
+                    border-left: 1px solid #ccc;
+                    border-right: 1px solid #ccc;
+                    border-bottom: none;
+                    border-radius: 0.5rem 0.5rem 0 0;
+                  }
+                  #quill-video-desc-container .ql-container {
+                    border-bottom: 1px solid #ccc;
+                    border-left: 1px solid #ccc;
+                    border-right: 1px solid #ccc;
+                    border-top: none;
+                    border-radius: 0 0 0.5rem 0.5rem;
+                  }
+                `}</style>
+              </div>
+
               {currentModule.videos.length > 0 && (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {currentModule.videos.map((video) => (
                     <div
                       key={video.id}
-                      className="flex items-center justify-between p-3 rounded-xl bg-white hover:bg-gray-100 border border-gray-300 transition-all duration-200"
+                      className="p-3 rounded-xl bg-white border border-gray-300 hover:border-gray-400 transition-all duration-200"
                     >
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900">
-                          {video.title}
-                        </p>
-                        <p className="text-[11px] text-gray-600 break-all">
-                          {video.url} • {video.duration || 'No duration'}
-                        </p>
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-gray-900">
+                            {video.title}
+                          </p>
+                          <p className="text-[11px] text-gray-600 break-all">
+                            {video.url} • {video.duration || 'No duration'}
+                          </p>
+                          {video.description && (
+                            <div className="text-[11px] text-gray-700 mt-2 bg-blue-50 p-2 rounded prose prose-sm max-w-none" 
+                              dangerouslySetInnerHTML={{ __html: video.description }}>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex gap-2 ml-2 whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => editVideo(video)}
+                            className="text-blue-500 hover:text-blue-600 text-[11px] transition-colors font-medium"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeVideo(video.id)}
+                            className="text-red-500 hover:text-red-600 text-[11px] transition-colors font-medium"
+                          >
+                            Remove
+                          </button>
+                        </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => removeVideo(video.id)}
-                        className="text-red-500 hover:text-red-600 text-[11px] transition-colors"
-                      >
-                        Remove
-                      </button>
                     </div>
                   ))}
                 </div>
@@ -627,42 +1386,52 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
                 Files & Resources
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3 mt-3">
+              <div className="space-y-3 mb-3 mt-3">
+                <div className="flex gap-3">
                 <input
                   type="text"
                   value={currentFile.title}
                   onChange={(e) =>
                     setCurrentFile({ ...currentFile, title: e.target.value })
                   }
-                  className="px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 placeholder-gray-400"
-                  placeholder="File title"
-                />
+                    className="flex-1 px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+                    placeholder="File title (optional, will use filename if empty)"
+                  />
+                  <label className="px-4 py-2 bg-gradient-to-r from-cyan-600 to-purple-600 text-white rounded-lg cursor-pointer hover:from-cyan-700 hover:to-purple-700 transition-all duration-200 flex items-center gap-2">
+                    {uploadingFile ? (
+                      <>
+                        <span className="animate-spin">⏳</span>
+                        <span>Uploading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>📄</span>
+                        <span>Choose PDF</span>
+                      </>
+                    )}
                 <input
-                  type="text"
-                  value={currentFile.url}
-                  onChange={(e) => setCurrentFile({ ...currentFile, url: e.target.value })}
-                  className="px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 placeholder-gray-400"
-                  placeholder="File URL"
-                />
+                      id="file-upload-input"
+                      type="file"
+                      accept=".pdf,application/pdf"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      disabled={uploadingFile}
+                    />
+                  </label>
+                </div>
+                {currentFile.url && (
+                  <div className="px-3 py-2 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+                    ✓ File uploaded: {currentFile.title || 'PDF file'}
+                  </div>
+                )}
                 <div className="flex gap-2">
-                  <select
-                    value={currentFile.type}
-                    onChange={(e) =>
-                      setCurrentFile({ ...currentFile, type: e.target.value })
-                    }
-                    className="flex-1 px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900"
-                  >
-                    <option value="pdf">PDF</option>
-                    <option value="doc">Document</option>
-                    <option value="ppt">Presentation</option>
-                    <option value="zip">Archive</option>
-                  </select>
                   <button
                     type="button"
                     onClick={addFile}
-                    className="px-3 py-2 text-[11px] rounded-lg bg-white hover:bg-gray-100 text-gray-700 hover:text-gray-900 border border-gray-300 transition-all duration-200"
+                    disabled={!currentFile.url || uploadingFile}
+                    className="flex-1 px-4 py-2 text-sm rounded-lg bg-gradient-to-r from-cyan-600 to-purple-600 text-white shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Add
+                    Add File to Module
                   </button>
                 </div>
               </div>

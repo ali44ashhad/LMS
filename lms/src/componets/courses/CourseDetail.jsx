@@ -73,6 +73,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
           completed: isCompleted,
           url: lesson.videoUrl,
           description: lesson.description,
+          resources: lesson.resources || [], // Include resources
         });
       });
       
@@ -189,10 +190,10 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
 
   const tabs = [
     { id: 'curriculum', label: 'Curriculum' },
+    { id: 'resources', label: 'Resources' },
     // { id: 'overview', label: 'Overview' },
     // { id: 'instructor', label: 'Instructor' },
     // { id: 'reviews', label: 'Reviews' },
-    // { id: 'resources', label: 'Resources' },
   ];
 
   return (
@@ -741,68 +742,87 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
           )}
 
           {/* RESOURCES */}
-          {activeTab === 'resources' && (
-            <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
-              <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-6">
-                Course Resources
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[
-                  {
-                    title: 'Course Slides PDF',
-                    description: 'Download all presentation slides from the course',
-                    type: 'pdf',
-                    size: '2.4 MB',
-                  },
-                  {
-                    title: 'Code Examples',
-                    description:
-                      'All source code used in the course demonstrations',
-                    type: 'zip',
-                    size: '1.8 MB',
-                  },
-                  {
-                    title: 'Cheat Sheets',
-                    description:
-                      'Quick reference guides for HTML, CSS, and JavaScript',
-                    type: 'pdf',
-                    size: '1.2 MB',
-                  },
-                  {
-                    title: 'Project Files',
-                    description: 'Starter files and completed projects',
-                    type: 'zip',
-                    size: '3.5 MB',
-                  },
-                ].map((resource, index) => (
-                  <div
-                    key={index}
-                    className="flex items-start justify-between p-3 rounded-xl bg-white hover:bg-gray-100 border border-gray-300 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow-md"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="text-2xl">
-                        {resource.type === 'pdf' ? '📄' : '📦'}
+          {activeTab === 'resources' && (() => {
+            // Collect all resources from all lessons
+            const allResources = [];
+            if (course.lessons && Array.isArray(course.lessons)) {
+              console.log('CourseDetail: Processing lessons for resources:', course.lessons.length);
+              course.lessons.forEach((lesson, lessonIdx) => {
+                console.log(`Lesson ${lessonIdx}:`, lesson.title, 'Resources:', lesson.resources);
+                if (lesson.resources && Array.isArray(lesson.resources)) {
+                  lesson.resources.forEach((resource, resIdx) => {
+                    console.log(`  Resource ${resIdx}:`, resource);
+                    if (resource && resource.title && resource.url) {
+                      allResources.push({
+                        ...resource,
+                        lessonTitle: lesson.title || 'Lesson'
+                      });
+                    }
+                  });
+                }
+              });
+            }
+            console.log('CourseDetail: Total resources found:', allResources.length);
+            
+            return (
+              <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
+                <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-6">
+                  Course Resources
+                </h2>
+                {allResources.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {allResources.map((resource, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start justify-between p-3 rounded-xl bg-white hover:bg-gray-100 border border-gray-300 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow-md"
+                      >
+                        <div className="flex items-start gap-3 flex-1">
+                          <div className="text-2xl">
+                            {resource.type === 'pdf' ? '📄' : '📎'}
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-medium text-gray-900">
+                              {resource.title}
+                            </h3>
+                            <p className="text-xs text-gray-600 mt-1">
+                              From: {resource.lessonTitle}
+                            </p>
+                            <p className="text-[11px] text-gray-500 mt-2">
+                              {resource.type?.toUpperCase() || 'FILE'}
+                            </p>
+                          </div>
+                        </div>
+                        {(() => {
+                          const fileName = `${(resource.title || 'resource').replace(/\.pdf$/i, '')}.pdf`;
+                          // Add Cloudinary transformation to force download with filename
+                          const downloadUrl = resource.url.includes('cloudinary.com') 
+                            ? `${resource.url.split('?')[0]}?fl_attachment:${encodeURIComponent(fileName)}`
+                            : `${resource.url}${resource.url.includes('?') ? '&' : '?'}download=1`;
+                          
+                          return (
+                            <a
+                              href={downloadUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              download={fileName}
+                              className="px-3 py-1 text-[10px] rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all duration-200 whitespace-nowrap ml-2"
+                            >
+                              Download PDF
+                            </a>
+                          );
+                        })()}
                       </div>
-                      <div>
-                        <h3 className="font-medium text-gray-900">
-                          {resource.title}
-                        </h3>
-                        <p className="text-xs text-gray-600 mt-1">
-                          {resource.description}
-                        </p>
-                        <p className="text-[11px] text-gray-500 mt-2">
-                          {resource.size}
-                        </p>
-                      </div>
-                    </div>
-                    <button className="px-3 py-1 text-[10px] rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all duration-200">
-                      Download
-                    </button>
+                    ))}
                   </div>
-                ))}
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p className="text-lg mb-2">No resources available</p>
+                    <p className="text-sm">Resources will appear here when the instructor adds them to lessons.</p>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
 
         {/* RIGHT SIDEBAR CARDS */}

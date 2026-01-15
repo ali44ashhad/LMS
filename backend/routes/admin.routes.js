@@ -1,9 +1,34 @@
 import express from 'express';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 import User from '../models/User.model.js';
 import Course from '../models/Course.model.js';
 import Enrollment from '../models/Enrollment.model.js';
-import Grade from '../models/Grade.model.js';
 import { protect, authorize } from '../middleware/auth.middleware.js';
+import cloudinary from '../config/cloudinary.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Configure multer for memory storage (for Cloudinary)
+const storage = multer.memoryStorage();
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Allow only PDF files
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed'), false);
+    }
+  }
+});
 
 // Check if Assignment and Quiz models exist, if not just skip them
 let Assignment = null;
@@ -259,8 +284,6 @@ router.delete('/courses/:id', async (req, res) => {
     if (Quiz) {
       await Quiz.deleteMany({ course: req.params.id });
     }
-    
-    await Grade.deleteMany({ course: req.params.id });
 
     await course.deleteOne();
 
@@ -295,6 +318,94 @@ router.get('/enrollments', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// @route   POST /api/admin/upload
+// @desc    Upload course file (PDF) to Cloudinary
+// @access  Private/Admin
+router.post('/upload', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No file uploaded'
+      });
+    }
+
+    // Check Cloudinary configuration
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      console.error('Cloudinary credentials missing!');
+      return res.status(500).json({
+        success: false,
+        message: 'Cloudinary configuration is missing. Please check your .env file.'
+      });
+    }
+
+    console.log('Uploading file to Cloudinary:', {
+      filename: req.file.originalname,
+      size: req.file.size,
+      mimetype: req.file.mimetype,
+      bufferLength: req.file.buffer?.length
+    });
+
+    // Convert buffer to base64 string for Cloudinary
+    const base64File = req.file.buffer.toString('base64');
+    const dataURI = `data:${req.file.mimetype};base64,${base64File}`;
+
+    // Extract original filename without extension for public_id
+    const originalName = req.file.originalname.replace(/\.pdf$/i, ''); // Remove .pdf extension
+    const sanitizedName = originalName.replace(/[^a-zA-Z0-9-_]/g, '_').substring(0, 100); // Sanitize and limit length
+    const publicId = `lms/course-resources/${sanitizedName}-${Date.now()}`;
+
+    // Upload to Cloudinary using upload method
+    console.log('Uploading with options:', {
+      resource_type: 'raw',
+      folder: 'lms/course-resources',
+      public_id: publicId
+    });
+    
+    const uploadResult = await cloudinary.uploader.upload(dataURI, {
+      resource_type: 'raw', // For PDF files
+      folder: 'lms/course-resources', // Organize files in Cloudinary
+      public_id: publicId,
+      overwrite: false,
+      use_filename: false
+    });
+
+    console.log('Cloudinary upload successful:', {
+      secure_url: uploadResult.secure_url,
+      public_id: uploadResult.public_id,
+      full_result: JSON.stringify(uploadResult, null, 2)
+    });
+
+    // Return Cloudinary URL with original filename preserved
+    const fileUrl = uploadResult.secure_url;
+    
+    res.json({
+      success: true,
+      file: {
+        filename: req.file.originalname,
+        originalname: req.file.originalname,
+        url: fileUrl, // Use secure_url for HTTPS
+        public_id: uploadResult.public_id,
+        size: req.file.size,
+        mimetype: req.file.mimetype
+      }
+    });
+  } catch (error) {
+    console.error('Cloudinary upload error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      http_code: error.http_code,
+      name: error.name,
+      stack: error.stack
+    });
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to upload file to Cloudinary',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 

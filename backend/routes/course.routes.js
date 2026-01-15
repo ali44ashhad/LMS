@@ -92,10 +92,196 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
     req.body.instructor = req.user.id;
     req.body.instructorName = req.user.name;
     
+    // Debug: Log the incoming request - RAW data
+    console.log('=== COURSE CREATION DEBUG (RAW) ===');
+    console.log('Received lessons count:', req.body.lessons?.length);
+    if (req.body.lessons && req.body.lessons.length > 0) {
+      const firstLesson = req.body.lessons[0];
+      console.log('First lesson resources (RAW):', JSON.stringify(firstLesson.resources));
+      console.log('First lesson resources type:', typeof firstLesson.resources);
+      console.log('First lesson resources isArray:', Array.isArray(firstLesson.resources));
+      
+      if (Array.isArray(firstLesson.resources) && firstLesson.resources.length > 0) {
+        console.log('First resource element (RAW):', JSON.stringify(firstLesson.resources[0]));
+        console.log('First resource element type:', typeof firstLesson.resources[0]);
+        console.log('First resource element value:', firstLesson.resources[0]);
+        
+        // Check if first element is a string
+        if (typeof firstLesson.resources[0] === 'string') {
+          console.error('ERROR: First resource element is a STRING!');
+          console.error('String value:', firstLesson.resources[0].substring(0, 500));
+        }
+      } else if (typeof firstLesson.resources === 'string') {
+        console.log('WARNING: Resources is a string!', firstLesson.resources.substring(0, 200));
+      }
+    }
+    console.log('=== END RAW DEBUG ===');
+    
+    // Clean and validate lessons resources - COMPLETELY REBUILD from scratch
+    if (req.body.lessons && Array.isArray(req.body.lessons)) {
+      req.body.lessons = req.body.lessons.map((lesson, lessonIndex) => {
+        // Start with completely empty array
+        const cleanResources = [];
+        
+        if (lesson.resources) {
+          // If resources is a string, this is an error - log and skip
+          if (typeof lesson.resources === 'string') {
+            console.error(`Lesson ${lessonIndex}: Resources is a STRING! Attempting to parse...`);
+            try {
+              const parsed = JSON.parse(lesson.resources);
+              lesson.resources = Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+              console.error(`Lesson ${lessonIndex}: Failed to parse resources string:`, e);
+              lesson.resources = [];
+            }
+          }
+          
+          // Process as array - but rebuild completely
+          if (Array.isArray(lesson.resources)) {
+            lesson.resources.forEach((resource, resIndex) => {
+              // CRITICAL: If resource element is a string, this is the problem!
+              if (typeof resource === 'string') {
+                console.error(`CRITICAL: Lesson ${lessonIndex}, Resource ${resIndex} is a STRING!`, resource.substring(0, 200));
+                // Try to parse it
+                try {
+                  const parsed = JSON.parse(resource);
+                  // If parsed is an array, extract objects from it
+                  if (Array.isArray(parsed)) {
+                    parsed.forEach((item, itemIdx) => {
+                      if (item && typeof item === 'object' && !Array.isArray(item) && item.title && item.url) {
+                        cleanResources.push({
+                          title: String(item.title || '').trim(),
+                          url: String(item.url || '').trim(),
+                          type: String(item.type || 'pdf').trim()
+                        });
+                      }
+                    });
+                  } else if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && parsed.title && parsed.url) {
+                    cleanResources.push({
+                      title: String(parsed.title || '').trim(),
+                      url: String(parsed.url || '').trim(),
+                      type: String(parsed.type || 'pdf').trim()
+                    });
+                  }
+                } catch (e) {
+                  console.error(`Lesson ${lessonIndex}, Resource ${resIndex}: Failed to parse string:`, e);
+                  // Skip this resource
+                }
+                return; // Don't process as object
+              }
+              
+              // Skip arrays (unless we handle them above)
+              if (Array.isArray(resource)) {
+                console.warn(`Lesson ${lessonIndex}, Resource ${resIndex}: Resource is an array, extracting objects`);
+                resource.forEach((item) => {
+                  if (item && typeof item === 'object' && !Array.isArray(item) && item.title && item.url) {
+                    cleanResources.push({
+                      title: String(item.title || '').trim(),
+                      url: String(item.url || '').trim(),
+                      type: String(item.type || 'pdf').trim()
+                    });
+                  }
+                });
+                return;
+              }
+              
+              // Only process if it's a plain object
+              if (resource && typeof resource === 'object' && !Array.isArray(resource)) {
+                // Must have title and url
+                if (resource.title && resource.url) {
+                  cleanResources.push({
+                    title: String(resource.title || '').trim(),
+                    url: String(resource.url || '').trim(),
+                    type: String(resource.type || 'pdf').trim()
+                  });
+                } else {
+                  console.warn(`Lesson ${lessonIndex}, Resource ${resIndex}: Missing title or url`);
+                }
+              } else {
+                console.warn(`Lesson ${lessonIndex}, Resource ${resIndex}: Invalid resource type:`, typeof resource);
+              }
+            });
+          }
+        }
+        
+        // Final validation - ensure cleanResources is an array of objects
+        const finalResources = cleanResources.filter(r => {
+          const isValid = r && typeof r === 'object' && !Array.isArray(r) && r.title && r.url;
+          if (!isValid) {
+            console.error(`Lesson ${lessonIndex}: Filtering invalid resource:`, r);
+          }
+          return isValid;
+        });
+        
+        return {
+          title: lesson.title,
+          description: lesson.description,
+          videoUrl: lesson.videoUrl,
+          duration: lesson.duration,
+          order: lesson.order,
+          moduleId: lesson.moduleId,
+          moduleName: lesson.moduleName,
+          resources: finalResources // Always an array of objects
+        };
+      });
+    }
+    
+    // Debug: Log after cleanup
+    if (req.body.lessons && req.body.lessons.length > 0) {
+      console.log('First lesson resources after cleanup:', req.body.lessons[0].resources);
+      console.log('First lesson resources type:', typeof req.body.lessons[0].resources);
+      console.log('First lesson resources isArray:', Array.isArray(req.body.lessons[0].resources));
+      if (req.body.lessons[0].resources && req.body.lessons[0].resources.length > 0) {
+        console.log('First resource element:', req.body.lessons[0].resources[0]);
+        console.log('First resource element type:', typeof req.body.lessons[0].resources[0]);
+        console.log('First resource element keys:', Object.keys(req.body.lessons[0].resources[0]));
+      }
+    }
+    
+    // CRITICAL: Ensure resources is always an array of objects before passing to Mongoose
+    req.body.lessons = req.body.lessons.map(lesson => {
+      // Deep clone to avoid any reference issues
+      const cleanLesson = {
+        title: lesson.title,
+        description: lesson.description,
+        videoUrl: lesson.videoUrl,
+        duration: lesson.duration,
+        order: lesson.order,
+        moduleId: lesson.moduleId,
+        moduleName: lesson.moduleName,
+        resources: [] // Start with empty array
+      };
+      
+      // Rebuild resources array from scratch
+      if (lesson.resources && Array.isArray(lesson.resources)) {
+        lesson.resources.forEach((r) => {
+          // Only add if it's a plain object
+          if (r && typeof r === 'object' && !Array.isArray(r) && r.title && r.url) {
+            cleanLesson.resources.push({
+              title: String(r.title).trim(),
+              url: String(r.url).trim(),
+              type: String(r.type || 'pdf').trim()
+            });
+          }
+        });
+      }
+      
+      return cleanLesson;
+    });
+    
+    // Final check before Mongoose
+    console.log('=== BEFORE MONGOOSE CREATE ===');
+    if (req.body.lessons && req.body.lessons.length > 0) {
+      console.log('Final first lesson resources:', JSON.stringify(req.body.lessons[0].resources));
+      console.log('Final first resource type:', typeof req.body.lessons[0].resources[0]);
+    }
+    
     const course = await Course.create(req.body);
 
     res.status(201).json({ success: true, course });
   } catch (error) {
+    console.error('Course creation error:', error);
+    console.error('Error details:', error.message);
     res.status(500).json({ success: false, message: error.message });
   }
 });

@@ -1,41 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import robot from '../../assets/robot.png';
-import { enrollmentAPI } from '../../services/api';
+import { useRealTimeProgress } from '../../hooks/useRealTimeProgress';
 
 const Sidebar = ({ activeTab, setActiveTab, userRole = 'student' }) => {
-  const [progressData, setProgressData] = useState({
-    overallProgress: 0,
-    completedCourses: 0,
-    totalCourses: 0
-  });
+  // Enable real-time progress updates every 2 seconds for students
+  const { overallProgress, completedCourses, totalCourses } = useRealTimeProgress(
+    userRole === 'student',
+    2000 // Poll every 2 seconds
+  );
 
-  useEffect(() => {
-    if (userRole === 'student') {
-      fetchProgressData();
-    }
-  }, [userRole]);
-
-  const fetchProgressData = async () => {
-    try {
-      const response = await enrollmentAPI.getMy();
-      const enrollments = response.enrollments || [];
-      
-      const totalCourses = enrollments.length;
-      const completedCourses = enrollments.filter((e) => e.progress === 100).length;
-      const overallProgress = totalCourses > 0
-        ? Math.round(
-            enrollments.reduce((acc, e) => acc + (e.progress || 0), 0) / totalCourses
-          )
-        : 0;
-
-      setProgressData({
-        overallProgress,
-        completedCourses,
-        totalCourses
-      });
-    } catch (error) {
-      console.error('Error fetching progress data:', error);
-    }
+  const progressData = {
+    overallProgress,
+    completedCourses,
+    totalCourses
   };
   const adminMenuItems = [
     { id: 'admin-dashboard', label: 'Admin Dashboard', icon: '👨‍💼' },

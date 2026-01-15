@@ -10,27 +10,6 @@ export const formatTime = (minutes) => {
   return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
 };
 
-export const calculateGrade = (score, total) => {
-  const percentage = (score / total) * 100;
-  
-  if (percentage >= 90) return 'A';
-  if (percentage >= 80) return 'B';
-  if (percentage >= 70) return 'C';
-  if (percentage >= 60) return 'D';
-  return 'F';
-};
-
-export const getGradeColor = (grade) => {
-  const gradeColors = {
-    'A': 'text-green-600 bg-green-100',
-    'B': 'text-blue-600 bg-blue-100',
-    'C': 'text-yellow-600 bg-yellow-100',
-    'D': 'text-orange-600 bg-orange-100',
-    'F': 'text-red-600 bg-red-100'
-  };
-  return gradeColors[grade] || 'text-gray-600 bg-gray-100';
-};
-
 export const generateCalendarEvents = (courses, assignments, quizzes) => {
   const events = [];
 

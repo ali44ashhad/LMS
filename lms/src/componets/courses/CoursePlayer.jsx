@@ -96,14 +96,85 @@ const CoursePlayer = ({
   const handleComplete = async () => {
     // Update local progress
     incrementProgress(5);
-    // Call completion handler to sync with backend
+    // Update local UI state immediately
+    setLessonCompleted(true);
+    // Call completion handler to sync with backend (and it will update the parent state)
     onComplete && onComplete();
   };
 
   const progress = duration ? (currentTime / duration) * 100 : 0;
 
+  // Function to clean up lesson description - remove "Module X: Title" prefix if present
+  const cleanLessonDescription = (desc) => {
+    if (!desc) return desc;
+    // Remove "Module X: ..." prefix that may have been added in the past
+    // Pattern: "Module 1:", "Module 2:", etc.
+    const cleanedDesc = desc.replace(/^Module\s+\d+:\s*[^\n]*\n+/i, '');
+    return cleanedDesc;
+  };
+
+  // CSS for cleaning up Quill HTML in lesson descriptions
+  const descriptionStyles = `
+    .lesson-description {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: #374151;
+    }
+    .lesson-description h1,
+    .lesson-description h2,
+    .lesson-description h3,
+    .lesson-description h4,
+    .lesson-description h5,
+    .lesson-description h6 { 
+      margin: 1rem 0 0.5rem 0;
+      font-weight: 600;
+      color: #1f2937;
+    }
+    .lesson-description h1 { font-size: 1.5rem; }
+    .lesson-description h2 { font-size: 1.25rem; }
+    .lesson-description h3 { font-size: 1.1rem; }
+    .lesson-description p { 
+      margin: 0.75rem 0;
+    }
+    .lesson-description ol,
+    .lesson-description ul { 
+      margin: 1rem 0;
+      padding-left: 2.5rem;
+      list-style-position: outside;
+    }
+    .lesson-description ol {
+      list-style-type: decimal;
+    }
+    .lesson-description ul {
+      list-style-type: disc;
+    }
+    .lesson-description li { 
+      margin: 0.5rem 0;
+      display: list-item;
+    }
+    .lesson-description strong {
+      font-weight: 600;
+      background-color: transparent !important;
+    }
+    .lesson-description em {
+      font-style: italic;
+    }
+    .lesson-description a {
+      color: #0891b2;
+      text-decoration: underline;
+    }
+    .lesson-description a:hover {
+      color: #0e7490;
+    }
+    /* Remove inline background colors from Quill styling */
+    .lesson-description span[style*="background-color"] {
+      background-color: transparent !important;
+    }
+  `;
+
   return (
     <div className="max-w-6xl mx-auto bg-[#FBFBFB] border rounded-lg shadow-sm">
+      <style>{descriptionStyles}</style>
       {/* HEADER */}
       <div className="px-6 py-4 border-b flex justify-between items-center">
         <div>
@@ -322,23 +393,90 @@ const CoursePlayer = ({
             </div>
           {/* DESCRIPTION */}
           <div className="p-6">
-            <h2 className="text-xl font-semibold mb-4">
-              About This Lesson
-            </h2>
-            <p className="mb-4 text-gray-600">
-              This lesson covers important concepts and techniques that are
-              fundamental to understanding{" "}
-              {course.category.toLowerCase()}.
-            </p>
-            <ul className="list-disc list-inside space-y-2 text-gray-600">
-              <li>Understand core concepts</li>
-              <li>Learn practical techniques</li>
-              <li>Apply knowledge</li>
-              <li>Develop problem-solving skills</li>
-            </ul>
-            
-           
+             
+            {lesson.description ? (
+              <>
+                <div 
+                  className="lesson-description mb-4"
+                  dangerouslySetInnerHTML={{ __html: cleanLessonDescription(lesson.description) }}
+                />
+                {lesson.learningPoints && Array.isArray(lesson.learningPoints) && lesson.learningPoints.length > 0 ? (
+                  <ul className="list-disc list-inside space-y-2 text-gray-600">
+                    {lesson.learningPoints.map((point, idx) => (
+                      <li key={idx}>{point}</li>
+                    ))}
+                  </ul>
+                )  : null}
+              </>
+            ) : (
+              <>
+                <p className="mb-4 text-gray-600">
+                  This lesson covers important concepts and techniques that are
+                  fundamental to understanding {course.category.toLowerCase()}.
+                </p>
+                <ul className="list-disc list-inside space-y-2 text-gray-600">
+                  <li>Understand core concepts</li>
+                  <li>Learn practical techniques</li>
+                  <li>Apply knowledge</li>
+                  <li>Develop problem-solving skills</li>
+                </ul>
+              </>
+            )}
           </div>
+
+          {/* FILES & RESOURCES */}
+          {(() => {
+            console.log('CoursePlayer: Lesson resources:', lesson.resources);
+            return lesson.resources && Array.isArray(lesson.resources) && lesson.resources.length > 0;
+          })() && (
+            <div className="p-6 border-t">
+              <h2 className="text-xl font-semibold mb-4">Files & Resources</h2>
+              <div className="space-y-3">
+                {lesson.resources.map((resource, index) => {
+                  console.log(`CoursePlayer: Resource ${index}:`, resource);
+                  return (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="text-2xl">
+                        {resource.type === 'pdf' ? '📄' : '📎'}
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-900">
+                          {resource.title || 'Resource'}
+                        </h3>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {resource.type?.toUpperCase() || 'FILE'}
+                        </p>
+                      </div>
+                    </div>
+                    {(() => {
+                      const fileName = `${(resource.title || 'resource').replace(/\.pdf$/i, '')}.pdf`;
+                      // Add Cloudinary transformation to force download with filename
+                      const downloadUrl = resource.url.includes('cloudinary.com') 
+                        ? `${resource.url.split('?')[0]}?fl_attachment:${encodeURIComponent(fileName)}`
+                        : `${resource.url}${resource.url.includes('?') ? '&' : '?'}download=1`;
+                      
+                      return (
+                        <a
+                          href={downloadUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          download={fileName}
+                          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
+                        >
+                          Download PDF
+                        </a>
+                      );
+                    })()}
+                  </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* SIDEBAR */}
@@ -369,191 +507,3 @@ const CoursePlayer = ({
 };
 
 export default CoursePlayer;
-
-
-
-// import React, { useState, useRef } from 'react';
-// import { useProgress } from '../../hooks/useProgress';
-// import { formatTime } from '../../utils/helpers';
-
-// const CoursePlayer = ({
-//   course,
-//   lesson,
-//   onComplete,
-//   onNext,
-//   onPrevious,
-//   onExit
-// }) => {
-//   const videoRef = useRef(null);
-
-//   /* ================= FLOATING VIDEO STATE ================= */
-//   const [showPlayer, setShowPlayer] = useState(true);
-//   const [position, setPosition] = useState({ x: 40, y: 100 });
-//   const dragOffset = useRef({ x: 0, y: 0 });
-
-//   /* ================= PROGRESS ================= */
-//   const [currentTime, setCurrentTime] = useState(0);
-//   const [duration, setDuration] = useState(0);
-
-//   const { incrementProgress } = useProgress(course.id);
-
-//   /* ================= DRAG LOGIC ================= */
-//   const startDrag = (e) => {
-//     dragOffset.current = {
-//       x: e.clientX - position.x,
-//       y: e.clientY - position.y
-//     };
-//     document.addEventListener('mousemove', onDrag);
-//     document.addEventListener('mouseup', stopDrag);
-//   };
-
-//   const onDrag = (e) => {
-//     setPosition({
-//       x: e.clientX - dragOffset.current.x,
-//       y: e.clientY - dragOffset.current.y
-//     });
-//   };
-
-//   const stopDrag = () => {
-//     document.removeEventListener('mousemove', onDrag);
-//     document.removeEventListener('mouseup', stopDrag);
-//   };
-
-//   /* ================= VIDEO HANDLERS ================= */
-//   const handleTimeUpdate = () => {
-//     if (!videoRef.current) return;
-
-//     setCurrentTime(videoRef.current.currentTime);
-//     setDuration(videoRef.current.duration || 0);
-
-//     if (
-//       videoRef.current.duration &&
-//       videoRef.current.currentTime / videoRef.current.duration > 0.9
-//     ) {
-//       incrementProgress(1);
-//       onComplete && onComplete();
-//     }
-//   };
-
-//   const isYouTube = lesson?.url?.includes('youtube');
-//   const youtubeEmbedUrl = lesson?.url
-//     ? lesson.url.replace('watch?v=', 'embed/').split('&')[0]
-//     : '';
-
-//   /* ================= UI ================= */
-//   return (
-//     <>
-//       {/* ================= ORIGINAL COURSE UI (UNCHANGED) ================= */}
-//       <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200">
-//         {/* Header */}
-//         <div className="px-6 py-4 border-b flex justify-between items-center">
-//           <div>
-//             <button
-//               onClick={onExit}
-//               className="text-sm text-gray-600 hover:text-gray-900 mb-2"
-//             >
-//               ← Back to Course
-//             </button>
-//             <h1 className="text-xl font-bold">{lesson.title}</h1>
-//             <p className="text-gray-600">{course.title}</p>
-//           </div>
-
-//           <button
-//             onClick={() => setShowPlayer(true)}
-//             className="px-4 py-2 bg-[#6ED6EE] text-white rounded-lg hover:bg-purple-700"
-//           >
-//             Open Video
-//           </button>
-//         </div>
-
-//         {/* Lesson Details */}
-//         <div className="p-6">
-//           <h2 className="text-lg font-semibold mb-3">About this lesson</h2>
-//           <p className="text-gray-700 mb-4">
-//             This lesson focuses on key concepts of{' '}
-//             <strong>{course.category}</strong>. Watch the video carefully and
-//             take notes to reinforce learning.
-//           </p>
-
-//           <ul className="list-disc list-inside text-gray-700 space-y-2 mb-6">
-//             <li>Concept overview & explanation</li>
-//             <li>Real-world examples</li>
-//             <li>Practical tips & best practices</li>
-//             <li>Lesson summary</li>
-//           </ul>
-
-//           <div className="flex gap-3">
-//             <button
-//               onClick={onPrevious}
-//               disabled={lesson.id === 1}
-//               className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-//             >
-//               ← Previous Lesson
-//             </button>
-//             <button
-//               onClick={onNext}
-//               className="px-4 py-2 bg-[#6ED6EE] text-white rounded"
-//             >
-//               Next Lesson →
-//             </button>
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* ================= FLOATING SMALL IFRAME ================= */}
-//       {showPlayer && lesson.url && (
-//         <div
-//           style={{ left: position.x, top: position.y }}
-//           className="
-//             fixed z-[9999]
-//             w-[460px] h-[290px]
-//             bg-black rounded-lg shadow-2xl
-//           "
-//         >
-//           {/* Drag Header */}
-//           <div
-//             onMouseDown={startDrag}
-//             className="
-//               h-8 px-3
-//               flex items-center justify-between
-//               bg-gray-900 text-white
-//               cursor-move select-none
-//               rounded-t-lg text-xs
-//             "
-//           >
-//             <span className="truncate">{lesson.title}</span>
-//             <button
-//               onClick={() => setShowPlayer(false)}
-//               className="text-red-400 hover:text-red-500"
-//             >
-//               ✕
-//             </button>
-//           </div>
-
-//           {/* Video */}
-//           <div className="w-full h-[calc(100%-2rem)]">
-//             {isYouTube ? (
-//               <iframe
-//                 src={youtubeEmbedUrl}
-//                 title={lesson.title}
-//                 className="w-full h-full rounded-b-lg"
-//                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-//                 allowFullScreen
-//               />
-//             ) : (
-//               <video
-//                 ref={videoRef}
-//                 src={lesson.url}
-//                 controls
-//                 onTimeUpdate={handleTimeUpdate}
-//                 className="w-full h-full rounded-b-lg bg-black"
-//               />
-//             )}
-//           </div>
-//         </div>
-//       )}
-//     </>
-//   );
-// };
-
-// export default CoursePlayer;

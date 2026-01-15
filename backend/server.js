@@ -25,9 +25,12 @@ const allowedOrigins = [
   'http://localhost:5174',
   'http://localhost:3000',
   process.env.FRONTEND_URL
-].filter(Boolean);
+]
+  .filter(Boolean)
+  .map(origin => origin.replace(/\/$/, '')); // Remove trailing slashes
 
 console.log('🌐 CORS Allowed Origins:', allowedOrigins);
+console.log('🌐 FRONTEND_URL from env:', process.env.FRONTEND_URL);
 
 // CORS configuration function
 const corsOptions = {
@@ -61,7 +64,46 @@ const corsOptions = {
   optionsSuccessStatus: 204
 };
 
-// Apply CORS middleware
+// Manual CORS headers middleware (FIRST - runs before everything)
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const normalizedOrigin = origin ? origin.replace(/\/$/, '') : null;
+  
+  console.log(`🔍 Request: ${req.method} ${req.path}, Origin: ${origin || 'none'}`);
+  console.log(`📋 Allowed origins:`, allowedOrigins);
+  
+  // Check if origin is allowed (normalized comparison)
+  const isAllowed = normalizedOrigin && allowedOrigins.includes(normalizedOrigin);
+  
+  if (isAllowed) {
+    console.log(`✅ Setting CORS headers for allowed origin: ${origin}`);
+    res.setHeader('Access-Control-Allow-Origin', origin); // Use original origin, not normalized
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
+    res.setHeader('Access-Control-Expose-Headers', 'Authorization');
+    res.setHeader('Access-Control-Max-Age', '86400');
+  } else if (origin) {
+    console.warn(`⚠️ Origin not in allowed list: ${origin}`);
+    console.warn(`   Normalized: ${normalizedOrigin}`);
+    console.warn(`   Allowed: ${allowedOrigins.join(', ')}`);
+  }
+  
+  // Handle preflight OPTIONS requests IMMEDIATELY
+  if (req.method === 'OPTIONS') {
+    console.log(`✈️ Handling OPTIONS preflight request`);
+    if (isAllowed) {
+      return res.status(204).end();
+    } else {
+      // Still respond to OPTIONS even if origin not allowed (but without CORS headers)
+      return res.status(204).end();
+    }
+  }
+  
+  next();
+});
+
+// Apply CORS middleware (as backup)
 app.use(cors(corsOptions));
 
 // Explicitly handle OPTIONS requests for all routes with same CORS config
@@ -126,8 +168,22 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Export for Vercel serverless functions
+// Vercel expects a handler function
+const handler = app;
+
+// Only start server if not in Vercel environment
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+// Check if we're running in Vercel (Vercel sets VERCEL env variable)
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+  });
+} else {
+  console.log('🚀 Running on Vercel');
+}
+
+// Export both app and handler for compatibility
+export { app, handler };
+export default app;

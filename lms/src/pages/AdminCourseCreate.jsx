@@ -147,10 +147,10 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
         setEditingVideoId(null);
       } else {
         // Add new video
-        setCurrentModule((prev) => ({
-          ...prev,
-          videos: [...prev.videos, { ...currentVideo, id: Date.now() }]
-        }));
+      setCurrentModule((prev) => ({
+        ...prev,
+        videos: [...prev.videos, { ...currentVideo, id: Date.now() }]
+      }));
       }
       setCurrentVideo({ title: '', url: '', duration: '', description: '' });
     }
@@ -950,68 +950,73 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
 
   // Initialize Quill editor for video description (same pattern as course description)
   useEffect(() => {
-    // Only initialize if ref exists
-    if (!videoQuillRefs.current['video-desc']) {
-      return;
-    }
+    // Use a small delay to ensure DOM is ready and state is updated
+    const timeoutId = setTimeout(() => {
+      // Only initialize if ref exists
+      if (!videoQuillRefs.current['video-desc']) {
+        return;
+      }
 
-    // Check if Quill is already initialized in this container (handles StrictMode double render)
-    if (videoQuillRefs.current['video-desc'].querySelector('.ql-toolbar') || videoQuillInstances.current['video-desc'] || videoQuillInitializingRef.current['video-desc']) {
-      return;
-    }
+      // Check if Quill is already initialized in this container (handles StrictMode double render)
+      if (videoQuillRefs.current['video-desc'].querySelector('.ql-toolbar') || videoQuillInstances.current['video-desc'] || videoQuillInitializingRef.current['video-desc']) {
+        return;
+      }
 
-    // Set flag to prevent duplicate initialization
-    videoQuillInitializingRef.current['video-desc'] = true;
+      // Set flag to prevent duplicate initialization
+      videoQuillInitializingRef.current['video-desc'] = true;
 
-    // Clear any existing content in the ref
-    videoQuillRefs.current['video-desc'].innerHTML = '';
+      // Clear any existing content in the ref
+      videoQuillRefs.current['video-desc'].innerHTML = '';
 
-    let quill;
-    try {
-      quill = new Quill(videoQuillRefs.current['video-desc'], {
-        theme: 'snow',
-        placeholder: 'Describe what students will learn in this video...',
-        modules: {
-          toolbar: [
-            [{ 'header': [1, 2, 3, false] }],
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-            [{ 'indent': '-1'}, { 'indent': '+1' }],
-            [{ 'color': [] }, { 'background': [] }],
-            ['link'],
-            ['clean']
+      let quill;
+      try {
+        quill = new Quill(videoQuillRefs.current['video-desc'], {
+          theme: 'snow',
+          placeholder: 'Describe what students will learn in this video...',
+          modules: {
+            toolbar: [
+              [{ 'header': [1, 2, 3, false] }],
+              ['bold', 'italic', 'underline', 'strike'],
+              [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+              [{ 'indent': '-1'}, { 'indent': '+1' }],
+              [{ 'color': [] }, { 'background': [] }],
+              ['link'],
+              ['clean']
+            ]
+          },
+          formats: [
+            'header', 'bold', 'italic', 'underline', 'strike',
+            'list', 'bullet', 'indent',
+            'color', 'background',
+            'link'
           ]
-        },
-        formats: [
-          'header', 'bold', 'italic', 'underline', 'strike',
-          'list', 'bullet', 'indent',
-          'color', 'background',
-          'link'
-        ]
+        });
+      } catch (error) {
+        console.error('Error initializing video Quill:', error);
+        videoQuillInitializingRef.current['video-desc'] = false;
+        return;
+      }
+
+      // Set initial content if editing - use currentVideo.description from state
+      const description = currentVideo.description || '';
+      if (description) {
+        quill.root.innerHTML = description;
+      }
+
+      // Listen for text changes
+      quill.on('text-change', () => {
+        const content = quill.root.innerHTML;
+        videoQuillChangeRef.current['video-desc'] = true;
+        setCurrentVideo(prev => ({ ...prev, description: content }));
       });
-    } catch (error) {
-      console.error('Error initializing video Quill:', error);
+
+      videoQuillInstances.current['video-desc'] = quill;
       videoQuillInitializingRef.current['video-desc'] = false;
-      return;
-    }
-
-    // Set initial content if editing
-    if (currentVideo.description) {
-      quill.root.innerHTML = currentVideo.description;
-    }
-
-    // Listen for text changes
-    quill.on('text-change', () => {
-      const content = quill.root.innerHTML;
-      videoQuillChangeRef.current['video-desc'] = true;
-      setCurrentVideo(prev => ({ ...prev, description: content }));
-    });
-
-    videoQuillInstances.current['video-desc'] = quill;
-    videoQuillInitializingRef.current['video-desc'] = false;
+    }, 50); // Small delay to ensure state is updated
 
     // Cleanup function
     return () => {
+      clearTimeout(timeoutId);
       videoQuillInitializingRef.current['video-desc'] = false;
       if (videoQuillInstances.current['video-desc'] && videoQuillRefs.current['video-desc']) {
         // Remove event listeners
@@ -1314,7 +1319,9 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
                 <div className="bg-white border border-gray-300 rounded-lg overflow-hidden" id="quill-video-desc-container">
                   <div 
                     key={`video-desc-${editingVideoId || 'new'}`}
-                    ref={el => { videoQuillRefs.current['video-desc'] = el; }}
+                    ref={el => { 
+                      videoQuillRefs.current['video-desc'] = el;
+                    }}
                     className="text-gray-900" 
                     style={{ minHeight: '150px' }} 
                   />
@@ -1357,16 +1364,16 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
-                          <p className="text-sm font-semibold text-gray-900">
-                            {video.title}
-                          </p>
-                          <p className="text-[11px] text-gray-600 break-all">
-                            {video.url} • {video.duration || 'No duration'}
-                          </p>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {video.title}
+                        </p>
+                        <p className="text-[11px] text-gray-600 break-all">
+                          {video.url} • {video.duration || 'No duration'}
+                        </p>
                           {video.description && (
                             <div className="text-[11px] text-gray-700 mt-2 bg-blue-50 p-2 rounded prose prose-sm max-w-none" 
                               dangerouslySetInnerHTML={{ __html: video.description }}>
-                            </div>
+                      </div>
                           )}
                         </div>
                         <div className="flex gap-2 ml-2 whitespace-nowrap">
@@ -1377,13 +1384,13 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
                           >
                             Edit
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => removeVideo(video.id)}
+                      <button
+                        type="button"
+                        onClick={() => removeVideo(video.id)}
                             className="text-red-500 hover:text-red-600 text-[11px] transition-colors font-medium"
-                          >
-                            Remove
-                          </button>
+                      >
+                        Remove
+                      </button>
                         </div>
                       </div>
                     </div>

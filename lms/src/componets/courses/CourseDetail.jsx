@@ -60,21 +60,44 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
             id: moduleId,
             title: moduleName,
             duration: 'Self-paced',
-            lessons: []
+            lessons: [],
+            moduleResources: [] // Module-level resources
           });
         }
         
-        moduleMap.get(moduleId).lessons.push({
-          id: lessonId || idx + 1,
-          _id: lessonId,
-          title: lesson.title || `Lesson ${idx + 1}`,
-          duration: lesson.duration || '10 min',
-          type: 'video',
-          completed: isCompleted,
-          url: lesson.videoUrl,
-          description: lesson.description,
-          resources: lesson.resources || [], // Include resources
-        });
+        const module = moduleMap.get(moduleId);
+        
+        // Check if this is a module resource lesson (no videoUrl and isModuleResource flag)
+        const isModuleResourceLesson = lesson.isModuleResource || 
+                                      (!lesson.videoUrl && lesson.title && lesson.title.includes('Resources'));
+        
+        if (isModuleResourceLesson) {
+          // This is a module resource lesson - add resources to moduleResources, not as a lesson
+          if (lesson.resources && Array.isArray(lesson.resources)) {
+            lesson.resources.forEach((resource) => {
+              if (resource && typeof resource === 'object' && resource.title && resource.url) {
+                module.moduleResources.push({
+                  title: resource.title,
+                  url: resource.url,
+                  type: resource.type || 'pdf'
+                });
+              }
+            });
+          }
+        } else if (lesson.videoUrl) {
+          // This is a regular video lesson - add to lessons array
+          module.lessons.push({
+            id: lessonId || idx + 1,
+            _id: lessonId,
+            title: lesson.title || `Lesson ${idx + 1}`,
+            duration: lesson.duration || '10 min',
+            type: 'video',
+            completed: isCompleted,
+            url: lesson.videoUrl,
+            description: lesson.description,
+            resources: [], // Video lessons should not have resources - they're module-level
+          });
+        }
       });
       
       // Convert map to array and calculate module durations
@@ -139,6 +162,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
           title: mod.title || `Module ${idx + 1}`,
           duration: mod.duration || '1 hour',
           lessons: moduleLessons,
+          moduleResources: mod.files || mod.resources || [], // Module-level resources/files
         };
       });
     } else {
@@ -190,7 +214,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
 
   const tabs = [
     { id: 'curriculum', label: 'Curriculum' },
-    { id: 'resources', label: 'Resources' },
+    // { id: 'resources', label: 'Resources' }, // Resources now shown in curriculum section
     // { id: 'overview', label: 'Overview' },
     // { id: 'instructor', label: 'Instructor' },
     // { id: 'reviews', label: 'Reviews' },
@@ -429,69 +453,148 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
                         <div className="px-5 pb-5 bg-gray-50/50">
                           <div className="space-y-2 pt-2">
                             {module.lessons.map((lesson, lessonIndex) => (
-                              <div
-                                key={lesson.id}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onLessonSelect && onLessonSelect(lesson);
-                                }}
-                                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 hover:bg-white border ${
-                                  lesson.completed
-                                    ? 'border-lime-300 bg-lime-50/50'
-                                    : 'border-gray-200 bg-white hover:shadow-sm'
-                                }`}
-                              >
+                              <div key={lesson.id}>
                                 <div
-                                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 ${
-                                    lesson.completed
-                                      ? 'bg-gradient-to-r from-lime-500 to-lime-400 text-white shadow-md shadow-lime-500/30'
-                                      : 'bg-gray-200 text-gray-700'
-                                  }`}
-                                >
-                                  {lesson.completed ? '✓' : lessonIndex + 1}
-                                </div>
-
-                                <div className="flex-1 min-w-0">
-                                  <h4 className="text-sm font-medium text-gray-900 truncate">
-                                    {lesson.title}
-                                  </h4>
-                                  <div className="flex flex-wrap items-center gap-2 mt-1 text-[11px] text-gray-600">
-                                    <span className="flex items-center gap-1">
-                                      <span>
-                                        {lesson.type === 'video'
-                                          ? '🎥'
-                                          : lesson.type === 'quiz'
-                                          ? '🧠'
-                                          : lesson.type === 'assignment'
-                                          ? '📝'
-                                          : '📄'}
-                                      </span>
-                                      <span className="capitalize">
-                                        {lesson.type}
-                                      </span>
-                                    </span>
-                                    <span>•</span>
-                                    <span>{lesson.duration}</span>
-                                  </div>
-                                </div>
-
-                                <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     onLessonSelect && onLessonSelect(lesson);
                                   }}
-                                  className={`px-3 py-1 text-[10px] rounded-lg transition-all duration-200 flex-shrink-0 ${
+                                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 hover:bg-white border ${
                                     lesson.completed
-                                      ? 'bg-white hover:bg-gray-100 text-gray-700 hover:text-gray-900 border border-gray-300'
-                                      : 'bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/40'
+                                      ? 'border-lime-300 bg-lime-50/50'
+                                      : 'border-gray-200 bg-white hover:shadow-sm'
                                   }`}
                                 >
-                                  {lesson.completed ? 'Review' : 'Start'}
-                                </button>
+                                  <div
+                                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 ${
+                                      lesson.completed
+                                        ? 'bg-gradient-to-r from-lime-500 to-lime-400 text-white shadow-md shadow-lime-500/30'
+                                        : 'bg-gray-200 text-gray-700'
+                                    }`}
+                                  >
+                                    {lesson.completed ? '✓' : lessonIndex + 1}
+                                  </div>
+
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="text-sm font-medium text-gray-900 truncate">
+                                      {lesson.title}
+                                    </h4>
+                                    <div className="flex flex-wrap items-center gap-2 mt-1 text-[11px] text-gray-600">
+                                      <span className="flex items-center gap-1">
+                                        <span>
+                                          {lesson.type === 'video'
+                                            ? '🎥'
+                                            : lesson.type === 'quiz'
+                                            ? '🧠'
+                                            : lesson.type === 'assignment'
+                                            ? '📝'
+                                            : '📄'}
+                                        </span>
+                                        <span className="capitalize">
+                                          {lesson.type}
+                                        </span>
+                                      </span>
+                                      <span>•</span>
+                                      <span>{lesson.duration}</span>
+                                    </div>
+                                  </div>
+
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onLessonSelect && onLessonSelect(lesson);
+                                    }}
+                                    className={`px-3 py-1 text-[10px] rounded-lg transition-all duration-200 flex-shrink-0 ${
+                                      lesson.completed
+                                        ? 'bg-white hover:bg-gray-100 text-gray-700 hover:text-gray-900 border border-gray-300'
+                                        : 'bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/40'
+                                    }`}
+                                  >
+                                    {lesson.completed ? 'Review' : 'Start'}
+                                  </button>
+                                </div>
+                                
+                                {/* Resources for this lesson */}
+                                {lesson.resources && Array.isArray(lesson.resources) && lesson.resources.length > 0 && (
+                                  <div className="flex col-2 md:col-3 py-3 space-y-2">
+                                    {lesson.resources.map((resource, resIndex) => (
+                                      resource && resource.title && resource.url && (
+                                        <div
+                                          key={resIndex}
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="flex items-center gap-2 p-2 rounded-lg bg-white border border-gray-200 hover:border-cyan-300 hover:shadow-sm transition-all duration-200"
+                                        >
+                                          <div className="text-lg flex-shrink-0">
+                                            {resource.type === 'pdf' ? '📄' : '📎'}
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <h5 className="text-xs font-medium text-gray-900 truncate">
+                                              {resource.title}
+                                            </h5>
+                                            <p className="text-[10px] text-gray-500">
+                                              {resource.type?.toUpperCase() || 'FILE'}
+                                            </p>
+                                          </div>
+                                          <a
+                                            href={resource.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="px-2 py-1 text-[10px] rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-sm hover:shadow-md transition-all duration-200 flex-shrink-0"
+                                          >
+                                            {resource.type === 'pdf' ? 'View' : 'Open'}
+                                          </a>
+                                        </div>
+                                      )
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             ))}
                           </div>
+                          
+                          {/* Module-level resources (if any) */}
+                          {module.moduleResources && Array.isArray(module.moduleResources) && module.moduleResources.length > 0 && (
+                            <div className="mt-4 pt-4 border-t border-gray-300">
+                              <h4 className="text-xs font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+                                Module Resources
+                              </h4>
+                              <div className="space-y-2">
+                                {module.moduleResources.map((resource, resIndex) => (
+                                  resource && resource.title && resource.url && (
+                                    <div
+                                      key={resIndex}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="flex items-center gap-2 p-2 rounded-lg bg-white border border-gray-200 hover:border-cyan-300 hover:shadow-sm transition-all duration-200"
+                                    >
+                                      <div className="text-lg flex-shrink-0">
+                                        {resource.type === 'pdf' ? '📄' : '📎'}
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <h5 className="text-xs font-medium text-gray-900 truncate">
+                                          {resource.title}
+                                        </h5>
+                                        <p className="text-[10px] text-gray-500">
+                                          {resource.type?.toUpperCase() || 'FILE'}
+                                        </p>
+                                      </div>
+                                      <a
+                                        href={resource.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="px-2 py-1 text-[10px] rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-sm hover:shadow-md transition-all duration-200 flex-shrink-0"
+                                      >
+                                        {resource.type === 'pdf' ? 'View' : 'Open'}
+                                      </a>
+                                    </div>
+                                  )
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
+                        
                       )}
                     </div>
                   );

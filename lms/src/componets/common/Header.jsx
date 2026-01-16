@@ -50,7 +50,7 @@ const Header = ({ user, onLogout }) => {
               </span>
               <input
                 type="text"
-                placeholder="Search modules..."
+                placeholder="Search courses..."
                 className="w-48 lg:w-64 pl-9 pr-3 py-1.5 md:py-2 text-xs md:text-sm
                   rounded-lg bg-white/90 border border-[#1EAAFF]
                   focus:outline-none focus:ring-2 focus:ring-cyan-400"

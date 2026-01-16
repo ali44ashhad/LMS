@@ -950,18 +950,42 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
 
   // Initialize Quill editor for video description
   useEffect(() => {
-    if (!videoQuillRefs.current['video-desc']) {
+    const refElement = videoQuillRefs.current['video-desc'];
+    
+    if (!refElement) {
       return;
     }
 
-    const refElement = videoQuillRefs.current['video-desc'];
+    // Check if already initialized - more thorough check
+    const hasToolbar = refElement.querySelector('.ql-toolbar');
+    const hasInstance = videoQuillInstances.current['video-desc'];
+    const isInitializing = videoQuillInitializingRef.current['video-desc'];
     
-    // Check if already initialized
-    if (refElement.querySelector('.ql-toolbar') || videoQuillInstances.current['video-desc'] || videoQuillInitializingRef.current['video-desc']) {
+    if (hasToolbar || hasInstance || isInitializing) {
       return;
+    }
+
+    // Cleanup any existing Quill instance first (defensive)
+    if (hasInstance) {
+      try {
+        hasInstance.off('text-change');
+        if (refElement) {
+          // Remove all Quill-generated DOM elements
+          const toolbar = refElement.querySelector('.ql-toolbar');
+          const container = refElement.querySelector('.ql-container');
+          if (toolbar) toolbar.remove();
+          if (container) container.remove();
+          refElement.innerHTML = '';
+        }
+        videoQuillInstances.current['video-desc'] = null;
+      } catch (e) {
+        console.warn('Error cleaning up existing Quill instance:', e);
+      }
     }
 
     videoQuillInitializingRef.current['video-desc'] = true;
+    
+    // Clear the container completely
     refElement.innerHTML = '';
 
     let quill;
@@ -989,6 +1013,7 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
       });
     } catch (error) {
       console.error('Error initializing video Quill:', error);
+      videoQuillInitializingRef.current['video-desc'] = false;
       return;
     }
 
@@ -1007,17 +1032,28 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
     videoQuillInstances.current['video-desc'] = quill;
     videoQuillInitializingRef.current['video-desc'] = false;
 
+    // Cleanup function
     return () => {
       videoQuillInitializingRef.current['video-desc'] = false;
-      if (videoQuillInstances.current['video-desc'] && videoQuillRefs.current['video-desc']) {
-        videoQuillInstances.current['video-desc'].off('text-change');
-        if (videoQuillRefs.current['video-desc']) {
-          videoQuillRefs.current['video-desc'].innerHTML = '';
+      const instance = videoQuillInstances.current['video-desc'];
+      const ref = videoQuillRefs.current['video-desc'];
+      
+      if (instance && ref) {
+        try {
+          instance.off('text-change');
+          // Properly destroy Quill instance by removing all its DOM
+          const toolbar = ref.querySelector('.ql-toolbar');
+          const container = ref.querySelector('.ql-container');
+          if (toolbar) toolbar.remove();
+          if (container) container.remove();
+          ref.innerHTML = '';
+          videoQuillInstances.current['video-desc'] = null;
+        } catch (e) {
+          console.warn('Error in Quill cleanup:', e);
         }
-        videoQuillInstances.current['video-desc'] = null;
       }
     };
-  }, [currentVideo.description]);
+  }, [editingVideoId, currentVideo.title]); // Only re-initialize when editing a different video, not on description change
 
   // Update video Quill content when currentVideo.description changes externally
   useEffect(() => {
@@ -1305,7 +1341,36 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
                   Video Description
                 </label>
                 <div className="bg-white border border-gray-300 rounded-lg overflow-hidden" id="quill-video-desc-container">
-                  <div ref={el => videoQuillRefs.current['video-desc'] = el} className="text-gray-900" style={{ minHeight: '150px' }} />
+                  <div 
+                    key={`video-desc-${editingVideoId || 'new'}`}
+                    ref={el => {
+                      if (el && videoQuillRefs.current['video-desc'] !== el) {
+                        // Cleanup old instance if ref changes
+                        const oldInstance = videoQuillInstances.current['video-desc'];
+                        if (oldInstance) {
+                          try {
+                            oldInstance.off('text-change');
+                            const oldRef = videoQuillRefs.current['video-desc'];
+                            if (oldRef) {
+                              const toolbar = oldRef.querySelector('.ql-toolbar');
+                              const container = oldRef.querySelector('.ql-container');
+                              if (toolbar) toolbar.remove();
+                              if (container) container.remove();
+                              oldRef.innerHTML = '';
+                            }
+                            videoQuillInstances.current['video-desc'] = null;
+                          } catch (e) {
+                            console.warn('Error cleaning up Quill on ref change:', e);
+                          }
+                        }
+                        videoQuillRefs.current['video-desc'] = el;
+                      } else if (!el) {
+                        videoQuillRefs.current['video-desc'] = null;
+                      }
+                    }} 
+                    className="text-gray-900" 
+                    style={{ minHeight: '150px' }} 
+                  />
                 </div>
                 <style>{`
                   #quill-video-desc-container .ql-container {

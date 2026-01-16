@@ -950,90 +950,100 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
 
   // Initialize Quill editor for video description
   useEffect(() => {
-    const refElement = videoQuillRefs.current['video-desc'];
-    
-    if (!refElement) {
-      return;
-    }
-
-    // Check if already initialized - more thorough check
-    const hasToolbar = refElement.querySelector('.ql-toolbar');
-    const hasInstance = videoQuillInstances.current['video-desc'];
-    const isInitializing = videoQuillInitializingRef.current['video-desc'];
-    
-    if (hasToolbar || hasInstance || isInitializing) {
-      return;
-    }
-
-    // Cleanup any existing Quill instance first (defensive)
-    if (hasInstance) {
-      try {
-        hasInstance.off('text-change');
-        if (refElement) {
-          // Remove all Quill-generated DOM elements
-          const toolbar = refElement.querySelector('.ql-toolbar');
-          const container = refElement.querySelector('.ql-container');
-          if (toolbar) toolbar.remove();
-          if (container) container.remove();
-          refElement.innerHTML = '';
-        }
-        videoQuillInstances.current['video-desc'] = null;
-      } catch (e) {
-        console.warn('Error cleaning up existing Quill instance:', e);
+    // Use a timeout to ensure DOM is stable and avoid multiple initializations
+    const timeoutId = setTimeout(() => {
+      const refElement = videoQuillRefs.current['video-desc'];
+      
+      if (!refElement) {
+        return;
       }
-    }
 
-    videoQuillInitializingRef.current['video-desc'] = true;
-    
-    // Clear the container completely
-    refElement.innerHTML = '';
+      // Check if element is actually in the DOM
+      if (!refElement.isConnected) {
+        return;
+      }
 
-    let quill;
-    try {
-      quill = new Quill(refElement, {
-        theme: 'snow',
-        placeholder: 'Describe what students will learn in this video...',
-        modules: {
-          toolbar: [
-            [{ 'header': [1, 2, 3, false] }],
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-            [{ 'indent': '-1'}, { 'indent': '+1' }],
-            [{ 'color': [] }, { 'background': [] }],
-            ['link'],
-            ['clean']
+      // Check if already initialized - more thorough check
+      const hasToolbar = refElement.querySelector('.ql-toolbar');
+      const hasInstance = videoQuillInstances.current['video-desc'];
+      const isInitializing = videoQuillInitializingRef.current['video-desc'];
+      
+      if (hasToolbar || hasInstance || isInitializing) {
+        return;
+      }
+
+      // Cleanup any existing Quill instance first (defensive)
+      if (hasInstance) {
+        try {
+          hasInstance.off('text-change');
+          const oldRef = videoQuillRefs.current['video-desc'];
+          if (oldRef) {
+            // Remove all Quill-generated DOM elements
+            const toolbar = oldRef.querySelector('.ql-toolbar');
+            const container = oldRef.querySelector('.ql-container');
+            if (toolbar) toolbar.remove();
+            if (container) container.remove();
+            oldRef.innerHTML = '';
+          }
+          videoQuillInstances.current['video-desc'] = null;
+        } catch (e) {
+          console.warn('Error cleaning up existing Quill instance:', e);
+        }
+      }
+
+      videoQuillInitializingRef.current['video-desc'] = true;
+      
+      // Clear the container completely
+      refElement.innerHTML = '';
+
+      let quill;
+      try {
+        quill = new Quill(refElement, {
+          theme: 'snow',
+          placeholder: 'Describe what students will learn in this video...',
+          modules: {
+            toolbar: [
+              [{ 'header': [1, 2, 3, false] }],
+              ['bold', 'italic', 'underline', 'strike'],
+              [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+              [{ 'indent': '-1'}, { 'indent': '+1' }],
+              [{ 'color': [] }, { 'background': [] }],
+              ['link'],
+              ['clean']
+            ]
+          },
+          formats: [
+            'header', 'bold', 'italic', 'underline', 'strike',
+            'list', 'bullet', 'indent',
+            'color', 'background',
+            'link'
           ]
-        },
-        formats: [
-          'header', 'bold', 'italic', 'underline', 'strike',
-          'list', 'bullet', 'indent',
-          'color', 'background',
-          'link'
-        ]
+        });
+      } catch (error) {
+        console.error('Error initializing video Quill:', error);
+        videoQuillInitializingRef.current['video-desc'] = false;
+        return;
+      }
+
+      // Set initial content
+      if (currentVideo.description) {
+        quill.root.innerHTML = currentVideo.description;
+      }
+
+      // Listen for changes
+      quill.on('text-change', () => {
+        const content = quill.root.innerHTML;
+        videoQuillChangeRef.current['video-desc'] = true;
+        setCurrentVideo(prev => ({ ...prev, description: content }));
       });
-    } catch (error) {
-      console.error('Error initializing video Quill:', error);
+
+      videoQuillInstances.current['video-desc'] = quill;
       videoQuillInitializingRef.current['video-desc'] = false;
-      return;
-    }
-
-    // Set initial content
-    if (currentVideo.description) {
-      quill.root.innerHTML = currentVideo.description;
-    }
-
-    // Listen for changes
-    quill.on('text-change', () => {
-      const content = quill.root.innerHTML;
-      videoQuillChangeRef.current['video-desc'] = true;
-      setCurrentVideo(prev => ({ ...prev, description: content }));
-    });
-
-    videoQuillInstances.current['video-desc'] = quill;
-    videoQuillInitializingRef.current['video-desc'] = false;
+    }, 100); // Small delay to ensure DOM is stable
 
     // Cleanup function
     return () => {
+      clearTimeout(timeoutId);
       videoQuillInitializingRef.current['video-desc'] = false;
       const instance = videoQuillInstances.current['video-desc'];
       const ref = videoQuillRefs.current['video-desc'];
@@ -1053,7 +1063,7 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
         }
       }
     };
-  }, [editingVideoId, currentVideo.title]); // Only re-initialize when editing a different video, not on description change
+  }, [editingVideoId]); // Only re-initialize when editing a different video
 
   // Update video Quill content when currentVideo.description changes externally
   useEffect(() => {
@@ -1344,12 +1354,35 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
                   <div 
                     key={`video-desc-${editingVideoId || 'new'}`}
                     ref={el => {
-                      if (el && videoQuillRefs.current['video-desc'] !== el) {
-                        // Cleanup old instance if ref changes
-                        const oldInstance = videoQuillInstances.current['video-desc'];
-                        if (oldInstance) {
+                      // Only update ref if it's different and element exists
+                      if (el) {
+                        // If ref is changing, cleanup old instance first
+                        if (videoQuillRefs.current['video-desc'] && videoQuillRefs.current['video-desc'] !== el) {
+                          const oldInstance = videoQuillInstances.current['video-desc'];
+                          if (oldInstance) {
+                            try {
+                              oldInstance.off('text-change');
+                              const oldRef = videoQuillRefs.current['video-desc'];
+                              if (oldRef && oldRef.isConnected) {
+                                const toolbar = oldRef.querySelector('.ql-toolbar');
+                                const container = oldRef.querySelector('.ql-container');
+                                if (toolbar) toolbar.remove();
+                                if (container) container.remove();
+                                oldRef.innerHTML = '';
+                              }
+                              videoQuillInstances.current['video-desc'] = null;
+                            } catch (e) {
+                              console.warn('Error cleaning up Quill on ref change:', e);
+                            }
+                          }
+                        }
+                        videoQuillRefs.current['video-desc'] = el;
+                      } else {
+                        // Element unmounted - cleanup
+                        const instance = videoQuillInstances.current['video-desc'];
+                        if (instance) {
                           try {
-                            oldInstance.off('text-change');
+                            instance.off('text-change');
                             const oldRef = videoQuillRefs.current['video-desc'];
                             if (oldRef) {
                               const toolbar = oldRef.querySelector('.ql-toolbar');
@@ -1360,11 +1393,9 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
                             }
                             videoQuillInstances.current['video-desc'] = null;
                           } catch (e) {
-                            console.warn('Error cleaning up Quill on ref change:', e);
+                            console.warn('Error cleaning up Quill on unmount:', e);
                           }
                         }
-                        videoQuillRefs.current['video-desc'] = el;
-                      } else if (!el) {
                         videoQuillRefs.current['video-desc'] = null;
                       }
                     }} 

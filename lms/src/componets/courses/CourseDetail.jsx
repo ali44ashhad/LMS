@@ -770,13 +770,13 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
                   Course Resources
                 </h2>
                 {allResources.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-4">
                     {allResources.map((resource, index) => (
                       <div
                         key={index}
-                        className="flex items-start justify-between p-3 rounded-xl bg-white hover:bg-gray-100 border border-gray-300 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow-md"
+                        className="bg-white rounded-xl border border-gray-300 shadow-sm overflow-hidden"
                       >
-                        <div className="flex items-start gap-3 flex-1">
+                        <div className="flex items-start gap-3 p-4 bg-gray-50 border-b border-gray-200">
                           <div className="text-2xl">
                             {resource.type === 'pdf' ? '📄' : '📎'}
                           </div>
@@ -792,25 +792,78 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
                             </p>
                           </div>
                         </div>
-                        {(() => {
-                          const fileName = `${(resource.title || 'resource').replace(/\.pdf$/i, '')}.pdf`;
-                          // Add Cloudinary transformation to force download with filename
-                          const downloadUrl = resource.url.includes('cloudinary.com') 
-                            ? `${resource.url.split('?')[0]}?fl_attachment:${encodeURIComponent(fileName)}`
-                            : `${resource.url}${resource.url.includes('?') ? '&' : '?'}download=1`;
-                          
-                          return (
+                        {resource.type === 'pdf' ? (
+                          <div className="w-full" style={{ height: '600px' }}>
+                            {(() => {
+                              // Normalize URL: Fix old URLs with %20 and wrong folder path
+                              let pdfUrl = resource.url;
+                              
+                              // Check if URL has old format issues
+                              const hasOldFormat = pdfUrl.includes('%20') || pdfUrl.includes('/lms/') && !pdfUrl.includes('/lms/course-resources/');
+                              
+                              if (hasOldFormat) {
+                                console.warn('CourseDetail: Old URL format detected, attempting to fix:', pdfUrl);
+                                
+                                // Try to fix: replace %20 with hyphens and fix folder path
+                                pdfUrl = pdfUrl
+                                  .replace(/%20/g, '-') // Replace %20 with hyphens
+                                  .replace(/\/lms\/(?!course-resources)/, '/lms/course-resources/'); // Fix folder path
+                                
+                                console.log('CourseDetail: Fixed URL:', pdfUrl);
+                              }
+                              
+                              console.log('CourseDetail: Rendering PDF with URL:', pdfUrl);
+                              
+                              return (
+                                <>
+                                  {/* Show warning if old format was detected */}
+                                  {hasOldFormat && (
+                                    <div className="mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+                                      ⚠️ This PDF was uploaded with an old format. If it doesn't load, please re-upload it from the admin panel.
+                                    </div>
+                                  )}
+                                  
+                                  {/* Use Google Docs Viewer for reliable PDF display */}
+                                  <iframe
+                                    src={`https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=true`}
+                                    className="w-full h-full border-0"
+                                    title={resource.title || 'PDF Viewer'}
+                                    style={{ border: 'none' }}
+                                    onError={(e) => {
+                                      console.error('PDF iframe error:', e, 'URL:', pdfUrl);
+                                    }}
+                                    onLoad={() => {
+                                      console.log('PDF iframe loaded successfully');
+                                    }}
+                                  />
+                                  
+                                  {/* Fallback: Direct link */}
+                                  <div className="mt-2 text-center p-2 bg-gray-50 text-xs">
+                                    <a
+                                      href={pdfUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-blue-600 hover:text-blue-800 underline"
+                                    >
+                                      Open PDF directly
+                                    </a>
+                                  </div>
+                                </>
+                              );
+                            })()}
+                          </div>
+                        ) : (
+                          <div className="p-4">
                             <a
-                              href={downloadUrl}
+                              href={resource.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              download={fileName}
-                              className="px-3 py-1 text-[10px] rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all duration-200 whitespace-nowrap ml-2"
+                              className="px-3 py-1 text-[10px] rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all duration-200 whitespace-nowrap inline-block"
                             >
-                              Download PDF
+                              Open Resource
                             </a>
-                          );
-                        })()}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

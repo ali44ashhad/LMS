@@ -431,15 +431,15 @@ const CoursePlayer = ({
           })() && (
             <div className="p-6 border-t">
               <h2 className="text-xl font-semibold mb-4">Files & Resources</h2>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {lesson.resources.map((resource, index) => {
                   console.log(`CoursePlayer: Resource ${index}:`, resource);
                   return (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+                    className="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 p-4 bg-white border-b border-gray-200">
                       <div className="text-2xl">
                         {resource.type === 'pdf' ? '📄' : '📎'}
                       </div>
@@ -452,25 +452,78 @@ const CoursePlayer = ({
                         </p>
                       </div>
                     </div>
-                    {(() => {
-                      const fileName = `${(resource.title || 'resource').replace(/\.pdf$/i, '')}.pdf`;
-                      // Add Cloudinary transformation to force download with filename
-                      const downloadUrl = resource.url.includes('cloudinary.com') 
-                        ? `${resource.url.split('?')[0]}?fl_attachment:${encodeURIComponent(fileName)}`
-                        : `${resource.url}${resource.url.includes('?') ? '&' : '?'}download=1`;
-                      
-                      return (
+                    {resource.type === 'pdf' ? (
+                      <div className="w-full" style={{ height: '600px' }}>
+                        {(() => {
+                          // Normalize URL: Fix old URLs with %20 and wrong folder path
+                          let pdfUrl = resource.url;
+                          
+                          // Check if URL has old format issues
+                          const hasOldFormat = pdfUrl.includes('%20') || pdfUrl.includes('/lms/') && !pdfUrl.includes('/lms/course-resources/');
+                          
+                          if (hasOldFormat) {
+                            console.warn('CoursePlayer: Old URL format detected, attempting to fix:', pdfUrl);
+                            
+                            // Try to fix: replace %20 with hyphens and fix folder path
+                            pdfUrl = pdfUrl
+                              .replace(/%20/g, '-') // Replace %20 with hyphens
+                              .replace(/\/lms\/(?!course-resources)/, '/lms/course-resources/'); // Fix folder path
+                            
+                            console.log('CoursePlayer: Fixed URL:', pdfUrl);
+                          }
+                          
+                          console.log('CoursePlayer: Rendering PDF with URL:', pdfUrl);
+                          
+                          return (
+                            <>
+                              {/* Show warning if old format was detected */}
+                              {hasOldFormat && (
+                                <div className="mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+                                  ⚠️ This PDF was uploaded with an old format. If it doesn't load, please re-upload it from the admin panel.
+                                </div>
+                              )}
+                              
+                              {/* Use Google Docs Viewer for reliable PDF display */}
+                              <iframe
+                                src={`https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=true`}
+                                className="w-full h-full border-0"
+                                title={resource.title || 'PDF Viewer'}
+                                style={{ border: 'none' }}
+                                onError={(e) => {
+                                  console.error('PDF iframe error:', e, 'URL:', pdfUrl);
+                                }}
+                                onLoad={() => {
+                                  console.log('PDF iframe loaded successfully');
+                                }}
+                              />
+                              
+                              {/* Fallback: Direct link */}
+                              <div className="mt-2 text-center p-2 bg-gray-50 text-xs">
+                                <a
+                                  href={pdfUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 underline"
+                                >
+                                  Open PDF directly
+                                </a>
+                              </div>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    ) : (
+                      <div className="p-4">
                         <a
-                          href={downloadUrl}
+                          href={resource.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          download={fileName}
-                          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
+                          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors inline-block"
                         >
-                          Download PDF
+                          Open Resource
                         </a>
-                      );
-                    })()}
+                      </div>
+                    )}
                   </div>
                   );
                 })}

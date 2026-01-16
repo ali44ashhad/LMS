@@ -36,12 +36,12 @@ let Quiz = null;
 try {
   Assignment = (await import('../models/Assignment.model.js')).default;
 } catch (e) {
-  console.log('Assignment model not found');
+  // Assignment model not found - skip silently
 }
 try {
   Quiz = (await import('../models/Quiz.model.js')).default;
 } catch (e) {
-  console.log('Quiz model not found');
+  // Quiz model not found - skip silently
 }
 
 const router = express.Router();
@@ -353,34 +353,65 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     const base64File = req.file.buffer.toString('base64');
     const dataURI = `data:${req.file.mimetype};base64,${base64File}`;
 
-    // Extract original filename without extension for public_id
-    const originalName = req.file.originalname.replace(/\.pdf$/i, ''); // Remove .pdf extension
-    const sanitizedName = originalName.replace(/[^a-zA-Z0-9-_]/g, '_').substring(0, 100); // Sanitize and limit length
-    const publicId = `lms/course-resources/${sanitizedName}-${Date.now()}`;
-
-    // Upload to Cloudinary using upload method
-    console.log('Uploading with options:', {
-      resource_type: 'raw',
-      folder: 'lms/course-resources',
-      public_id: publicId
+    // Preserve original filename for display, but sanitize for Cloudinary
+    const originalName = req.file.originalname;
+    
+    // Ensure filename ends with .pdf
+    const filenameWithExt = originalName.toLowerCase().endsWith('.pdf') 
+      ? originalName 
+      : `${originalName}.pdf`;
+    
+    // Sanitize filename for Cloudinary: replace spaces with hyphens, remove special chars
+    const baseName = filenameWithExt.replace(/\.pdf$/i, '');
+    const sanitizedName = baseName
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/[^a-zA-Z0-9-_]/g, '-') // Replace special chars with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+      .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+    
+    const timestamp = Date.now();
+    
+    // Use sanitized filename with timestamp for public_id
+    const publicId = `${sanitizedName}-${timestamp}`;
+    
+    // Upload to Cloudinary
+    console.log('Uploading file to Cloudinary:', {
+      originalname: originalName,
+      sanitized_name: sanitizedName,
+      public_id: publicId,
+      size: req.file.size,
+      mimetype: req.file.mimetype
     });
     
+    // Upload PDF to Cloudinary as raw file
     const uploadResult = await cloudinary.uploader.upload(dataURI, {
       resource_type: 'raw', // For PDF files
       folder: 'lms/course-resources', // Organize files in Cloudinary
-      public_id: publicId,
+      public_id: publicId, // Sanitized filename with timestamp
       overwrite: false,
-      use_filename: false
+      use_filename: false,
+      format: 'pdf' // Explicitly set format
     });
 
     console.log('Cloudinary upload successful:', {
       secure_url: uploadResult.secure_url,
       public_id: uploadResult.public_id,
-      full_result: JSON.stringify(uploadResult, null, 2)
+      version: uploadResult.version
     });
 
-    // Return Cloudinary URL with original filename preserved
-    const fileUrl = uploadResult.secure_url;
+    // Use Cloudinary's secure_url directly - it has the correct sanitized path
+    // This URL will have hyphens instead of spaces (%20)
+    let fileUrl = uploadResult.secure_url;
+    
+    // Ensure URL ends with .pdf extension for proper browser handling
+    if (!fileUrl.toLowerCase().endsWith('.pdf')) {
+      fileUrl = `${fileUrl}.pdf`;
+    }
+    
+    // Remove query parameters for clean URL
+    if (fileUrl.includes('?')) {
+      fileUrl = fileUrl.split('?')[0];
+    }
     
     res.json({
       success: true,

@@ -11,8 +11,6 @@ const apiSecret = process.env.CLOUDINARY_API_SECRET;
 if (!cloudName || !apiKey || !apiSecret) {
   console.warn('⚠️  Cloudinary credentials are missing! Please check your .env file.');
   console.warn('Required variables: CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET');
-} else {
-  console.log('✅ Cloudinary configured successfully');
 }
 
 cloudinary.config({

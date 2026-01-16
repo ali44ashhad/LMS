@@ -86,9 +86,6 @@ try {
   allowedOrigins = ['https://courses.cyfi.nestatoys.com'];
 }
 
-console.log('🌐 CORS Allowed Origins:', allowedOrigins);
-console.log('🌐 FRONTEND_URL from env:', process.env.FRONTEND_URL);
-
 // CORS configuration function
 const corsOptions = {
   origin: function (origin, callback) {
@@ -96,11 +93,8 @@ const corsOptions = {
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.includes(origin)) {
-      console.log(`✅ CORS allowed for origin: ${origin}`);
       callback(null, true);
     } else {
-      console.warn(`❌ CORS blocked request from origin: ${origin}`);
-      console.log('Allowed origins:', allowedOrigins);
       callback(new Error('CORS not allowed for this origin'));
     }
   },
@@ -145,14 +139,6 @@ app.use((req, res, next) => {
 
 // Apply CORS middleware (as backup)
 app.use(cors(corsOptions));
-
-// Request logging middleware (for debugging) - skip for OPTIONS to reduce noise
-app.use((req, res, next) => {
-  if (req.method !== 'OPTIONS') {
-    console.log(`${req.method} ${req.path} - Origin: ${req.headers.origin || 'none'}`);
-  }
-  next();
-});
 
 // Middleware
 app.use(express.json());
@@ -238,6 +224,4 @@ if (!process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
   });
-} else {
-  console.log('🚀 Running on Vercel');
 }

@@ -32,11 +32,18 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
     description: ''
   });
   const [editingVideoId, setEditingVideoId] = useState(null);
+  // Track which video is being edited in modules (format: "moduleId-videoId")
+  const [editingVideoInModule, setEditingVideoInModule] = useState(null);
+  const [editingVideoData, setEditingVideoData] = useState({});
   const [videoDescEditing, setVideoDescEditing] = useState(null);
   const videoQuillRefs = useRef({});
   const videoQuillInstances = useRef({});
   const videoQuillChangeRef = useRef({});
   const videoQuillInitializingRef = useRef({});
+  const videoEditorRef = useRef(null);
+  const moduleEditorRef = useRef(null);
+  // Refs for inline video editors in modules
+  const inlineVideoEditorRefs = useRef({});
 
   const [currentFile, setCurrentFile] = useState({
     title: '',
@@ -67,7 +74,7 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
           title: moduleName,
           description: '', // Module description, not lesson description
           videos: [],
-          files: [],
+          files: [], // Module-level files/resources
           quiz: null,
           assignment: null
         });
@@ -75,8 +82,41 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
       
       const module = moduleMap.get(moduleId);
       
-      // Add video to module
-      if (lesson.videoUrl) {
+      // Check if this is a module resource lesson (no videoUrl and isModuleResource flag)
+      const isModuleResourceLesson = lesson.isModuleResource || 
+                                    (!lesson.videoUrl && lesson.title && lesson.title.includes('Resources'));
+      
+      if (isModuleResourceLesson) {
+        // This is a module resource lesson - add resources to module.files
+        if (lesson.resources) {
+          let resourcesArray = [];
+          
+          // Handle if resources is a string
+          if (typeof lesson.resources === 'string') {
+            try {
+              resourcesArray = JSON.parse(lesson.resources);
+            } catch (e) {
+              console.warn('Failed to parse resources string:', e);
+              resourcesArray = [];
+            }
+          } else if (Array.isArray(lesson.resources)) {
+            resourcesArray = lesson.resources;
+          }
+          
+          resourcesArray.forEach((resource) => {
+            // Only add if resource is a valid object
+            if (resource && typeof resource === 'object' && resource.title && resource.url) {
+              module.files.push({
+                title: String(resource.title || ''),
+                url: String(resource.url || ''),
+                type: String(resource.type || 'pdf'),
+                id: resource._id || resource.id || (Date.now() + Math.random())
+              });
+            }
+          });
+        }
+      } else if (lesson.videoUrl) {
+        // This is a regular video lesson - add video to module
         module.videos.push({
           id: lesson._id || (Date.now() + Math.random()),
           title: lesson.title || '',
@@ -85,35 +125,8 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
           description: lesson.description || ''
         });
       }
-      
-      // Add files to module
-      if (lesson.resources) {
-        let resourcesArray = [];
-        
-        // Handle if resources is a string (shouldn't happen, but be defensive)
-        if (typeof lesson.resources === 'string') {
-          try {
-            resourcesArray = JSON.parse(lesson.resources);
-          } catch (e) {
-            console.warn('Failed to parse resources string:', e);
-            resourcesArray = [];
-          }
-        } else if (Array.isArray(lesson.resources)) {
-          resourcesArray = lesson.resources;
-        }
-        
-        resourcesArray.forEach((resource) => {
-          // Only add if resource is a valid object
-          if (resource && typeof resource === 'object' && resource.title && resource.url) {
-          module.files.push({
-              title: String(resource.title || ''),
-              url: String(resource.url || ''),
-              type: String(resource.type || 'pdf'),
-            id: resource._id || resource.id || (Date.now() + Math.random())
-          });
-          }
-        });
-      }
+      // Note: We no longer add lesson.resources to module.files for regular video lessons
+      // Only module resource lessons contribute to module.files
     });
     
     return Array.from(moduleMap.values());
@@ -157,15 +170,127 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
   };
 
   const editVideo = (video) => {
-    setCurrentVideo(video);
+    // Ensure we have all video properties including description
+    const videoWithDescription = {
+      title: video.title || '',
+      url: video.url || '',
+      duration: video.duration || '',
+      description: video.description || ''
+    };
+    
+    // Reset any stuck Quill state before editing
+    videoQuillChangeRef.current['video-desc'] = false;
+    
+    // Set the video data and editing ID
+    setCurrentVideo(videoWithDescription);
     setEditingVideoId(video.id);
-    // Scroll to form
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Scrolling is handled by useEffect when editingVideoId changes
+  };
+
+  // Edit video directly in modules array (for inline editing)
+  const editVideoInModule = (moduleId, video) => {
+    const videoKey = `${moduleId}-${video.id}`;
+    const videoWithDescription = {
+      title: video.title || '',
+      url: video.url || '',
+      duration: video.duration || '',
+      description: video.description || ''
+    };
+    
+    // Reset any stuck Quill state before editing
+    videoQuillChangeRef.current[videoKey] = false;
+    
+    // Set the video data and editing key
+    setEditingVideoInModule(videoKey);
+    setEditingVideoData(videoWithDescription);
+  };
+
+  // Save video edited in modules array
+  const saveVideoInModule = (moduleId, videoId) => {
+    const module = courseData.modules.find(m => m.id === moduleId);
+    if (!module) return;
+
+    if (editingVideoData.title && editingVideoData.url) {
+      setCourseData((prev) => ({
+        ...prev,
+        modules: prev.modules.map((m) =>
+          m.id === moduleId
+            ? {
+                ...m,
+                videos: m.videos.map((v) =>
+                  v.id === videoId ? { ...editingVideoData, id: videoId } : v
+                )
+              }
+            : m
+        )
+      }));
+      
+      // Cleanup Quill instance
+      const videoKey = `${moduleId}-${videoId}`;
+      if (videoQuillInstances.current[videoKey]) {
+        try {
+          videoQuillInstances.current[videoKey].off('text-change');
+        } catch (e) {
+          console.error('Error removing event listeners:', e);
+        }
+        videoQuillInstances.current[videoKey] = null;
+      }
+      
+      setEditingVideoInModule(null);
+      setEditingVideoData({});
+    }
+  };
+
+  // Cancel editing video in modules array
+  const cancelEditVideoInModule = (moduleId, videoId) => {
+    const videoKey = `${moduleId}-${videoId}`;
+    
+    // Cleanup Quill instance
+    if (videoQuillInstances.current[videoKey]) {
+      try {
+        videoQuillInstances.current[videoKey].off('text-change');
+      } catch (e) {
+        console.error('Error removing event listeners:', e);
+      }
+      videoQuillInstances.current[videoKey] = null;
+    }
+    
+    // Clean up DOM elements
+    const container = videoQuillRefs.current[videoKey];
+    if (container) {
+      const parentContainer = container?.parentElement;
+      if (parentContainer) {
+        const toolbar = parentContainer.querySelector('.ql-toolbar');
+        if (toolbar) toolbar.remove();
+        const qlContainer = parentContainer.querySelector('.ql-container');
+        if (qlContainer) qlContainer.remove();
+      }
+      container.innerHTML = '';
+    }
+    
+    setEditingVideoInModule(null);
+    setEditingVideoData({});
   };
 
   const cancelEditVideo = () => {
     setCurrentVideo({ title: '', url: '', duration: '', description: '' });
     setEditingVideoId(null);
+  };
+
+  // Remove video from modules array
+  const removeVideoFromModule = (moduleId, videoId) => {
+    setCourseData((prev) => ({
+      ...prev,
+      modules: prev.modules.map((m) =>
+        m.id === moduleId
+          ? {
+              ...m,
+              videos: m.videos.filter((v) => v.id !== videoId)
+            }
+          : m
+      )
+    }));
   };
 
   const removeVideo = (videoId) => {
@@ -302,8 +427,7 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
     if (moduleToEdit) {
       setCurrentModule(JSON.parse(JSON.stringify(moduleToEdit)));
       setEditingModuleId(moduleId);
-      // Scroll to module builder
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Scrolling is handled by useEffect when editingModuleId changes
     }
   };
 
@@ -334,13 +458,12 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
       console.log('=== END INITIAL STATE DEBUG ===');
 
       const lessons = courseData.modules.flatMap((module, moduleIndex) => {
-        // Ensure module.files is an array
+        // Ensure module.files is an array (for module-level resources)
         let moduleFiles = [];
         if (module && module.files) {
           if (Array.isArray(module.files)) {
             moduleFiles = module.files;
           } else if (typeof module.files === 'string') {
-            // If files is a string, try to parse it
             try {
               const parsed = JSON.parse(module.files);
               moduleFiles = Array.isArray(parsed) ? parsed : [];
@@ -353,140 +476,87 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
         
         // Ensure module.videos is an array
         const moduleVideos = Array.isArray(module.videos) ? module.videos : [];
+        const moduleId = String(`module-${moduleIndex}`);
+        const moduleName = String(module.title || `Module ${moduleIndex + 1}`);
         
-        return moduleVideos.map((video, videoIndex) => {
-          // Build resources array from module files - create completely fresh objects
-          // CRITICAL: Never push strings, only plain objects
-          const resources = [];
-          
-          if (Array.isArray(moduleFiles) && moduleFiles.length > 0) {
-            moduleFiles.forEach((file, fileIndex) => {
-              try {
-                // Skip invalid entries - be very strict
-                if (!file) {
-                  console.warn(`Module ${moduleIndex}, Video ${videoIndex}, File ${fileIndex}: File is null/undefined`);
-                  return;
-                }
-                
-                // CRITICAL: If file is a string, this is an error - log and skip
-                if (typeof file === 'string') {
-                  console.error(`CRITICAL ERROR: Module ${moduleIndex}, Video ${videoIndex}, File ${fileIndex} is a STRING!`, file.substring(0, 100));
-                  // Don't try to parse - just skip it
-                  return;
-                }
-                
-                // Skip arrays - we only want objects
-                if (Array.isArray(file)) {
-                  console.error(`CRITICAL ERROR: Module ${moduleIndex}, Video ${videoIndex}, File ${fileIndex} is an ARRAY!`, file);
-                  return;
-                }
-                
-                // Must be a plain object
-                if (!file || typeof file !== 'object') {
-                  console.error(`CRITICAL ERROR: Module ${moduleIndex}, Video ${videoIndex}, File ${fileIndex} is not an object!`, typeof file, file);
-                  return;
-                }
-                
-                // Extract values directly - don't use file object directly
-                const fileTitle = file.title;
-                const fileUrl = file.url;
-                const fileType = file.type;
-                
-                // Validate that title and url are strings
-                if (!fileTitle || !fileUrl) {
-                  console.warn(`Module ${moduleIndex}, Video ${videoIndex}, File ${fileIndex}: Missing title or url`);
-                  return;
-                }
-                
-                if (typeof fileTitle !== 'string' || typeof fileUrl !== 'string') {
-                  console.error(`CRITICAL ERROR: Module ${moduleIndex}, Video ${videoIndex}, File ${fileIndex}: Title or URL is not a string!`, {
-                    titleType: typeof fileTitle,
-                    urlType: typeof fileUrl
-                  });
-                  return;
-                }
-                
-                // Create a completely new object with only the required fields
-                // NEVER use JSON.stringify or any string conversion here
-                const newResource = {
-                  title: fileTitle.trim(),
-                  url: fileUrl.trim(),
-                  type: (fileType && typeof fileType === 'string') ? fileType.trim() : 'pdf'
-                };
-                
-                // Final validation before pushing
-                if (typeof newResource.title === 'string' && typeof newResource.url === 'string' && typeof newResource.type === 'string') {
-                  resources.push(newResource);
-                } else {
-                  console.error(`CRITICAL ERROR: Created invalid resource object!`, newResource);
-                }
-              } catch (error) {
-                console.error(`Module ${moduleIndex}, Video ${videoIndex}, File ${fileIndex}: Error processing file`, error);
-              }
-            });
-          }
-          
-          // Final validation - ensure resources is an array of plain objects
-          const validatedResources = resources
-            .filter(r => {
-              const isValid = r && typeof r === 'object' && !Array.isArray(r);
-              if (!isValid) {
-                console.warn(`Module ${moduleIndex}, Video ${videoIndex}: Filtering out invalid resource:`, typeof r, r);
-              }
-              return isValid;
-            })
-            .map(r => {
-              // Create completely fresh object
-              const cleanObj = {
-                title: String(r.title || '').trim(),
-                url: String(r.url || '').trim(),
-                type: String(r.type || 'pdf').trim()
-              };
-              
-              // Verify the object is valid
-              if (typeof cleanObj.title !== 'string' || typeof cleanObj.url !== 'string') {
-                console.error(`Module ${moduleIndex}, Video ${videoIndex}: Invalid resource object created!`, cleanObj);
-                return null;
-              }
-              
-              return cleanObj;
-            })
-            .filter(r => r !== null); // Remove any nulls
-          
-          // DEBUG: Log resources before creating lesson
-          if (validatedResources.length > 0) {
-            console.log(`Module ${moduleIndex}, Video ${videoIndex} resources:`, validatedResources);
-            console.log(`First resource type:`, typeof validatedResources[0]);
-            console.log(`First resource:`, validatedResources[0]);
-          }
-          
-          // Create lesson object with validated resources array
+        const lessonList = [];
+        
+        // Create lessons for videos (without module files attached)
+        moduleVideos.forEach((video, videoIndex) => {
+          // Videos should have empty resources - module files are separate
           const lesson = {
             title: String(video.title || ''),
             description: String(video.description || ''),
             videoUrl: String(video.url || ''),
             duration: String(video.duration || ''),
-            order: Number(moduleIndex * 100 + videoIndex),
-            moduleId: String(`module-${moduleIndex}`),
-            moduleName: String(module.title || `Module ${moduleIndex + 1}`),
-            resources: validatedResources // Already validated array
+            order: Number(moduleIndex * 1000 + videoIndex * 10), // Use larger multiplier for ordering
+            moduleId: moduleId,
+            moduleName: moduleName,
+            resources: [] // Videos have no resources - module files are separate
           };
           
-          // Final check before returning
-          if (!Array.isArray(lesson.resources)) {
-            console.error(`Lesson ${moduleIndex}-${videoIndex}: Resources is not an array!`, typeof lesson.resources, lesson.resources);
-            lesson.resources = [];
-          }
+          lessonList.push(lesson);
+        });
+        
+        // Create a special lesson entry for module-level resources (placed after all videos)
+        if (Array.isArray(moduleFiles) && moduleFiles.length > 0) {
+          // Build module resources array
+          const moduleResources = [];
           
-          // Verify each resource element is an object
-          lesson.resources.forEach((r, rIdx) => {
-            if (typeof r !== 'object' || Array.isArray(r) || typeof r === 'string') {
-              console.error(`Lesson ${moduleIndex}-${videoIndex}, Resource ${rIdx} is invalid!`, typeof r, r);
+          moduleFiles.forEach((file, fileIndex) => {
+            try {
+              // Skip invalid entries
+              if (!file || typeof file !== 'object' || Array.isArray(file)) {
+                return;
+              }
+              
+              // Extract values directly
+              const fileTitle = file.title;
+              const fileUrl = file.url;
+              const fileType = file.type;
+              
+              // Validate that title and url are strings
+              if (!fileTitle || !fileUrl || typeof fileTitle !== 'string' || typeof fileUrl !== 'string') {
+                console.warn(`Module ${moduleIndex}, File ${fileIndex}: Invalid file data`);
+                return;
+              }
+              
+              // Create a completely new object with only the required fields
+              const newResource = {
+                title: fileTitle.trim(),
+                url: fileUrl.trim(),
+                type: (fileType && typeof fileType === 'string') ? fileType.trim() : 'pdf'
+              };
+              
+              // Final validation before pushing
+              if (typeof newResource.title === 'string' && typeof newResource.url === 'string' && typeof newResource.type === 'string') {
+                moduleResources.push(newResource);
+              }
+            } catch (error) {
+              console.error(`Module ${moduleIndex}, File ${fileIndex}: Error processing file`, error);
             }
           });
           
-          return lesson;
-        });
+          // Create a special lesson entry for module resources (no videoUrl, just resources)
+          // This will be identified as module-level resources when grouping lessons
+          if (moduleResources.length > 0) {
+            const moduleResourceLesson = {
+              title: String(`${moduleName} - Resources`), // Special title to identify as module resources
+              description: String('Module Resources'), // Special description
+              videoUrl: String(''), // No video URL - this is a resource-only entry
+              duration: String(''),
+              order: Number(moduleIndex * 1000 + moduleVideos.length * 10 + 1), // Place after all videos
+              moduleId: moduleId,
+              moduleName: moduleName,
+              resources: moduleResources, // Module-level resources
+              isModuleResource: true // Flag to identify this as module resources
+            };
+            
+            lessonList.push(moduleResourceLesson);
+          }
+        }
+        
+        return lessonList;
       });
 
       // Single pass validation - ensure all lessons have properly formatted resources
@@ -948,29 +1018,58 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
     return text.length > 0;
   };
 
-  // Initialize Quill editor for video description (same pattern as course description)
+  // Initialize Quill editor for video description in Module Builder
+  // This should work for both adding new videos and editing existing ones
   useEffect(() => {
-    // Use a small delay to ensure DOM is ready and state is updated
-    const timeoutId = setTimeout(() => {
-      // Only initialize if ref exists
-      if (!videoQuillRefs.current['video-desc']) {
-        return;
-      }
+    // Only initialize if ref exists
+    if (!videoQuillRefs.current['video-desc']) {
+      return;
+    }
 
-      // Check if Quill is already initialized in this container (handles StrictMode double render)
-      if (videoQuillRefs.current['video-desc'].querySelector('.ql-toolbar') || videoQuillInstances.current['video-desc'] || videoQuillInitializingRef.current['video-desc']) {
-        return;
-      }
+    const container = videoQuillRefs.current['video-desc'];
+    const parentContainer = container?.parentElement; // The div with id="quill-video-desc-container"
+    
+    // Check if Quill is already initialized (both instance and DOM)
+    if (videoQuillInstances.current['video-desc'] && 
+        parentContainer && 
+        parentContainer.querySelector('.ql-toolbar')) {
+      // Already initialized and connected to DOM
+      return;
+    }
 
-      // Set flag to prevent duplicate initialization
-      videoQuillInitializingRef.current['video-desc'] = true;
-
-      // Clear any existing content in the ref
-      videoQuillRefs.current['video-desc'].innerHTML = '';
-
-      let quill;
+    // Clean up any existing instance or DOM elements
+    if (videoQuillInstances.current['video-desc']) {
       try {
-        quill = new Quill(videoQuillRefs.current['video-desc'], {
+        videoQuillInstances.current['video-desc'].off('text-change');
+      } catch (error) {
+        console.error('Error removing event listeners:', error);
+      }
+      videoQuillInstances.current['video-desc'] = null;
+    }
+
+    // Clean up any existing Quill DOM elements
+    if (parentContainer) {
+      const toolbar = parentContainer.querySelector('.ql-toolbar');
+      if (toolbar) toolbar.remove();
+      const qlContainer = parentContainer.querySelector('.ql-container');
+      if (qlContainer) qlContainer.remove();
+    }
+    if (container) {
+      container.innerHTML = '';
+    }
+
+    // Prevent duplicate initialization
+    if (videoQuillInitializingRef.current['video-desc']) {
+      return;
+    }
+
+    // Set flag to prevent duplicate initialization
+    videoQuillInitializingRef.current['video-desc'] = true;
+
+    // Use a small delay to ensure DOM is ready
+    const timeoutId = setTimeout(() => {
+      try {
+        const quill = new Quill(container, {
           theme: 'snow',
           placeholder: 'Describe what students will learn in this video...',
           modules: {
@@ -991,56 +1090,260 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
             'link'
           ]
         });
+
+        // Listen for text changes
+        quill.on('text-change', () => {
+          const content = quill.root.innerHTML;
+          videoQuillChangeRef.current['video-desc'] = true;
+          setCurrentVideo(prev => ({ ...prev, description: content }));
+        });
+
+        videoQuillInstances.current['video-desc'] = quill;
+        videoQuillInitializingRef.current['video-desc'] = false;
+        
+        // Set initial content from currentVideo
+        const description = currentVideo.description || '';
+        if (quill && quill.root && description) {
+          quill.root.innerHTML = description;
+        }
       } catch (error) {
         console.error('Error initializing video Quill:', error);
         videoQuillInitializingRef.current['video-desc'] = false;
-        return;
       }
-
-      // Set initial content if editing - use currentVideo.description from state
-      const description = currentVideo.description || '';
-      if (description) {
-        quill.root.innerHTML = description;
-      }
-
-      // Listen for text changes
-      quill.on('text-change', () => {
-        const content = quill.root.innerHTML;
-        videoQuillChangeRef.current['video-desc'] = true;
-        setCurrentVideo(prev => ({ ...prev, description: content }));
-      });
-
-      videoQuillInstances.current['video-desc'] = quill;
-      videoQuillInitializingRef.current['video-desc'] = false;
-    }, 50); // Small delay to ensure state is updated
+    }, 100);
 
     // Cleanup function
     return () => {
       clearTimeout(timeoutId);
       videoQuillInitializingRef.current['video-desc'] = false;
-      if (videoQuillInstances.current['video-desc'] && videoQuillRefs.current['video-desc']) {
-        // Remove event listeners
-        videoQuillInstances.current['video-desc'].off('text-change');
-        // Clear the container
-        if (videoQuillRefs.current['video-desc']) {
-          videoQuillRefs.current['video-desc'].innerHTML = '';
-        }
-        // Clear the instance
-        videoQuillInstances.current['video-desc'] = null;
-      }
     };
-  }, [editingVideoId]); // Re-initialize when editing a different video
+  }, [editingVideoId]); // Re-initialize when switching between edit/add modes
 
-  // Update video Quill content when currentVideo.description changes externally
+  // Update video Quill content when currentVideo.description changes externally or when editingVideoId changes
   useEffect(() => {
-    if (videoQuillInstances.current['video-desc'] && !videoQuillChangeRef.current['video-desc']) {
-      const currentContent = videoQuillInstances.current['video-desc'].root.innerHTML;
-      if (currentVideo.description !== currentContent) {
-        videoQuillInstances.current['video-desc'].root.innerHTML = currentVideo.description || '';
-      }
+    // Only update if we're editing a video
+    if (editingVideoId === null) {
+      videoQuillChangeRef.current['video-desc'] = false;
+      return;
     }
-    videoQuillChangeRef.current['video-desc'] = false;
-  }, [currentVideo.description]);
+
+    let retryCount = 0;
+    const maxRetries = 20; // Allow more retries for smoother experience
+
+    // Wait for editor to be initialized if it's not ready yet
+    const updateContent = () => {
+      const quill = videoQuillInstances.current['video-desc'];
+      if (!quill || !quill.root) {
+        // Editor not ready yet, try again after a short delay (with retry limit)
+        if (retryCount < maxRetries) {
+          retryCount++;
+          setTimeout(updateContent, 30); // Faster retry for smoother experience
+        }
+        return;
+      }
+
+      const currentContent = quill.root.innerHTML.trim();
+      const newContent = (currentVideo.description || '').trim();
+      
+      // Only update if content is different and it's not a user-initiated change
+      if (currentContent !== newContent && !videoQuillChangeRef.current['video-desc']) {
+        quill.root.innerHTML = newContent;
+      }
+      
+      // Reset the flag after successful update
+      videoQuillChangeRef.current['video-desc'] = false;
+    };
+
+    // Use requestAnimationFrame for smooth, immediate updates
+    requestAnimationFrame(updateContent);
+  }, [currentVideo.description, editingVideoId]);
+
+  // Scroll to module editor when editing a module
+  useEffect(() => {
+    if (editingModuleId && moduleEditorRef.current) {
+      // Use multiple requestAnimationFrame calls to ensure DOM is fully updated
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const element = moduleEditorRef.current;
+          if (element) {
+            const elementPosition = element.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - 20; // 20px offset from top
+            
+            window.scrollTo({
+              top: offsetPosition,
+              behavior: 'smooth'
+            });
+          }
+        });
+      });
+    }
+  }, [editingModuleId]);
+
+  // Scroll to video editor when editing a video
+  useEffect(() => {
+    if (editingVideoId && videoEditorRef.current) {
+      // Use multiple requestAnimationFrame calls to ensure DOM is fully updated
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const element = videoEditorRef.current;
+          if (element) {
+            const elementPosition = element.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - 20; // 20px offset from top
+            
+            window.scrollTo({
+              top: offsetPosition,
+              behavior: 'smooth'
+            });
+          }
+        });
+      });
+    }
+  }, [editingVideoId]);
+
+  // Initialize Quill editors for inline video editing in modules
+  useEffect(() => {
+    if (!editingVideoInModule) {
+      return;
+    }
+
+    const videoKey = editingVideoInModule;
+    const container = videoQuillRefs.current[videoKey];
+    
+    if (!container) {
+      return;
+    }
+
+    const parentContainer = container?.parentElement;
+    
+    // Clean up existing instance if any
+    if (videoQuillInstances.current[videoKey]) {
+      try {
+        videoQuillInstances.current[videoKey].off('text-change');
+      } catch (error) {
+        console.error('Error removing event listeners:', error);
+      }
+      
+      if (parentContainer) {
+        const toolbar = parentContainer.querySelector('.ql-toolbar');
+        if (toolbar) toolbar.remove();
+        const qlContainer = parentContainer.querySelector('.ql-container');
+        if (qlContainer) qlContainer.remove();
+      }
+      
+      container.innerHTML = '';
+      videoQuillInstances.current[videoKey] = null;
+    }
+
+    // Check if Quill is already initialized
+    if (parentContainer && parentContainer.querySelector('.ql-toolbar')) {
+      return;
+    }
+
+    // Prevent duplicate initialization
+    if (videoQuillInitializingRef.current[videoKey]) {
+      return;
+    }
+
+    videoQuillInitializingRef.current[videoKey] = true;
+
+    // Initialize Quill with a small delay to ensure DOM is ready
+    const timeoutId = setTimeout(() => {
+      try {
+        const quill = new Quill(container, {
+          theme: 'snow',
+          placeholder: 'Describe what students will learn in this video...',
+          modules: {
+            toolbar: [
+              [{ 'header': [1, 2, 3, false] }],
+              ['bold', 'italic', 'underline', 'strike'],
+              [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+              [{ 'indent': '-1'}, { 'indent': '+1' }],
+              [{ 'color': [] }, { 'background': [] }],
+              ['link'],
+              ['clean']
+            ]
+          },
+          formats: [
+            'header', 'bold', 'italic', 'underline', 'strike',
+            'list', 'bullet', 'indent',
+            'color', 'background',
+            'link'
+          ]
+        });
+
+        // Set initial content - the content update useEffect will handle this
+        // But set it here as fallback for immediate display
+        const description = editingVideoData.description || '';
+        if (description) {
+          quill.root.innerHTML = description;
+        }
+
+        // Listen for text changes
+        quill.on('text-change', () => {
+          const content = quill.root.innerHTML;
+          videoQuillChangeRef.current[videoKey] = true;
+          setEditingVideoData(prev => ({ ...prev, description: content }));
+        });
+
+        videoQuillInstances.current[videoKey] = quill;
+        videoQuillInitializingRef.current[videoKey] = false;
+      } catch (error) {
+        console.error('Error initializing inline video Quill:', error);
+        videoQuillInitializingRef.current[videoKey] = false;
+      }
+    }, 100);
+
+    // Cleanup function
+    return () => {
+      clearTimeout(timeoutId);
+      videoQuillInitializingRef.current[videoKey] = false;
+    };
+  }, [editingVideoInModule]);
+
+  // Update Quill content when editingVideoData.description changes
+  useEffect(() => {
+    if (!editingVideoInModule) {
+      return;
+    }
+
+    const videoKey = editingVideoInModule;
+    const quill = videoQuillInstances.current[videoKey];
+    
+    if (!quill || !quill.root) {
+      return;
+    }
+
+    const currentContent = quill.root.innerHTML.trim();
+    const newContent = (editingVideoData.description || '').trim();
+    
+    // Only update if content is different and it's not a user-initiated change
+    if (currentContent !== newContent && !videoQuillChangeRef.current[videoKey]) {
+      quill.root.innerHTML = newContent;
+    }
+    
+    // Reset the flag after processing
+    videoQuillChangeRef.current[videoKey] = false;
+  }, [editingVideoData.description, editingVideoInModule]);
+
+  // Scroll to inline video editor when editing a video in module
+  useEffect(() => {
+    if (editingVideoInModule && inlineVideoEditorRefs.current[editingVideoInModule]) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const element = inlineVideoEditorRefs.current[editingVideoInModule];
+          if (element) {
+            const elementPosition = element.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - 20;
+            
+            window.scrollTo({
+              top: offsetPosition,
+              behavior: 'smooth'
+            });
+          }
+        });
+      });
+    }
+  }, [editingVideoInModule]);
 
   const canSubmit = courseData.title && hasDescriptionContent(courseData.description) && courseData.duration && courseData.modules.length > 0;
 
@@ -1219,7 +1522,7 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
         </div>
 
         {/* Current Module Builder */}
-        <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
+        <div ref={moduleEditorRef} className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
           <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-4 flex items-center justify-between gap-3">
             {editingModuleId ? 'Edit Module' : 'Module Builder'}
             <span className="text-[10px] md:text-xs text-gray-500 tracking-[0.18em] uppercase">
@@ -1257,7 +1560,7 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
             </div>
 
             {/* Videos */}
-            <div className="border-t border-gray-200 pt-4 mt-2">
+            <div ref={videoEditorRef} className="border-t border-gray-200 pt-4 mt-2">
               <h3 className="text-sm font-semibold text-gray-800 tracking-[0.16em] uppercase mb-3">
                 Videos
               </h3>
@@ -1318,9 +1621,10 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
                 </label>
                 <div className="bg-white border border-gray-300 rounded-lg overflow-hidden" id="quill-video-desc-container">
                   <div 
-                    key={`video-desc-${editingVideoId || 'new'}`}
                     ref={el => { 
-                      videoQuillRefs.current['video-desc'] = el;
+                      if (el) {
+                        videoQuillRefs.current['video-desc'] = el;
+                      }
                     }}
                     className="text-gray-900" 
                     style={{ minHeight: '150px' }} 
@@ -1522,41 +1826,206 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
               Course Modules ({courseData.modules.length})
             </h2>
 
-            <div className="mt-4 space-y-3">
-              {courseData.modules.map((module, index) => (
-                <div key={module.id} className="flex items-center justify-between p-3 rounded-xl bg-white hover:bg-gray-100 border border-gray-300 transition-all duration-200">
-                  <div className="flex-1">
-                    <p className="text-sm md:text-base font-semibold text-gray-900">
-                      Module {index + 1}: {module.title}
-                    </p>
-                    {module.description && (
-                      <p className="text-xs text-gray-600 mt-1">
-                        {module.description}
-                      </p>
-                    )}
-                    <div className="flex flex-wrap gap-4 mt-2 text-[11px] text-gray-500">
-                      <span>📹 {module.videos.length} videos</span>
-                      <span>📄 {module.files.length} files</span>
+            <div className="mt-4 space-y-4">
+              {courseData.modules.map((module, index) => {
+                const videoKeyPrefix = module.id;
+                return (
+                  <div key={module.id} className="rounded-xl bg-white border border-gray-300 p-4">
+                    {/* Module Header */}
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex-1">
+                        <p className="text-sm md:text-base font-semibold text-gray-900">
+                          Module {index + 1}: {module.title}
+                        </p>
+                        {module.description && (
+                          <p className="text-xs text-gray-600 mt-1">
+                            {module.description}
+                          </p>
+                        )}
+                        <div className="flex flex-wrap gap-4 mt-2 text-[11px] text-gray-500">
+                          <span>📹 {module.videos.length} videos</span>
+                          <span>📄 {module.files.length} files</span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 items-center">
+                        <button
+                          type="button"
+                          onClick={() => editModule(module.id)}
+                          className="px-3 py-1.5 text-[11px] rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+                        >
+                          Edit Module
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeModule(module.id)}
+                          className="text-red-500 hover:text-red-600 text-[11px] transition-colors"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
+
+                    {/* Videos in Module */}
+                    {module.videos.length > 0 && (
+                      <div className="mt-4 border-t border-gray-200 pt-4 space-y-3">
+                        {module.videos.map((video) => {
+                          const videoKey = `${videoKeyPrefix}-${video.id}`;
+                          const isEditing = editingVideoInModule === videoKey;
+                          return (
+                            <div key={video.id}>
+                              <div className="p-3 rounded-xl bg-gray-50 border border-gray-200 hover:border-gray-300 transition-all duration-200">
+                                <div className="flex items-start justify-between mb-2">
+                                  <div className="flex-1">
+                                    <p className="text-sm font-semibold text-gray-900">
+                                      {video.title}
+                                    </p>
+                                    <p className="text-[11px] text-gray-600 break-all mt-1">
+                                      {video.url} • {video.duration || 'No duration'}
+                                    </p>
+                                    {video.description && !isEditing && (
+                                      <div 
+                                        className="text-[11px] text-gray-700 mt-2 bg-blue-50 p-2 rounded prose prose-sm max-w-none" 
+                                        dangerouslySetInnerHTML={{ __html: video.description }}
+                                      />
+                                    )}
+                                  </div>
+                                  <div className="flex gap-2 ml-2 whitespace-nowrap">
+                                    {!isEditing ? (
+                                      <>
+                                        <button
+                                          type="button"
+                                          onClick={() => editVideoInModule(module.id, video)}
+                                          className="text-blue-500 hover:text-blue-600 text-[11px] transition-colors font-medium"
+                                        >
+                                          Edit
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => removeVideoFromModule(module.id, video.id)}
+                                          className="text-red-500 hover:text-red-600 text-[11px] transition-colors font-medium"
+                                        >
+                                          Remove
+                                        </button>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <button
+                                          type="button"
+                                          onClick={() => saveVideoInModule(module.id, video.id)}
+                                          className="px-2 py-1 text-[11px] rounded bg-green-500 hover:bg-green-600 text-white transition-colors"
+                                        >
+                                          Save
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => cancelEditVideoInModule(module.id, video.id)}
+                                          className="px-2 py-1 text-[11px] rounded bg-gray-500 hover:bg-gray-600 text-white transition-colors"
+                                        >
+                                          Cancel
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Inline Video Editor */}
+                              {isEditing && (
+                                <div 
+                                  ref={el => {
+                                    if (el) {
+                                      inlineVideoEditorRefs.current[videoKey] = el;
+                                    }
+                                  }}
+                                  className="mt-2 p-4 rounded-xl bg-white border-2 border-blue-300 shadow-lg"
+                                >
+                                  <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-[0.16em] mb-3">
+                                    Edit Video
+                                  </h4>
+                                  
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                                    <input
+                                      type="text"
+                                      value={editingVideoData.title || ''}
+                                      onChange={(e) =>
+                                        setEditingVideoData({ ...editingVideoData, title: e.target.value })
+                                      }
+                                      className="px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+                                      placeholder="Video title"
+                                    />
+                                    <input
+                                      type="text"
+                                      value={editingVideoData.url || ''}
+                                      onChange={(e) =>
+                                        setEditingVideoData({ ...editingVideoData, url: e.target.value })
+                                      }
+                                      className="px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+                                      placeholder="Video URL"
+                                    />
+                                    <input
+                                      type="text"
+                                      value={editingVideoData.duration || ''}
+                                      onChange={(e) =>
+                                        setEditingVideoData({ ...editingVideoData, duration: e.target.value })
+                                      }
+                                      className="px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+                                      placeholder="Duration"
+                                    />
+                                  </div>
+
+                                  <div className="mb-3">
+                                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-[0.18em] mb-2">
+                                      Video Description
+                                    </label>
+                                    <div className="bg-white border border-gray-300 rounded-lg overflow-hidden" id={`quill-video-desc-container-${videoKey}`}>
+                                      <div 
+                                        ref={el => { 
+                                          if (el) {
+                                            videoQuillRefs.current[videoKey] = el;
+                                          }
+                                        }}
+                                        className="text-gray-900" 
+                                        style={{ minHeight: '150px' }} 
+                                      />
+                                    </div>
+                                    <style>{`
+                                      #quill-video-desc-container-${videoKey} .ql-container {
+                                        min-height: 120px;
+                                        font-size: 14px;
+                                      }
+                                      #quill-video-desc-container-${videoKey} .ql-editor {
+                                        min-height: 120px;
+                                      }
+                                      #quill-video-desc-container-${videoKey} .ql-editor.ql-blank::before {
+                                        color: #9ca3af;
+                                        font-style: normal;
+                                      }
+                                      #quill-video-desc-container-${videoKey} .ql-toolbar {
+                                        border-top: 1px solid #ccc;
+                                        border-left: 1px solid #ccc;
+                                        border-right: 1px solid #ccc;
+                                        border-bottom: none;
+                                        border-radius: 0.5rem 0.5rem 0 0;
+                                      }
+                                      #quill-video-desc-container-${videoKey} .ql-container {
+                                        border-bottom: 1px solid #ccc;
+                                        border-left: 1px solid #ccc;
+                                        border-right: 1px solid #ccc;
+                                        border-top: none;
+                                        border-radius: 0 0 0.5rem 0.5rem;
+                                      }
+                                    `}</style>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                  <div className="flex gap-2 items-center">
-                    <button
-                      type="button"
-                      onClick={() => editModule(module.id)}
-                      className="px-3 py-1.5 text-[11px] rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-colors"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => removeModule(module.id)}
-                      className="text-red-500 hover:text-red-600 text-[11px] transition-colors"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

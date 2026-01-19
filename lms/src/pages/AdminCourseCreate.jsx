@@ -1348,7 +1348,7 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
   const canSubmit = courseData.title && hasDescriptionContent(courseData.description) && courseData.duration && courseData.modules.length > 0;
 
   return (
-    <div className="space-y-8 p-4">
+    <div className="space-y-8 ,md:p-3">
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div>
@@ -1373,7 +1373,7 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
 
       <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
         {/* Course Basic Info */}
-        <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
+        <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-3 md:p-6">
           <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-4">
             Course Information
           </h2>
@@ -1522,7 +1522,7 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
         </div>
 
         {/* Current Module Builder */}
-        <div ref={moduleEditorRef} className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
+        <div ref={moduleEditorRef} className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-3 md:p-6">
           <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-4 flex items-center justify-between gap-3">
             {editingModuleId ? 'Edit Module' : 'Module Builder'}
             <span className="text-[10px] md:text-xs text-gray-500 tracking-[0.18em] uppercase">
@@ -1821,7 +1821,7 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
 
         {/* Added Modules */}
         {courseData.modules.length > 0 && (
-          <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
+          <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-3 md:p-6">
             <h2 className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-4">
               Course Modules ({courseData.modules.length})
             </h2>

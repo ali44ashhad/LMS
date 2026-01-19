@@ -27,7 +27,6 @@ app.use((req, res, next) => {
         'http://localhost:5173',
         'http://localhost:5174',
         'http://localhost:3000',
-        'https://lms-trvj-git-testing-kahas-projects-baeca9d9.vercel.app/',
         process.env.FRONTEND_URL
       ].filter(Boolean).map(o => o && o.replace(/\/$/, ''));
       
@@ -78,15 +77,13 @@ try {
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:3000',
-    'https://lms-trvj-git-testing-kahas-projects-baeca9d9.vercel.app/',
-  
     process.env.FRONTEND_URL
   ]
     .filter(Boolean)
     .map(origin => origin.replace(/\/$/, '')); // Remove trailing slashes
 } catch (error) {
   console.error('Error setting up CORS origins:', error);
-  allowedOrigins = ['https://courses.cyfi.nestatoys.com','https://lms-trvj-git-testing-kahas-projects-baeca9d9.vercel.app/'];
+  allowedOrigins = ['https://courses.cyfi.nestatoys.com'];
 }
 
 // CORS configuration function
@@ -144,8 +141,9 @@ app.use((req, res, next) => {
 app.use(cors(corsOptions));
 
 // Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Increase body parser limits to handle large course data (videos, modules, etc.)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Serve uploaded files statically (only if not in serverless)
 try {

@@ -64,14 +64,29 @@ class Module {
     // Reorder modules
     static async reorder(courseId, modulesOrder) {
         // modulesOrder is array of { id, order }
+        // Use two-phase update to avoid unique constraint violations:
+        // Phase 1: Set all to temporary negative values
+        // Phase 2: Set to final positive values
         return await transaction(async (client) => {
+            // Phase 1: Set temporary negative order values to avoid conflicts
+            for (let i = 0; i < modulesOrder.length; i++) {
+                const item = modulesOrder[i];
+                await client.query(
+                    `UPDATE ${table('modules')} 
+                     SET order_num = $1 
+                     WHERE id = $2 AND course_id = $3`,
+                    [-(i + 1), item.id, courseId]
+                );
+            }
+
+            // Phase 2: Set final order values
             const results = [];
             for (const item of modulesOrder) {
                 const result = await client.query(
                     `UPDATE ${table('modules')} 
-           SET order_num = $1 
-           WHERE id = $2 AND course_id = $3
-           RETURNING *`,
+                     SET order_num = $1 
+                     WHERE id = $2 AND course_id = $3
+                     RETURNING *`,
                     [item.order, item.id, courseId]
                 );
                 if (result.rows[0]) {

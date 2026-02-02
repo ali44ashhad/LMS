@@ -261,7 +261,61 @@ Requires user with `role: 'admin'` (or `admin` in roles array).
 - **Update Any Course:** `PUT /api/admin/courses/:id`
 - **Delete Any Course:** `DELETE /api/admin/courses/:id`
 
-### 3. Upload Resource (PDF)
+### 3. Get Available Instructors
+Returns all users with `ROLE_TEACHER` or `ROLE_ADMIN` roles.
+- **URL:** `/api/admin/instructors`
+- **Method:** `GET`
+- **Header:** `Authorization: Bearer <admin_token>`
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "instructors": [
+      {
+        "id": "uuid-of-user",
+        "fullname": "John Teacher",
+        "email": "john@example.com",
+        "role": "teacher",
+        "roles": ["ROLE_USER", "ROLE_TEACHER"]
+      }
+    ],
+    "total": 1
+  }
+  ```
+
+### 4. Create Course (Admin)
+Allows admin to create a course and assign any teacher/admin as instructor.
+- **URL:** `/api/admin/courses`
+- **Method:** `POST`
+- **Header:** `Authorization: Bearer <admin_token>`
+- **Body:**
+  ```json
+  {
+    "title": "Advanced JavaScript Course",
+    "description": "Learn advanced JavaScript concepts",
+    "instructorId": "<uuid-from-instructors-list>",
+    "instructorName": "John Teacher",
+    "category": "Development",
+    "level": "Advanced",
+    "duration": "5h 30m",
+    "price": 99.99,
+    "image": "https://example.com/image.png",
+    "thumbnail": "https://example.com/thumb.png",
+    "learningOutcomes": ["Master closures", "Understand async/await"],
+    "prerequisites": ["Basic JavaScript"]
+  }
+  ```
+- **Validation:**
+  - `instructorId` must reference an existing user with `ROLE_TEACHER` or `ROLE_ADMIN`
+  - `instructorName` is required and provided manually
+- **Error Responses:**
+  | Status | Condition |
+  |--------|-----------|
+  | 400 | Missing `instructorId` or `instructorName` |
+  | 400 | Selected user doesn't have teacher/admin role |
+  | 404 | Instructor not found |
+
+### 5. Upload Resource (PDF)
 Uploads a PDF to Cloudinary.
 - **URL:** `/api/admin/upload`
 - **Method:** `POST`

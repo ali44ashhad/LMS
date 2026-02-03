@@ -13,14 +13,14 @@ Complete backend API for the Learning Management System (LMS).
 ## Tech Stack
 
 - Node.js & Express.js
-- MongoDB & Mongoose
+- PostgreSQL
 - JWT for Authentication
 - bcryptjs for Password Hashing
 
 ## Prerequisites
 
 - Node.js (v16 or higher)
-- MongoDB Atlas account (or local MongoDB)
+- PostreSQL
 
 ## Installation
 
@@ -42,10 +42,13 @@ cp .env.example .env
 4. Update `.env` file with your configuration:
 ```
 PORT=5000
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/lms
-JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
-JWT_EXPIRE=7d
-NODE_ENV=development
+DB_USER=db_user_name
+DB_HOST=db_host
+DB_DATABASE=db_name
+DB_PASSWORD=db_password
+DB_PORT=db_port
+# DB Table
+DB_SCHEMA=db_schema
 
 # Cloudinary Configuration (for file uploads)
 CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
@@ -58,12 +61,8 @@ CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 2. Go to Dashboard
 3. Copy your `Cloud Name`, `API Key`, and `API Secret`
 
-5. Seed the database with sample data:
-```bash
-npm run seed
-```
 
-6. Start the server:
+5. Start the server:
 ```bash
 # Development mode with nodemon
 npm run dev
@@ -72,19 +71,7 @@ npm run dev
 npm start
 ```
 
-The API will be available at `http://localhost:5000`
-
-## Default Login Credentials
-
-After running the seed script:
-
-**Admin:**
-- Email: admin@lms.com
-- Password: Admin@123
-
-**Student:**
-- Email: john@lms.com
-- Password: Student@123
+The API will be available at `http://localhost:{PORT}`
 
 ## API Endpoints
 
@@ -100,9 +87,9 @@ After running the seed script:
 ### Courses
 - `GET /api/courses` - Get all published courses
 - `GET /api/courses/:id` - Get single course
-- `POST /api/courses` - Create course (Admin)
-- `PUT /api/courses/:id` - Update course (Admin)
-- `DELETE /api/courses/:id` - Delete course (Admin)
+- `POST /api/courses` - Create course (Admin/ Teacher)
+- `PUT /api/courses/:id` - Update course (Admin/ Teacher)
+- `DELETE /api/courses/:id` - Delete course (Admin/ Teacher)
 
 ### Enrollments
 - `POST /api/enrollments` - Enroll in course

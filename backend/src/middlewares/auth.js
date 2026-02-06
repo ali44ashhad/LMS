@@ -48,10 +48,10 @@ export const authenticateToken = (req, res, next) => {
 
 // Check if user is instructor (teacher role)
 export const requireInstructor = (req, res, next) => {
-    if (!req.userRoles.includes('ROLE_TEACHER')) {
+    if (!req.userRoles.includes('ROLE_TEACHER' || 'ROLE_ADMIN')) {
         return res.status(403).json({
             success: false,
-            message: 'Instructor access required. Only teachers can perform this action.'
+            message: 'Admin/Instructor access required. Only admins/teachers can perform this action.'
         });
     }
     next();

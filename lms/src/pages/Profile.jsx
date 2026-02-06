@@ -9,7 +9,6 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
-  const [avatarPreview, setAvatarPreview] = useState(null);
 
   const completedCourses = enrolledCourses.filter(
     (e) => e.progress === 100
@@ -19,13 +18,6 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
     fetchUserData();
     fetchEnrolledCourses();
   }, []);
-
-  useEffect(() => {
-    // Set avatar preview if user has avatar
-    if (user?.avatar) {
-      setAvatarPreview(user.avatar);
-    }
-  }, [user]);
 
   const fetchUserData = async () => {
     try {
@@ -58,32 +50,6 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
     }
   };
 
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        alert('Please select an image file');
-        return;
-      }
-      
-      // Validate file size (max 2MB)
-      if (file.size > 2 * 1024 * 1024) {
-        alert('Image size should be less than 2MB');
-        return;
-      }
-
-      // Convert to base64
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result;
-        setAvatarPreview(base64String);
-        setUser({ ...user, avatar: base64String });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleUpdateProfile = async () => {
     if (updating) return;
     
@@ -111,12 +77,6 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
           avatar: response.user.avatar || user.avatar || "",
           createdAt: response.user.createdAt || user.createdAt,
         };
-        
-        // Update avatar preview
-        if (updatedUser.avatar) {
-          setAvatarPreview(updatedUser.avatar);
-        }
-        
         // Update localStorage with complete user data
         localStorage.setItem("user", JSON.stringify(updatedUser));
         setUser(updatedUser);
@@ -153,32 +113,19 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
         {/* SIDEBAR */}
         <aside className="lg:col-span-1">
           <div className="bg-white border border-[#8AD5FF] rounded-xl p-6 text-center shadow-sm">
-            <label className="cursor-pointer block">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarChange}
-                className="hidden"
-              />
-              <div className="relative mx-auto w-24 h-24 rounded-full bg-[#C0EAFF] border-2 border-[#8AD5FF] flex items-center justify-center mb-4 overflow-hidden hover:border-[#99DBFF] transition-all group">
-                {avatarPreview ? (
-                  <img 
-                    src={avatarPreview} 
-                    alt={user.name || "Avatar"} 
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="text-3xl font-bold text-cyan-600 tracking-[0.12em]">
-                    {user.name?.substring(0, 2).toUpperCase() || "US"}
-                  </span>
-                )}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <span className="text-white text-xs font-semibold">
-                    {avatarPreview ? "Change" : "Upload"}
-                  </span>
-                </div>
-              </div>
-            </label>
+            <div className="mx-auto w-24 h-24 rounded-full bg-[#C0EAFF] border-2 border-[#8AD5FF] flex items-center justify-center mb-4 overflow-hidden">
+              {user?.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={user.name || "Avatar"}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-3xl font-bold text-cyan-600 tracking-[0.12em]">
+                  {user.name?.substring(0, 2).toUpperCase() || "US"}
+                </span>
+              )}
+            </div>
 
             <h2 className="text-lg font-semibold text-[#545454]">
               {user.name}
@@ -229,50 +176,7 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
                 Profile Information
               </h3>
 
-              <div className="space-y-6">
-                {/* Avatar Upload Section */}
-                <div className="border-b border-[#8AD5FF] pb-6">
-                  <label className="block text-sm font-medium text-slate-600 mb-2">
-                    Profile Picture
-                  </label>
-                  <div className="flex items-center gap-4">
-                    <label className="cursor-pointer relative group">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleAvatarChange}
-                        className="hidden"
-                      />
-                      <div className="relative w-20 h-20 rounded-full bg-[#C0EAFF] border-2 border-[#8AD5FF] flex items-center justify-center overflow-hidden hover:border-[#99DBFF] transition-all group-hover:opacity-90">
-                        {avatarPreview ? (
-                          <img 
-                            src={avatarPreview} 
-                            alt={user.name || "Avatar"} 
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-xl font-bold text-cyan-600">
-                            {user.name?.substring(0, 2).toUpperCase() || "US"}
-                          </span>
-                        )}
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <span className="text-white text-xs font-semibold">
-                            {avatarPreview ? "Change" : "Upload"}
-                          </span>
-                        </div>
-                      </div>
-                    </label>
-                    <div>
-                      <p className="text-sm text-slate-600 font-medium">
-                        Click on avatar to {avatarPreview ? "change" : "upload"} picture
-                      </p>
-                      <p className="text-xs text-slate-500 mt-1">
-                        JPG, PNG or GIF (max 2MB)
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
+                <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {[
                     { label: "Full Name", key: "name", type: "text" },

@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { courseAPI, enrollmentAPI } from "../services/api";
-import CourseCard from "../componets/courses/CourseCard";
 import CourseGrid from "../componets/courses/CourseGrid";
 
-const Courses = ({ onCourseSelect }) => {
+const Courses = ({ onCourseSelect, isPublic = false }) => {
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [courses, setCourses] = useState([]);
-  const [enrollments, setEnrollments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const categories = [
@@ -22,17 +20,40 @@ const Courses = ({ onCourseSelect }) => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [isPublic]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [coursesRes, enrollmentsRes] = await Promise.all([
-        courseAPI.getAll(),
-        enrollmentAPI.getMy(),
-      ]);
-      setCourses(coursesRes.courses || []);
-      setEnrollments(enrollmentsRes.enrollments || []);
+      if (isPublic) {
+        const coursesRes = await courseAPI.getAll();
+        setCourses(coursesRes.courses || []);
+      } else {
+        // Logged-in: My Courses = only enrolled courses
+        const { enrollments } = await enrollmentAPI.getMy();
+        const enrolledList = enrollments || [];
+        const coursesWithDetails = await Promise.all(
+          enrolledList.map(async (e) => {
+            const courseId = e.course_id ?? e.course?.id ?? e.course?._id;
+            if (!courseId) return null;
+            try {
+              const res = await courseAPI.getById(courseId);
+              const course = res.course ?? res;
+              return {
+                ...course,
+                _id: course._id ?? course.id,
+                id: course.id ?? course._id,
+                enrolled: true,
+                progress: e.progress ?? 0,
+                lastAccessed: e.lastAccessed ?? e.last_accessed,
+              };
+            } catch {
+              return null;
+            }
+          })
+        );
+        setCourses(coursesWithDetails.filter(Boolean));
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -40,47 +61,20 @@ const Courses = ({ onCourseSelect }) => {
     }
   };
 
-  const coursesWithProgress = courses.map((course, index) => {
-    const enrollment = enrollments.find(
-      (e) => {
-        const enrollCourseId = e.course?._id || e.course?.id;
-        const courseId = course._id || course.id;
-        return enrollCourseId?.toString() === courseId?.toString();
-      }
-    );
-    return {
-      ...course,
-      enrolled: !!enrollment,
-      progress: enrollment?.progress ?? 0,
-      lastAccessed: enrollment?.lastAccessed || null,
-      questIndex: index + 1,
-    };
-  });
+  const coursesNormalized = courses.map((course) => ({
+    ...course,
+    _id: course._id ?? course.id,
+  }));
 
-  const filteredCourses = coursesWithProgress.filter((course) => {
+  const filteredCourses = coursesNormalized.filter((course) => {
     const matchesCategory =
       filter === "all" || course.category === filter;
+    const instructorName = course.instructor_name ?? course.instructorName;
     const matchesSearch =
       course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.instructorName
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase());
+      instructorName?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCategory && matchesSearch;
   });
-
-  const enrolledCourses = filteredCourses.filter((c) => c.enrolled);
-  const availableCourses = filteredCourses.filter((c) => !c.enrolled);
-
-  const handleEnroll = async (courseId) => {
-    try {
-      await enrollmentAPI.enroll(courseId);
-      alert("Successfully enrolled in course!");
-      fetchData();
-    } catch (error) {
-      console.error("Error enrolling:", error);
-      alert("Failed to enroll in course");
-    }
-  };
 
   if (loading) {
     return (
@@ -95,10 +89,10 @@ const Courses = ({ onCourseSelect }) => {
       {/* TITLE */}
       <div>
         <p className="text-[11px] uppercase tracking-[0.32em] text-cyan-400/70 mb-1">
-          Explore Courses
+          {isPublic ? "Explore Courses" : "Your enrollments"}
         </p>
         <h1 className="text-3xl md:text-4xl font-extrabold text-[#545454] tracking-[0.14em] uppercase flex items-center gap-3">
-          Courses
+          {isPublic ? "Courses" : "My Courses"}
           <span className="flex-1 h-[2px] bg-gradient-to-r from-cyan-400 to-transparent" />
         </h1>
       </div>
@@ -115,7 +109,7 @@ const Courses = ({ onCourseSelect }) => {
             className="
               w-full
               px-4 py-2
-              border border-[#1EAAFF]
+              border border-slate-300
               rounded-lg
               text-sm
               focus:outline-none
@@ -143,8 +137,8 @@ const Courses = ({ onCourseSelect }) => {
                   transition
                   ${
                     isActive
-                      ? "bg-[#6ED6EE] text-white border-cyan-600"
-                      : "bg-white text-slate-600 border-[#1EAAFF] hover:bg-slate-100"
+                      ? "bg-purple-600 text-white border-purple-600"
+                      : "bg-white text-slate-600 border-slate-300 hover:bg-slate-100"
                   }
                 `}
               >
@@ -155,36 +149,17 @@ const Courses = ({ onCourseSelect }) => {
         </div>
       </div>
 
-      {/* ENROLLED COURSES */}
-      {enrolledCourses.length > 0 && (
+      {/* COURSES GRID (published courses) */}
+      {filteredCourses.length > 0 && (
         <section>
           <h2 className="text-xl md:text-2xl font-semibold text-slate-800 mb-4">
-            My Learning ({enrolledCourses.length})
-          </h2>
-
-          <div className="space-y-4">
-            {enrolledCourses.map((course) => (
-              <CourseCard
-                key={course._id}
-                course={course}
-                onSelect={onCourseSelect}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* AVAILABLE COURSES */}
-      {availableCourses.length > 0 && (
-        <section>
-          <h2 className="text-xl md:text-2xl font-semibold text-slate-800 mb-4">
-            Available Courses ({availableCourses.length})
+            {isPublic ? "Courses" : "My Courses"} ({filteredCourses.length})
           </h2>
 
           <CourseGrid
-            courses={availableCourses}
+            courses={filteredCourses}
             onCourseSelect={onCourseSelect}
-            onEnroll={handleEnroll}
+            isPublic={isPublic}
           />
         </section>
       )}
@@ -192,11 +167,15 @@ const Courses = ({ onCourseSelect }) => {
       {/* EMPTY STATE */}
       {filteredCourses.length === 0 && (
         <div className="text-center py-16 space-y-3 text-slate-400">
-          <div className="text-6xl">❌</div>
+          <div className="text-6xl">{isPublic ? "❌" : "📚"}</div>
           <h3 className="text-xl font-semibold text-slate-600">
-            No courses found
+            {isPublic ? "No courses found" : "No enrolled courses yet"}
           </h3>
-          <p>Try adjusting your keywords or filters</p>
+          <p>
+            {isPublic
+              ? "Try adjusting your keywords or filters"
+              : "Enroll in courses from the Dashboard or explore the catalog to get started."}
+          </p>
         </div>
       )}
     </div>

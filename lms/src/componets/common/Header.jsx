@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import logo from "../../assets/logo.jpeg";
 
-const Header = ({ user, onLogout }) => {
+const NESTA_SIGNIN_URL = import.meta.env.VITE_NESTA_SIGNIN_URL || '/';
+
+const Header = ({ user, onLogout, isPublic = false }) => {
   const [showDropdown, setShowDropdown] = useState(false);
 
   const getInitials = (name) => {
@@ -14,6 +16,11 @@ const Header = ({ user, onLogout }) => {
       .toUpperCase()
       .slice(0, 2);
   };
+
+  const roles = Array.isArray(user?.roles) ? user.roles : [];
+  const isAdmin = roles.includes('admin');
+  const isTeacher = roles.includes('teacher');
+  const roleLabel = isAdmin ? 'Admin' : isTeacher ? 'Teacher' : 'User';
 
 
   return (
@@ -57,73 +64,49 @@ const Header = ({ user, onLogout }) => {
               />
             </div>
  
-            {/* USER MENU */}
+            {/* USER MENU or SIGN IN (no login/signup in LMS – sign in on Nesta) */}
             <div className="relative">
-              <button
-                onClick={() => setShowDropdown((p) => !p)}
-                className={`flex items-center gap-2 bg-gray-100 md:gap-3 px-2 py-1.5 rounded-lg transition
-                  ${
-                    showDropdown
-                      ? "bg-white shadow"
-                      : "hover:bg-white/70"
-                  }`}
-              >
-                <div className="h-7 w-7 md:h-8 md:w-8 rounded-full bg-slate-900 border border-cyan-400/60
-                  flex items-center justify-center overflow-hidden shadow-[0_0_10px_rgba(0,195,221,0.6)]">
-                  {user?.avatar ? (
-                    <img 
-                      src={user.avatar} 
-                      alt={user?.name || "Avatar"} 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-cyan-200 font-semibold text-xs md:text-sm">
-                      {getInitials(user?.name)}
-                    </span>
-                  )}
-                </div>
-
-                {/* <div className="hidden sm:block text-left">
-                  <p className="text-[11px] md:text-sm font-semibold text-[#545454] leading-tight">
-                    {user?.name || "User"}
-                  </p>
-                  <span
-                    className={`inline-block mt-0.5 px-2 py-[1px] rounded-full
-                      text-[9px] md:text-[10px] uppercase text-gray-900 tracking-[0.16em]
-                      ${getRoleBadgeColor(user?.role)}`}
+              {isPublic ? (
+                <a
+                  href={NESTA_SIGNIN_URL}
+                  className="flex items-center gap-2 bg-white/90 hover:bg-white px-3 py-2 rounded-lg border border-[#1EAAFF] text-slate-700 text-xs md:text-sm font-medium transition"
+                >
+                  Sign in (Nesta)
+                </a>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setShowDropdown((p) => !p)}
+                    className={`flex items-center gap-2 bg-gray-100 md:gap-3 px-2 py-1.5 rounded-lg transition
+                      ${showDropdown ? "bg-white shadow" : "hover:bg-white/70"}`}
                   >
-                    {user?.role || "student"}
-                  </span>
-                </div> */}
-              </button>
+                    <div className="h-7 w-7 md:h-8 md:w-8 rounded-full bg-slate-900 border border-cyan-400/60 flex items-center justify-center overflow-hidden shadow-[0_0_10px_rgba(0,195,221,0.6)]">
+                      {user?.avatar ? (
+                        <img src={user.avatar} alt={user?.name || "Avatar"} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-cyan-200 font-semibold text-xs md:text-sm">
+                          {getInitials(user?.name)}
+                        </span>
+                      )}
+                    </div>
+                  </button>
 
-              {/* DROPDOWN */}
-            {showDropdown && (
-  <div
-    className="absolute right-0 mt-2 w-48 bg-[#1EAAFF]
-    border border-white/20 rounded-xl
-    shadow-[0_10px_30px_rgba(0,0,0,0.35)] z-50"
-  >
-    <div className="px-3 py-2 border-b border-white/20">
-      <p className="text-xs font-semibold text-white truncate">
-        {user?.name || "User"}
-      </p>
-      <p className="text-[10px] text-white/70 uppercase tracking-[0.16em]">
-        {user?.email || "signed in"}
-      </p>
-    </div>
-
-    <button
-      onClick={onLogout}
-      className="w-full text-left px-4 py-2 text-xs md:text-sm
-        text-red-100 hover:bg-white/10 hover:text-white
-        transition uppercase tracking-[0.14em]"
-    >
-      Sign Out
-    </button>
-  </div>
-)}
-
+                  {showDropdown && (
+                    <div className="absolute right-0 mt-2 w-48 bg-[#1EAAFF] border border-white/20 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)] z-50">
+                      <div className="px-3 py-2 border-b border-white/20">
+                        <p className="text-xs font-semibold text-white truncate">{roleLabel}</p>
+                        <p className="text-[10px] text-white/70 uppercase tracking-[0.16em]">signed in</p>
+                      </div>
+                      <button
+                        onClick={onLogout}
+                        className="w-full text-left px-4 py-2 text-xs md:text-sm text-red-100 hover:bg-white/10 hover:text-white transition uppercase tracking-[0.14em]"
+                      >
+                        Sign Out
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>

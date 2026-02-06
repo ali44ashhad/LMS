@@ -1,49 +1,58 @@
 import React, { useState, useEffect } from "react";
-import { enrollmentAPI } from "../services/api";
+import { useRealTimeProgress } from "../hooks/useRealTimeProgress";
 import CourseCard from "../componets/courses/CourseCard";
+import CourseGrid from "../componets/courses/CourseGrid";
 import StatsCards from "../componets/dashboard/StatsCards";
 import ProgressChart from "../componets/dashboard/ProgressChart";
+import { courseAPI } from "../services/api";
 
 const Dashboard = ({ onCourseSelect }) => {
-  const [enrolledCourses, setEnrolledCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [user] = useState(
     JSON.parse(localStorage.getItem("user") || "{}")
   );
+  const [allCourses, setAllCourses] = useState([]);
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      const enrollmentsRes = await enrollmentAPI.getMy();
-      setEnrolledCourses(enrollmentsRes.enrollments || []);
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Same source as sidebar: enrollments with progress computed on frontend (video lessons only)
+  const {
+    enrollments: enrolledCourses,
+    overallProgress: averageProgress,
+    completedCourses,
+    totalCourses,
+    loading,
+  } = useRealTimeProgress(true, 2000);
 
   const recentCourses = enrolledCourses.slice(0, 3);
 
+  // All published courses for "Other available courses"
+  useEffect(() => {
+    const fetchAll = async () => {
+      try {
+        const res = await courseAPI.getAll();
+        setAllCourses(res.courses || []);
+      } catch (err) {
+        console.error("Error fetching all courses:", err);
+      }
+    };
+    fetchAll();
+  }, []);
+
+  const enrolledCourseIds = new Set(
+    enrolledCourses
+      .map((e) => e.course_id ?? e.course?.id ?? e.course?._id)
+      .filter(Boolean)
+      .map(String)
+  );
+  const availableCourses = allCourses.filter(
+    (c) => !enrolledCourseIds.has(String(c.id ?? c._id))
+  );
+
   const stats = {
-    totalCourses: enrolledCourses.length,
-    completedCourses: enrolledCourses.filter((e) => e.progress === 100).length,
+    totalCourses,
+    completedCourses,
     inProgressCourses: enrolledCourses.filter(
-      (e) => e.progress > 0 && e.progress < 100
+      (e) => (e.progress || 0) > 0 && (e.progress || 0) < 100
     ).length,
-    averageProgress:
-      enrolledCourses.length > 0
-        ? Math.round(
-            enrolledCourses.reduce(
-              (acc, e) => acc + (e.progress || 0),
-              0
-            ) / enrolledCourses.length
-          )
-        : 0,
+    averageProgress,
   };
 
   if (loading) {
@@ -120,7 +129,7 @@ const Dashboard = ({ onCourseSelect }) => {
               <div className="space-y-3 md:space-y-4">
                 {recentCourses.map((enrollment, idx) => (
                   <CourseCard
-                    key={enrollment._id}
+                    key={enrollment.id ?? enrollment._id ?? idx}
                     course={{
                       ...enrollment.course,
                       enrolled: true,
@@ -132,6 +141,29 @@ const Dashboard = ({ onCourseSelect }) => {
                   />
                 ))}
               </div>
+            )}
+          </div>
+
+          {/* Other available courses – below Active Quests */}
+          <div className="p-3">
+            <h2 className="text-lg md:text-xl font-semibold tracking-[0.16em] uppercase text-[#545454] mb-2">
+              Other available courses
+            </h2>
+            <p className="text-[10px] md:text-xs text-slate-400 tracking-[0.18em] uppercase mb-4">
+              All courses you haven’t enrolled in yet
+            </p>
+            {availableCourses.length === 0 ? (
+              <p className="text-sm text-slate-400">
+                {allCourses.length === 0
+                  ? "Loading courses..."
+                  : "You're enrolled in all available courses, or no other courses right now."}
+              </p>
+            ) : (
+              <CourseGrid
+                courses={availableCourses}
+                onCourseSelect={onCourseSelect}
+                isPublic={false}
+              />
             )}
           </div>
         </div>

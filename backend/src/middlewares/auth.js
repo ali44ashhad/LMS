@@ -71,14 +71,26 @@ export const requireAdmin = (req, res, next) => {
     next();
 };
 
-// Check if user is student
+// Check if user can enroll in courses
+// Business rule: everyone EXCEPT admins/teachers can enroll (students, parents, etc.)
 export const requireStudent = (req, res, next) => {
-    if (!req.userRoles.includes('ROLE_STUDENT')) {
+    const roles = req.userRoles || [];
+    const primaryRole = (req.userRole || '').toLowerCase();
+
+    const isAdminOrTeacher =
+        (Array.isArray(roles) &&
+            (roles.includes('ROLE_ADMIN') || roles.includes('ROLE_TEACHER'))) ||
+        primaryRole === 'admin' ||
+        primaryRole === 'teacher';
+
+    if (isAdminOrTeacher) {
         return res.status(403).json({
             success: false,
             message: 'Student access required'
         });
     }
+
+    // Any authenticated user that is not admin/teacher is allowed to enroll
     next();
 };
 

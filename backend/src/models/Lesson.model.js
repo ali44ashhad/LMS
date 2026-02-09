@@ -1,12 +1,15 @@
-import { query, table, transaction } from '../utils/db.js';
+import pool, { DB_SCHEMA } from '../config/pg-db.js';
+import { transaction } from '../utils/db.js';
+
+const LESSONS_TABLE = `${DB_SCHEMA}.lessons`;
 
 class Lesson {
     // Create new lesson
     static async create(lessonData) {
         const { module_id, title, description, video_url, duration, order_num, resources } = lessonData;
 
-        const result = await query(
-            `INSERT INTO ${table('lessons')} 
+        const result = await pool.query(
+            `INSERT INTO ${LESSONS_TABLE} 
        (module_id, title, description, video_url, duration, order_num, resources)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
@@ -26,8 +29,8 @@ class Lesson {
 
     // Find all lessons for a module (ordered)
     static async findByModuleId(moduleId) {
-        const result = await query(
-            `SELECT * FROM ${table('lessons')} 
+        const result = await pool.query(
+            `SELECT * FROM ${LESSONS_TABLE} 
        WHERE module_id = $1 
        ORDER BY order_num ASC`,
             [moduleId]
@@ -37,8 +40,8 @@ class Lesson {
 
     // Find lesson by ID
     static async findById(id) {
-        const result = await query(
-            `SELECT * FROM ${table('lessons')} WHERE id = $1`,
+        const result = await pool.query(
+            `SELECT * FROM ${LESSONS_TABLE} WHERE id = $1`,
             [id]
         );
         return result.rows[0];
@@ -70,8 +73,8 @@ class Lesson {
 
         values.push(id);
 
-        const result = await query(
-            `UPDATE ${table('lessons')} 
+        const result = await pool.query(
+            `UPDATE ${LESSONS_TABLE} 
        SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP
        WHERE id = $${paramCount}
        RETURNING *`,
@@ -83,8 +86,8 @@ class Lesson {
 
     // Delete lesson
     static async delete(id) {
-        await query(
-            `DELETE FROM ${table('lessons')} WHERE id = $1`,
+        await pool.query(
+            `DELETE FROM ${LESSONS_TABLE} WHERE id = $1`,
             [id]
         );
     }
@@ -100,7 +103,7 @@ class Lesson {
             for (let i = 0; i < lessonsOrder.length; i++) {
                 const item = lessonsOrder[i];
                 await client.query(
-                    `UPDATE ${table('lessons')} 
+                    `UPDATE ${LESSONS_TABLE} 
                      SET order_num = $1 
                      WHERE id = $2 AND module_id = $3`,
                     [-(i + 1), item.id, moduleId]
@@ -111,7 +114,7 @@ class Lesson {
             const results = [];
             for (const item of lessonsOrder) {
                 const result = await client.query(
-                    `UPDATE ${table('lessons')} 
+                    `UPDATE ${LESSONS_TABLE} 
                      SET order_num = $1 
                      WHERE id = $2 AND module_id = $3
                      RETURNING *`,

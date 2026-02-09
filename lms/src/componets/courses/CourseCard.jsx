@@ -147,7 +147,7 @@ const CourseCard = ({ course, onSelect }) => {
           <div className="flex items-center gap-2 text-slate-400">
             <span>⭐ {course.rating || 4.5}</span>
             <span>•</span>
-            <span>👥 {course.enrolledStudents || 0} players</span>
+            <span>👥 {course.enrolled_students ?? course.enrolledStudents ?? 0} players</span>
           </div>
 
           <button className="

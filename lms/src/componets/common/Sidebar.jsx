@@ -2,31 +2,27 @@ import React from 'react';
 import robot from '../../assets/robot.png';
 import { useRealTimeProgress } from '../../hooks/useRealTimeProgress';
 
-const Sidebar = ({ activeTab, setActiveTab, userRole = 'student' }) => {
-  // Enable real-time progress updates every 2 seconds for students
+const Sidebar = ({ activeTab, setActiveTab, userRole = 'student', isPublic = false }) => {
   const { overallProgress, completedCourses, totalCourses } = useRealTimeProgress(
-    userRole === 'student',
-    2000 // Poll every 2 seconds
+    !isPublic && userRole === 'student',
+    2000
   );
 
-  const progressData = {
-    overallProgress,
-    completedCourses,
-    totalCourses
-  };
-  const adminMenuItems = [
-    { id: 'admin-dashboard', label: 'Admin Dashboard', icon: '👨‍💼' },
-    { id: 'admin-users', label: 'User Management', icon: '👥' },
+  const progressData = { overallProgress, completedCourses, totalCourses };
+
+  const publicMenuItems = [
+    { id: 'courses', label: 'Courses', icon: '📚' },
+  ];
+  const adminMenuItems = [ 
     { id: 'admin-courses', label: 'Manage Courses', icon: '🎓' },
   ];
-
   const studentMenuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
     { id: 'courses', label: 'My Courses', icon: '📚' },
     { id: 'profile', label: 'Profile', icon: '👤' },
   ];
 
-  const menuItems = userRole === 'admin' ? adminMenuItems : studentMenuItems;
+  const menuItems = isPublic ? publicMenuItems : (userRole === 'admin' ? adminMenuItems : studentMenuItems);
 
   return (
     <aside className="w-full md:w-64 bg-[#E7F6FE] text-slate-700 border-r border-[#1EAAFF] md:min-h-screen">
@@ -41,7 +37,7 @@ const Sidebar = ({ activeTab, setActiveTab, userRole = 'student' }) => {
 
         <ul className="space-y-2 px-3 grid grid-cols-2 md:grid-cols-1 gap-2">
           {menuItems.map((item) => {
-            const isActive = activeTab === item.id;
+            const isActive = activeTab === item.id || (isPublic && item.id === 'courses' && activeTab === 'course-detail');
             return (
               <li key={item.id}>
                <button
@@ -65,7 +61,7 @@ const Sidebar = ({ activeTab, setActiveTab, userRole = 'student' }) => {
         </ul>
       </nav>
 
-      {userRole === 'student' && (
+      {!isPublic && userRole === 'student' && (
         <div className="hidden md:block mt-10 px-4">
           <div className="bg-white rounded-xl p-4 border border-[#1EAAFF]">
             <h3 className="text-sm font-semibold text-slate-600 uppercase tracking-wide">

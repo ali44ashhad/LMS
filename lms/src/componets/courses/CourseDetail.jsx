@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useProgress } from '../../hooks/useProgress'; 
 
-const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enrollment, completedLessons = [], allLessons = [] }) => {
+const NESTA_SIGNIN_URL = import.meta.env.VITE_NESTA_SIGNIN_URL || '/';
+
+const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enrollment, completedLessons = [], allLessons = [], isPublic = false }) => {
   const [activeTab, setActiveTab] = useState('curriculum');
   const [expandedModules, setExpandedModules] = useState(new Set());
   const courseId = course?._id || course?.id;
-  const { progress, loading: progressLoading } = useProgress(courseId);
   const [showFullDescription, setShowFullDescription] = useState(false);
 
 
@@ -21,8 +21,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
     });
   };
   
-  // Use enrollment progress if available, otherwise use hook progress
-  const displayProgress = enrollment?.progress !== undefined ? enrollment.progress : progress;
+  // Progress computed on frontend from completed vs total video lessons (no backend progress used)
 
   // Safe course props
   const courseTitle = course?.title || 'Course';
@@ -37,10 +36,46 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
   const courseImage = course?.image || '📚';
   const courseRating = course?.rating || 4.5;
   const courseCategory = course?.category || 'General';
-  const courseStudents = course?.enrolledStudents || course?.students || 0;
+  const courseStudents = course?.enrolled_students ?? course?.enrolledStudents ?? course?.students ?? 0;
 
-  // Modules - Support both lessons array from backend and modules structure
+  // Last updated: prefer updated_at, fallback to created_at; format for display
+  const rawDate = course?.updated_at ?? course?.updatedAt ?? course?.created_at ?? course?.createdAt;
+  const lastUpdatedDisplay = rawDate
+    ? (() => {
+        const d = new Date(rawDate);
+        if (Number.isNaN(d.getTime())) return 'N/A';
+        return d.toLocaleDateString('en-IN', { month: 'short', year: 'numeric', day: 'numeric' });
+      })()
+    : 'N/A';
+
+  // Modules - Support backend course.modules (with lessons) or legacy course.lessons
   const modules = (() => {
+    if (course.modules && Array.isArray(course.modules) && course.modules.length > 0) {
+      return course.modules.map((mod, idx) => ({
+        id: mod.id ?? mod._id ?? idx + 1,
+        title: mod.title ?? `Module ${idx + 1}`,
+        duration: 'Self-paced',
+        lessons: (mod.lessons ?? []).map((lesson, lidx) => {
+          const lessonId = lesson.id ?? lesson._id ?? lidx + 1;
+          const isCompleted = completedLessons.some(id => id?.toString() === String(lessonId));
+          const hasVideo = !!(lesson.video_url ?? lesson.videoUrl);
+          return {
+            id: lessonId,
+            _id: lesson.id ?? lesson._id,
+            title: lesson.title ?? `Lesson ${lidx + 1}`,
+            duration: lesson.duration ?? '10 min',
+            type: hasVideo ? 'video' : 'resources',
+            url: lesson.video_url ?? lesson.videoUrl,
+            description: lesson.description,
+            resources: lesson.resources ?? [],
+            isCompleted,
+            completed: isCompleted,
+            isVideoLesson: hasVideo,
+          };
+        }),
+        moduleResources: [],
+      }));
+    }
     if (course.lessons && Array.isArray(course.lessons) && course.lessons.length > 0) {
       // Group lessons by moduleId - each lesson should have moduleId and moduleName
       const moduleMap = new Map();
@@ -193,15 +228,25 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
     }
   })();
 
+  // Count only video lessons (exclude resource-only "Resources" lesson; legacy format has no isVideoLesson so count those)
   const totalLessons = modules.reduce(
-    (total, module) => total + module.lessons.length,
+    (total, module) =>
+      total + module.lessons.filter((l) => l.isVideoLesson !== false).length,
     0
   );
   const completedLessonsCount = modules.reduce(
     (total, module) =>
-      total + module.lessons.filter((lesson) => lesson.completed).length,
+      total +
+      module.lessons.filter(
+        (lesson) =>
+          lesson.isVideoLesson !== false && (lesson.completed === true || lesson.isCompleted === true)
+      ).length,
     0
   );
+
+  // Progress % from frontend only: completed video lessons / total video lessons (so it matches "X of Y lessons")
+  const displayProgress =
+    totalLessons > 0 ? Math.min(100, Math.round((completedLessonsCount / totalLessons) * 100)) : 0;
 
   const instructors = [
     {
@@ -457,6 +502,10 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
                                 <div
                                   onClick={(e) => {
                                     e.stopPropagation();
+                                    if (isPublic) {
+                                      alert('Sign in to enroll to access lessons.');
+                                      return;
+                                    }
                                     onLessonSelect && onLessonSelect(lesson);
                                   }}
                                   className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 hover:bg-white border ${
@@ -502,6 +551,10 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
+                                      if (isPublic) {
+                                        alert('Sign in to enroll to access lessons.');
+                                        return;
+                                      }
                                       onLessonSelect && onLessonSelect(lesson);
                                     }}
                                     className={`px-3 py-1 text-[10px] rounded-lg transition-all duration-200 flex-shrink-0 ${
@@ -991,9 +1044,16 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
             >
               ✓ Already Enrolled
             </button>
+          ) : isPublic ? (
+            <a
+              href={NESTA_SIGNIN_URL}
+              className="w-full py-4 text-base font-semibold justify-center rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-[1.02] transition-all duration-200 flex items-center gap-2"
+            >
+              Sign in to enroll (Nesta)
+            </a>
           ) : (
             <button
-              onClick={() => onEnroll && onEnroll(course._id)}
+              onClick={() => onEnroll && onEnroll(course?.id ?? course?._id)}
               disabled={enrolling}
               className={`w-full py-4 text-base font-semibold justify-center rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-[1.02] transition-all duration-200 flex items-center gap-2 ${
                 enrolling ? 'opacity-50 cursor-not-allowed' : ''
@@ -1003,7 +1063,8 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
             </button>
           )}
 
-          {/* Progress Card */}
+          {/* Progress Card (hidden for public / not enrolled) */}
+          {!isPublic && (
           <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
             <h3 className="text-sm font-extrabold bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent tracking-[0.16em] uppercase mb-4">
               Your Progress
@@ -1041,6 +1102,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
               </p>
             </div>
           </div>
+          )}
 
           {/* Course Info */}
           <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-lg shadow-gray-200/50 p-6">
@@ -1066,7 +1128,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Last Updated</span>
-                <span className="font-medium">Jan 2025</span>
+                <span className="font-medium">{lastUpdatedDisplay}</span>
               </div>
             </div>
           </div>
@@ -1089,7 +1151,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
                 />
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                {progress}% towards certificate
+                {displayProgress}% towards certificate
               </p>
             </div>
           </div>

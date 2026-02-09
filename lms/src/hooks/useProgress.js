@@ -20,11 +20,14 @@ export const useProgress = (courseId) => {
       try {
         const response = await enrollmentAPI.getMy();
         const enrollment = response.enrollments?.find(
-          (e) => e.course?._id === courseId || e.course?._id?.toString() === courseId?.toString()
+          (e) => {
+            const enrollCourseId = e.course?.id ?? e.course?._id ?? e.course_id;
+            return enrollCourseId != null && String(enrollCourseId) === String(courseId);
+          }
         );
         
         if (enrollment) {
-          setEnrollmentId(enrollment._id);
+          setEnrollmentId(enrollment.id ?? enrollment._id);
           const backendProgress = enrollment.progress || 0;
           setCurrentProgress(backendProgress);
           // Sync to localStorage
@@ -51,34 +54,14 @@ export const useProgress = (courseId) => {
     const newProgress = Math.min(100, currentProgress + increment);
     setCurrentProgress(newProgress);
     updateProgress(courseId, newProgress);
-    
-    // Sync to backend if enrollment exists
-    if (enrollmentId) {
-      try {
-        await enrollmentAPI.updateProgress(enrollmentId, {
-          progress: newProgress
-        });
-      } catch (error) {
-        console.error('Error updating progress on backend:', error);
-      }
-    }
+    // Backend only updates progress when a lesson is completed (lessonId); no-op here for backend
   };
 
   const setProgress = async (newProgress) => {
     const progress = Math.min(100, Math.max(0, newProgress));
     setCurrentProgress(progress);
     updateProgress(courseId, progress);
-    
-    // Sync to backend if enrollment exists
-    if (enrollmentId) {
-      try {
-        await enrollmentAPI.updateProgress(enrollmentId, {
-          progress: progress
-        });
-      } catch (error) {
-        console.error('Error updating progress on backend:', error);
-      }
-    }
+    // Backend only updates progress when a lesson is completed (lessonId); no-op here for backend
   };
 
   return {

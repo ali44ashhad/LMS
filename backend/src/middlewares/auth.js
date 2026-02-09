@@ -9,9 +9,10 @@ if (!JWT_SECRET) {
 
 // Main authentication middleware
 export const authenticateToken = (req, res, next) => {
-    // Get token from cookie, header, or query
+    // Get token from LMS cookie, Nesta cookie, header, or query
     const token =
-        req.cookies?.accessToken ||
+        req.cookies?.accessToken || // LMS-issued JWT
+        req.cookies?.token || // Nesta-issued JWT (SSO)
         req.headers?.authorization?.replace('Bearer ', '') ||
         req.query?.token;
 
@@ -26,7 +27,9 @@ export const authenticateToken = (req, res, next) => {
         const decoded = jwt.verify(token, JWT_SECRET);
 
         // Attach user info to request
-        req.userId = decoded.id;
+        // Support both LMS tokens (id) and Nesta tokens (sub)
+        req.userToken = decoded;
+        req.userId = decoded.id || decoded.sub;
         req.userRoles = decoded.roles || [];
         req.userRole = decoded.role; // student/parent/teacher
 
@@ -83,13 +86,14 @@ export const requireStudent = (req, res, next) => {
 export const optionalAuth = (req, res, next) => {
     const token =
         req.cookies?.accessToken ||
+        req.cookies?.token ||
         req.headers?.authorization?.replace('Bearer ', '') ||
         req.query?.token;
 
     if (token) {
         try {
             const decoded = jwt.verify(token, JWT_SECRET);
-            req.userId = decoded.id;
+            req.userId = decoded.id || decoded.sub;
             req.userRoles = decoded.roles || [];
             req.userRole = decoded.role;
         } catch (error) {

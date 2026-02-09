@@ -1,6 +1,19 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useProgress } from "../../hooks/useProgress";
 import { formatTime } from "../../utils/helpers";
+
+// Build flat list of video-only lessons from course (modules or flat lessons)
+function getVideoLessons(course) {
+  if (!course) return [];
+  if (course.modules && Array.isArray(course.modules)) {
+    const list = course.modules.flatMap((mod) => mod.lessons ?? []);
+    return list.filter((l) => !!(l.video_url ?? l.videoUrl));
+  }
+  if (course.lessons && Array.isArray(course.lessons)) {
+    return course.lessons.filter((l) => !!(l.video_url ?? l.videoUrl));
+  }
+  return [];
+}
 
 const CoursePlayer = ({
   course,
@@ -10,6 +23,7 @@ const CoursePlayer = ({
   onNext,
   onPrevious,
   onExit,
+  canMarkComplete = true,
 }) => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -23,6 +37,20 @@ const CoursePlayer = ({
 
   const courseId = course?._id || course?.id;
   const { incrementProgress } = useProgress(courseId);
+
+  // Video-only list for "Lesson X of Y" (only videos count)
+  const videoLessons = useMemo(() => getVideoLessons(course), [course]);
+  const currentLessonId = lesson?._id ?? lesson?.id;
+  const currentVideoIndex = videoLessons.findIndex(
+    (l) => String(l._id ?? l.id) === String(currentLessonId)
+  );
+  const totalVideos = videoLessons.length;
+  const lessonLabel =
+    totalVideos > 0
+      ? `Lesson ${currentVideoIndex >= 0 ? currentVideoIndex + 1 : 1} of ${totalVideos}`
+      : "Lesson";
+  const hasPreviousVideo = totalVideos > 0 && currentVideoIndex > 0;
+  const hasNextVideo = totalVideos > 0 && currentVideoIndex >= 0 && currentVideoIndex < totalVideos - 1;
 
   // Update lessonCompleted when lesson or isCompleted prop changes
   useEffect(() => {
@@ -190,7 +218,7 @@ const CoursePlayer = ({
         </div>
 
         <div className="text-right text-sm">
-          <div>Lesson {course.lessons ? course.lessons.findIndex(l => (l._id || l.id) === (lesson._id || lesson.id)) + 1 : 1} of {course.lessons?.length || 1}</div>
+          <div>{lessonLabel}</div>
           <div className="font-medium">
             {videoContent.type.toUpperCase()}
           </div>
@@ -375,9 +403,13 @@ const CoursePlayer = ({
               </div>
             </div>
           )}
- {/* Mark as Complete Button */}
- <div className="p-6 border-t">
-              {lessonCompleted ? (
+ {/* Mark as Complete – sirf enrolled users ke liye */}
+            <div className="p-6 border-t">
+              {!canMarkComplete ? (
+                <p className="text-sm text-slate-500 text-center py-2">
+                  Enroll in this course to mark lessons as complete.
+                </p>
+              ) : lessonCompleted ? (
                 <div className="flex items-center gap-2 text-green-600 font-semibold">
                   <span>✓</span>
                   <span>Lesson Completed</span>
@@ -539,7 +571,7 @@ const CoursePlayer = ({
           <div className="space-y-2">
             <button
               onClick={onPrevious}
-              disabled={!onPrevious}
+              disabled={!hasPreviousVideo}
               className="w-full px-3 py-2 bg-lime-400 rounded-lg hover:bg-lime-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               ← Previous Lesson
@@ -547,7 +579,7 @@ const CoursePlayer = ({
 
             <button
               onClick={onNext}
-              disabled={!onNext}
+              disabled={!hasNextVideo}
               className="w-full px-3 py-2 bg-[#6ED6EE] text-white rounded-lg hover:bg-[#1EAAFF] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next Lesson →

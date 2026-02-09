@@ -1,10 +1,9 @@
 // src/App.jsx
+// Auth: No login/signup in LMS. User is verified by token from Nesta backend.
+// If token is valid → profile and full app. If no/invalid token → public pages only.
 import React, { useState, useEffect } from 'react';
 import Dashboard from './pages/Dashboard';
-import Profile from './pages/Profile';
-import Login from './pages/Login';
-import AdminDashboard from './pages/AdminDashboard';
-import AdminUsers from './pages/AdminUsers';
+import Profile from './pages/Profile'; 
 import AdminCourses from './pages/AdminCourses';
 import AdminCourseCreate from './pages/AdminCourseCreate';
 import Header from './componets/common/Header';
@@ -15,7 +14,7 @@ import CourseDetailPage from './pages/CourseDetail';
 import { authAPI } from './services/api';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('courses');
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [editingCourse, setEditingCourse] = useState(null);
   const [user, setUser] = useState(null);
@@ -23,103 +22,95 @@ function App() {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      const token = localStorage.getItem('token');
-      const storedUser = localStorage.getItem('user');
-      
-      // Both token and user must exist
-      if (token && storedUser) {
-        try {
-          const parsedUser = JSON.parse(storedUser);
-          
-          // Verify token is still valid by calling /auth/me
-          try {
-            const currentUser = await authAPI.getCurrentUser();
-            if (currentUser.success && currentUser.user) {
-              // Update user data from server
-              const userData = {
-                ...currentUser.user,
-                _id: currentUser.user._id || currentUser.user.id
-              };
-              localStorage.setItem('user', JSON.stringify(userData));
-              setUser(userData);
-              if (userData.role === 'admin') {
-                setActiveTab('admin-dashboard');
-              }
-            } else {
-              // Token invalid, clear storage
-              authAPI.logout();
-              setUser(null);
-            }
-          } catch (error) {
-            // Token invalid or expired, clear storage
-            authAPI.logout();
-            setUser(null);
+      try {
+        // SSO: token can come from cookie OR URL (?token=... or #token=...)
+        const url = new URL(window.location.href);
+        const tokenFromQuery = url.searchParams.get('token');
+        const tokenFromHash = (() => {
+          const hash = (url.hash || '').replace(/^#/, '');
+          if (!hash) return null;
+          const p = new URLSearchParams(hash);
+          return p.get('token');
+        })();
+        const ssoToken = tokenFromQuery || tokenFromHash || undefined;
+
+        const currentUser = await authAPI.validateToken(ssoToken);
+        // DEBUG: remove after fixing SSO – paste this output if login still fails
+        console.log('[LMS auth] validateToken response:', currentUser);
+
+        // Normalize different backend response shapes (LMS /auth/validate vs Nesta /auth/check)
+        const raw = currentUser || {};
+        const userPayload =
+          raw.user || // { success, user: {...} }
+          (raw.data && (raw.data.user || raw.data)) || // { data: { user } } or { data: {...} }
+          (raw.success && !raw.user && !raw.data ? raw : null); // plain { success:true, ...userFields }
+
+        if (userPayload) {
+          const roles = Array.isArray(userPayload.roles) ? userPayload.roles : [];
+          const userData = {
+            ...userPayload,
+            roles,
+            _id: userPayload._id ?? userPayload.id,
+            id: userPayload.id ?? userPayload._id,
+          };
+          localStorage.setItem('user', JSON.stringify(userData));
+          setUser(userData);
+
+          // Clean token from URL after successful validation (avoid leaking via copy/paste/history)
+          if (tokenFromQuery) url.searchParams.delete('token');
+          if (tokenFromHash) {
+            const hashParams = new URLSearchParams((url.hash || '').replace(/^#/, ''));
+            hashParams.delete('token');
+            url.hash = hashParams.toString() ? `#${hashParams.toString()}` : '';
           }
-        } catch (err) {
-          // Invalid user data, clear storage
+          if (tokenFromQuery || tokenFromHash) {
+            window.history.replaceState({}, document.title, url.toString());
+          }
+
+          const rolesArr = Array.isArray(userData.roles) ? userData.roles : [];
+          const isAdmin = rolesArr.includes('admin');
+
+          if (isAdmin) setActiveTab('admin-dashboard');
+          else setActiveTab('dashboard');
+        } else {
           authAPI.logout();
           setUser(null);
         }
-      } else {
-        // Missing token or user, clear storage
-        if (token || storedUser) {
-          authAPI.logout();
-        }
+      } catch (_) {
+        authAPI.logout();
         setUser(null);
       }
-      
       setLoading(false);
     };
 
     initializeAuth();
   }, []);
 
-  const handleLogin = (userData) => {
-    // Ensure user data is properly formatted
-    const formattedUser = {
-      ...userData,
-      _id: userData._id || userData.id
-    };
-    
-    // Ensure token and user are in localStorage (should already be set by Login component)
-    const token = localStorage.getItem('token');
-    if (token) {
-      localStorage.setItem('user', JSON.stringify(formattedUser));
-      setUser(formattedUser);
-      setActiveTab(formattedUser.role === 'admin' ? 'admin-dashboard' : 'dashboard');
-    } else {
-      // Token missing, clear and show error
-      authAPI.logout();
-      setUser(null);
-    }
-  };
-
   const handleLogout = () => {
     authAPI.logout();
     setUser(null);
-    setActiveTab('dashboard');
+    setActiveTab('courses');
   };
 
   const renderContent = () => {
-    if (user?.role === 'admin') {
+    const rolesArr = Array.isArray(user?.roles) ? user.roles : [];
+    const isAdmin = rolesArr.includes('admin');
+
+    if (isAdmin) {
+      const adminCourseHandlers = {
+        onCreateNew: () => {
+          setEditingCourse(null);
+          setActiveTab('admin-course-create');
+        },
+        onEdit: (course) => {
+          setEditingCourse(course);
+          setActiveTab('admin-course-create');
+        }
+      };
       switch (activeTab) {
         case 'admin-dashboard':
-          return <AdminDashboard />;
-        case 'admin-users':
-          return <AdminUsers />;
         case 'admin-courses':
-          return (
-            <AdminCourses
-              onCreateNew={() => {
-                setEditingCourse(null);
-                setActiveTab('admin-course-create');
-              }}
-              onEdit={(course) => {
-                setEditingCourse(course);
-                setActiveTab('admin-course-create');
-              }}
-            />
-          );
+          return <AdminCourses {...adminCourseHandlers} />;
         case 'admin-course-create':
           return (
             <AdminCourseCreate
@@ -135,7 +126,7 @@ function App() {
             />
           );
         default:
-          return <AdminDashboard />;
+          return <AdminCourses {...adminCourseHandlers} />;
       }
     }
 
@@ -190,22 +181,24 @@ function App() {
     );
   }
 
-  if (!user) {
-    return <Login onLogin={handleLogin} />;
-  }
+  const isPublic = !user;
+  const sidebarRoles = Array.isArray(user?.roles) ? user.roles : [];
+  const sidebarRole = sidebarRoles.includes('admin')
+    ? 'admin'
+    : (user?.role || 'student');
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
-      <Header user={user} onLogout={handleLogout} />
+      <Header user={user} onLogout={handleLogout} isPublic={isPublic} />
 
       <div className="flex flex-1 flex-col md:flex-row">
         <Sidebar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
-          userRole={user.role}
+          userRole={sidebarRole}
+          isPublic={isPublic}
         />
 
-        {/* ✅ Background pattern ONLY on main content */}
         <main
           className="
             flex-1 p-3 md:p-6 overflow-x-hidden
@@ -214,7 +207,25 @@ function App() {
             bg-[size:40px_40px]
           "
         >
-          {renderContent()}
+          {isPublic ? (
+            activeTab === 'course-detail' ? (
+              <CourseDetailPage
+                course={selectedCourse}
+                onBack={() => setActiveTab('courses')}
+                isPublic
+              />
+            ) : (
+              <Courses
+                onCourseSelect={(course) => {
+                  setSelectedCourse(course);
+                  setActiveTab('course-detail');
+                }}
+                isPublic
+              />
+            )
+          ) : (
+            renderContent()
+          )}
         </main>
       </div>
 

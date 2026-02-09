@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import CourseDetail from "../componets/courses/CourseDetail";
 import CoursePlayer from "../componets/courses/CoursePlayer";
 import { enrollmentAPI, courseAPI } from "../services/api";
 
-const CourseDetailPage = ({ course, onBack, onEnrollSuccess }) => {
+const CourseDetailPage = ({ course, onBack, onEnrollSuccess, isPublic = false }) => {
   const [currentLesson, setCurrentLesson] = useState(null);
   const [currentLessonIndex, setCurrentLessonIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -99,30 +99,49 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess }) => {
     };
   }, [courseId, lastFetchTime]);
   
-  // Get all lessons from course
+  // Get all lessons in correct order: module 1 (lesson 1,2,3...), then module 2 (lesson 1,2,3...), etc.
+  // Do NOT sort globally by order_num (that would mix: m1.l1, m2.l1, m3.l1, m1.l2...).
   const allLessons = React.useMemo(() => {
     const courseData = currentCourse || course;
-    if (courseData?.lessons && Array.isArray(courseData.lessons)) {
-      return courseData.lessons.map((lesson, idx) => ({
-        id: lesson._id || lesson.id || idx + 1,
-        _id: lesson._id || lesson.id,
-        title: lesson.title || `Lesson ${idx + 1}`,
-        duration: lesson.duration || '10 min',
-        type: 'video',
-        url: lesson.videoUrl,
-        description: lesson.description,
-        order: lesson.order || idx + 1,
-        resources: lesson.resources || [], // Include resources from backend
-      }));
+    let lessonList = [];
+    const orderKey = (l) => l.order_num ?? l.order ?? 0;
+    if (courseData?.modules && Array.isArray(courseData.modules)) {
+      lessonList = courseData.modules.flatMap((mod) => {
+        const lessons = mod.lessons ?? [];
+        return [...lessons].sort((a, b) => orderKey(a) - orderKey(b));
+      });
     }
-    return [];
+    if (lessonList.length === 0 && courseData?.lessons && Array.isArray(courseData.lessons)) {
+      lessonList = [...courseData.lessons].sort((a, b) => orderKey(a) - orderKey(b));
+    }
+    return lessonList.map((lesson, idx) => ({
+      id: lesson.id ?? lesson._id ?? idx + 1,
+      _id: lesson._id ?? lesson.id,
+      title: lesson.title || `Lesson ${idx + 1}`,
+      duration: lesson.duration || '10 min',
+      type: 'video',
+      url: lesson.video_url ?? lesson.videoUrl,
+      description: lesson.description,
+      order: lesson.order_num ?? lesson.order ?? idx + 1,
+      resources: lesson.resources || [],
+    }));
   }, [currentCourse, course]);
 
-  // Fetch enrollment data when course loads
+  // Video-only lessons in same order (for Next/Previous in player: 1→2→3… of 8)
+  const videoOnlyLessons = useMemo(
+    () => allLessons.filter((l) => !!(l.url ?? l.video_url ?? l.videoUrl)),
+    [allLessons]
+  );
+
+  // Fetch enrollment data when course loads (skip when public view)
   useEffect(() => {
+    if (isPublic) {
+      setEnrollment(null);
+      setCompletedLessons([]);
+      return;
+    }
     const fetchEnrollment = async () => {
       if (!courseId) return;
-      
       try {
         const response = await enrollmentAPI.getMy();
         const foundEnrollment = response.enrollments?.find(
@@ -133,15 +152,14 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess }) => {
         );
         if (foundEnrollment) {
           setEnrollment(foundEnrollment);
-          setCompletedLessons(foundEnrollment.completedLessons || []);
+          setCompletedLessons(foundEnrollment.completedLessons ?? foundEnrollment.completed_lessons ?? []);
         }
       } catch (error) {
         console.error("Error fetching enrollment:", error);
       }
     };
-
     fetchEnrollment();
-  }, [courseId]);
+  }, [courseId, isPublic]);
 
   // Refresh enrollment after lesson completion
   const refreshEnrollment = async () => {
@@ -158,10 +176,10 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess }) => {
       if (foundEnrollment) {
         console.log('Enrollment refreshed:', {
           progress: foundEnrollment.progress,
-          completedLessons: foundEnrollment.completedLessons
+          completedLessons: foundEnrollment.completedLessons ?? foundEnrollment.completed_lessons
         });
         setEnrollment(foundEnrollment);
-        setCompletedLessons(foundEnrollment.completedLessons || []);
+        setCompletedLessons(foundEnrollment.completedLessons ?? foundEnrollment.completed_lessons ?? []);
       }
     } catch (error) {
       console.error("Error refreshing enrollment:", error);
@@ -178,16 +196,47 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess }) => {
     setIsPlaying(true);
   };
 
-  const handleEnroll = async (courseId) => {
+  const handleEnroll = async (enrollCourseId) => {
+    // Only students should be able to enroll. Teachers/admins see a message instead of 403 error.
+    let storedUser = null;
+    try {
+      storedUser = JSON.parse(localStorage.getItem('user') || 'null');
+    } catch {
+      storedUser = null;
+    }
+
+    const roles = Array.isArray(storedUser?.roles) ? storedUser.roles : [];
+    const isAdmin = roles.includes('ROLE_ADMIN');
+    const isTeacher = roles.includes('ROLE_TEACHER');
+
+    // Block only admins/teachers; everyone else can attempt enroll (backend still enforces ROLE_STUDENT)
+    if (isAdmin || isTeacher) {
+      alert('Sirf students courses me enroll kar sakte hain.');
+      return;
+    }
+
     try {
       setEnrolling(true);
-      const response = await enrollmentAPI.enroll(courseId);
-      setEnrollment(response.enrollment);
+      const response = await enrollmentAPI.enroll(enrollCourseId);
+      const raw = response.enrollment;
+      setEnrollment({
+        ...raw,
+        id: raw?.id ?? raw?._id,
+        _id: raw?._id ?? raw?.id,
+        course: raw?.course ?? { id: enrollCourseId, _id: enrollCourseId },
+        completedLessons: raw?.completedLessons ?? raw?.completed_lessons ?? [],
+        lastAccessed: raw?.lastAccessed ?? raw?.last_accessed,
+      });
       alert("Successfully enrolled in course!");
       onEnrollSuccess && onEnrollSuccess();
     } catch (error) {
       console.error("Error enrolling:", error);
-      alert("Failed to enroll in course");
+      const msg = error?.message || '';
+      if (msg.includes('Student access required')) {
+        alert('Sirf students courses me enroll kar sakte hain.');
+      } else {
+        alert("Failed to enroll in course");
+      }
     } finally {
       setEnrolling(false);
     }
@@ -244,7 +293,7 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess }) => {
       const newProgress = Math.max(0, Math.min(100, Math.round(rawProgress)));
       
       console.log("Updating progress:", {
-        enrollmentId: enrollment._id,
+        enrollmentId: enrollment.id ?? enrollment._id,
         lessonId,
         totalLessons,
         completedCount: effectiveCompletedCount,
@@ -260,10 +309,10 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess }) => {
         lastAccessed: new Date()
       });
 
-      // Update backend
-      const response = await enrollmentAPI.updateProgress(enrollment._id, {
-        progress: newProgress,
-        completedLessons: updatedCompletedLessons
+      // Update backend: PATCH with { lessonId } (backend appends to completed_lessons and recalculates progress)
+      const enrollmentId = enrollment.id ?? enrollment._id;
+      const response = await enrollmentAPI.updateProgress(enrollmentId, {
+        lessonId
       });
       
       if (!response || !response.success) {
@@ -274,6 +323,9 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess }) => {
       
       // Refresh enrollment data to ensure sync and get latest state from server
       await refreshEnrollment();
+      
+      // Notify sidebar/dashboard to refresh progress so they show same % as this page
+      window.dispatchEvent(new CustomEvent('lms-progress-updated'));
       
       // Show success message
       alert("Lesson marked as complete!");
@@ -287,18 +339,36 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess }) => {
   };
 
   const handleNextLesson = () => {
-    if (currentLessonIndex < allLessons.length - 1) {
-      const nextIndex = currentLessonIndex + 1;
-      setCurrentLessonIndex(nextIndex);
-      setCurrentLesson(allLessons[nextIndex]);
+    const currentId = currentLesson?._id ?? currentLesson?.id;
+    const videoIndex = videoOnlyLessons.findIndex(
+      (l) => String(l._id ?? l.id) === String(currentId)
+    );
+    if (videoIndex >= 0 && videoIndex < videoOnlyLessons.length - 1) {
+      const nextVideo = videoOnlyLessons[videoIndex + 1];
+      const indexInAll = allLessons.findIndex(
+        (l) => String(l._id ?? l.id) === String(nextVideo._id ?? nextVideo.id)
+      );
+      if (indexInAll >= 0) {
+        setCurrentLessonIndex(indexInAll);
+        setCurrentLesson(allLessons[indexInAll]);
+      }
     }
   };
 
   const handlePreviousLesson = () => {
-    if (currentLessonIndex > 0) {
-      const prevIndex = currentLessonIndex - 1;
-      setCurrentLessonIndex(prevIndex);
-      setCurrentLesson(allLessons[prevIndex]);
+    const currentId = currentLesson?._id ?? currentLesson?.id;
+    const videoIndex = videoOnlyLessons.findIndex(
+      (l) => String(l._id ?? l.id) === String(currentId)
+    );
+    if (videoIndex > 0) {
+      const prevVideo = videoOnlyLessons[videoIndex - 1];
+      const indexInAll = allLessons.findIndex(
+        (l) => String(l._id ?? l.id) === String(prevVideo._id ?? prevVideo.id)
+      );
+      if (indexInAll >= 0) {
+        setCurrentLessonIndex(indexInAll);
+        setCurrentLesson(allLessons[indexInAll]);
+      }
     }
   };
 
@@ -331,6 +401,7 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess }) => {
         onNext={handleNextLesson}
         onPrevious={handlePreviousLesson}
         onExit={handleExitPlayer}
+        canMarkComplete={!!enrollment}
       />
     );
   }
@@ -340,11 +411,12 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess }) => {
       course={currentCourse || course}
       onBack={onBack}
       onLessonSelect={handleLessonSelect}
-      onEnroll={handleEnroll}
+      onEnroll={isPublic ? null : handleEnroll}
       enrolling={enrolling}
       enrollment={enrollment}
       completedLessons={completedLessons}
       allLessons={allLessons}
+      isPublic={isPublic}
     />
   );
 };

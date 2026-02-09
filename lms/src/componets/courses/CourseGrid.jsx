@@ -1,7 +1,7 @@
 import React from "react";
 import CourseCard from "./CourseCard";
 
-const CourseGrid = ({ courses, onCourseSelect }) => {
+const CourseGrid = ({ courses, onCourseSelect, isPublic = false }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
       {courses.map((course) => (
@@ -28,7 +28,7 @@ const CourseGrid = ({ courses, onCourseSelect }) => {
             </h3>
 
             <p className="text-gray-600 text-xs md:text-sm mt-1">
-              {course.instructorName || course.instructor}
+              {course.instructor_name ?? course.instructorName ?? course.instructor}
             </p>
           </div>
 
@@ -44,10 +44,8 @@ const CourseGrid = ({ courses, onCourseSelect }) => {
             <div className="flex justify-between">
               <span>Lessons:</span>
               <span className="font-medium">
-                {course.modules?.length ||
-                  (Array.isArray(course.lessons)
-                    ? course.lessons.length
-                    : 0)}
+                {(course.modules ?? []).reduce((sum, m) => sum + (m.lessons?.length ?? 0), 0) ||
+                  (Array.isArray(course.lessons) ? course.lessons.length : 0)}
               </span>
             </div>
 
@@ -103,7 +101,7 @@ const CourseGrid = ({ courses, onCourseSelect }) => {
                 transition-colors
               "
             >
-              View Course
+              {isPublic ? "View Course" : "View Course"}
             </button>
           </div>
         </div>

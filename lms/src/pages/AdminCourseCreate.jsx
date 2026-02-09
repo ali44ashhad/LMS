@@ -52,9 +52,16 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
     file: null
   });
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [deletedModuleIds, setDeletedModuleIds] = useState([]);
+  const [deletedLessonIds, setDeletedLessonIds] = useState([]);
+
+  // --- RESOURCES (where they live & how they're saved) ---
+  // Backend: resources exist only on LESSONS (DB column lesson.resources = JSON array of { title, url }).
+  // Upload: User picks PDF → POST /api/admin/upload → file goes to Cloudinary (folder lms/course-resources) → API returns { file: { url } }.
+  // In UI we show "Files & Resources" per module (module.files). On save we write them into one lesson per module titled "Resources" (no video), so they appear under that module for students.
 
   const [editingModuleId, setEditingModuleId] = useState(null);
-  const isEditMode = !!(course && course._id);
+  const isEditMode = !!(course && (course.id ?? course._id));
   const quillRef = useRef(null);
   const quillInstanceRef = useRef(null);
   const isQuillChangeRef = useRef(false);
@@ -132,8 +139,13 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
     return Array.from(moduleMap.values());
   };
 
+  // When opening for edit: list API returns courses without modules/lessons.
+  // Fetch full course (GET /api/admin/courses/:id) and map course.modules[].lessons to UI shape.
   useEffect(() => {
-    if (course) {
+    if (!course) return;
+
+    const courseId = course.id ?? course._id;
+    if (!courseId) {
       setCourseData({
         title: course.title || '',
         description: course.description || '',
@@ -141,10 +153,98 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
         level: course.level || 'Beginner',
         duration: course.duration || '',
         image: course.image || '📚',
-        isPublished: course.isPublished || false,
-        modules: course.lessons ? groupLessonsByModule(course.lessons) : []
+        isPublished: course.is_published ?? course.isPublished ?? false,
+        modules: []
       });
+      return;
     }
+
+    let cancelled = false;
+
+    const loadCourseForEdit = async () => {
+      try {
+        const res = await adminAPI.getCourseById(courseId);
+        const fullCourse = res.course || res;
+        if (cancelled) return;
+
+        // Backend: resources live only on LESSONS (lesson.resources = [{ title, url }]).
+        // Upload: PDF → POST /api/admin/upload → Cloudinary → URL. That URL goes into a lesson's resources.
+        // In UI we show "module-level" files; when saving we store them in one "Resources" lesson per module.
+        const backendModules = fullCourse.modules || [];
+        const modulesForUI = backendModules.map((mod) => {
+          const lessons = mod.lessons || [];
+          const videos = [];
+          const files = [];
+          let resourceLessonId = null;
+          lessons.forEach((lesson) => {
+            const videoUrl = lesson.video_url ?? lesson.videoUrl;
+            if (videoUrl) {
+              videos.push({
+                id: lesson.id ?? lesson._id ?? Date.now() + Math.random(),
+                title: lesson.title || '',
+                url: videoUrl,
+                duration: lesson.duration || '',
+                description: lesson.description || '',
+                isNew: false
+              });
+            } else {
+              resourceLessonId = lesson.id ?? lesson._id;
+              const resList = lesson.resources || [];
+              const arr = Array.isArray(resList) ? resList : [];
+              arr.forEach((r) => {
+                if (r && r.title && r.url) {
+                  files.push({
+                    id: r.id ?? r._id ?? Date.now() + Math.random(),
+                    title: r.title,
+                    url: r.url,
+                    type: r.type || 'pdf'
+                  });
+                }
+              });
+            }
+          });
+          return {
+            id: mod.id ?? mod._id,
+            title: mod.title || '',
+            description: mod.description || '',
+            videos,
+            files,
+            resourceLessonId,
+            quiz: null,
+            assignment: null,
+            isNew: false
+          };
+        });
+
+        setCourseData({
+          title: fullCourse.title || '',
+          description: fullCourse.description || '',
+          category: fullCourse.category || 'Development',
+          level: fullCourse.level || 'Beginner',
+          duration: fullCourse.duration || '',
+          image: fullCourse.image || '📚',
+          isPublished: fullCourse.is_published ?? fullCourse.isPublished ?? false,
+          modules: modulesForUI
+        });
+      } catch (err) {
+        if (!cancelled) {
+          console.error('Failed to load course for edit:', err);
+          setCourseData({
+            title: course.title || '',
+            description: course.description || '',
+            category: course.category || 'Development',
+            level: course.level || 'Beginner',
+            duration: course.duration || '',
+            image: course.image || '📚',
+            isPublished: course.is_published ?? course.isPublished ?? false,
+            modules: []
+          });
+        }
+      }
+    };
+
+    loadCourseForEdit();
+    return () => { cancelled = true; };
   }, [course]);
 
   const addVideo = () => {
@@ -154,16 +254,21 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
         setCurrentModule((prev) => ({
           ...prev,
           videos: prev.videos.map((v) =>
-            v.id === editingVideoId ? { ...currentVideo, id: editingVideoId } : v
+            v.id === editingVideoId
+              ? { ...currentVideo, id: editingVideoId, isNew: v.isNew }
+              : v
           )
         }));
         setEditingVideoId(null);
       } else {
         // Add new video
-      setCurrentModule((prev) => ({
-        ...prev,
-        videos: [...prev.videos, { ...currentVideo, id: Date.now() }]
-      }));
+        setCurrentModule((prev) => ({
+          ...prev,
+          videos: [
+            ...prev.videos,
+            { ...currentVideo, id: Date.now(), isNew: true }
+          ]
+        }));
       }
       setCurrentVideo({ title: '', url: '', duration: '', description: '' });
     }
@@ -280,17 +385,29 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
 
   // Remove video from modules array
   const removeVideoFromModule = (moduleId, videoId) => {
-    setCourseData((prev) => ({
-      ...prev,
-      modules: prev.modules.map((m) =>
-        m.id === moduleId
-          ? {
-              ...m,
-              videos: m.videos.filter((v) => v.id !== videoId)
-            }
-          : m
-      )
-    }));
+    setCourseData((prev) => {
+      const nextModules = prev.modules.map((m) => {
+        if (m.id !== moduleId) return m;
+
+        const videos = Array.isArray(m.videos) ? m.videos : [];
+        const videoToRemove = videos.find((v) => v.id === videoId);
+
+        // Track deletion only for existing backend lessons (isNew === false)
+        if (videoToRemove && !videoToRemove.isNew && videoToRemove.id != null) {
+          setDeletedLessonIds((prevDeleted) => [...prevDeleted, Number(videoToRemove.id)]);
+        }
+
+        return {
+          ...m,
+          videos: videos.filter((v) => v.id !== videoId)
+        };
+      });
+
+      return {
+        ...prev,
+        modules: nextModules
+      };
+    });
   };
 
   const removeVideo = (videoId) => {
@@ -398,7 +515,9 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
         setCourseData((prev) => ({
           ...prev,
           modules: prev.modules.map((m) =>
-            m.id === editingModuleId ? { ...currentModule, id: m.id } : m
+            m.id === editingModuleId
+              ? { ...currentModule, id: m.id, isNew: m.isNew }
+              : m
           )
         }));
         setEditingModuleId(null);
@@ -407,7 +526,10 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
         // Add new module
         setCourseData((prev) => ({
           ...prev,
-          modules: [...prev.modules, { ...currentModule, id: Date.now() }]
+          modules: [
+            ...prev.modules,
+            { ...currentModule, id: Date.now(), isNew: true }
+          ]
         }));
       }
       setCurrentModule({
@@ -432,10 +554,19 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
   };
 
   const removeModule = (moduleId) => {
-    setCourseData((prev) => ({
-      ...prev,
-      modules: prev.modules.filter((m) => m.id !== moduleId)
-    }));
+    setCourseData((prev) => {
+      const moduleToRemove = prev.modules.find((m) => m.id === moduleId);
+
+      // Track deletion only for existing backend modules (isNew === false)
+      if (moduleToRemove && !moduleToRemove.isNew && moduleToRemove.id != null) {
+        setDeletedModuleIds((prevDeleted) => [...prevDeleted, moduleToRemove.id]);
+      }
+
+      return {
+        ...prev,
+        modules: prev.modules.filter((m) => m.id !== moduleId)
+      };
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -443,477 +574,276 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
     setLoading(true);
 
     try {
-      // DEBUG: Log the initial state
-      console.log('=== INITIAL STATE DEBUG ===');
-      console.log('CourseData modules:', courseData.modules);
-      courseData.modules.forEach((module, idx) => {
-        console.log(`Module ${idx} files:`, module.files);
-        console.log(`Module ${idx} files type:`, typeof module.files);
-        console.log(`Module ${idx} files isArray:`, Array.isArray(module.files));
-        if (module.files && module.files.length > 0) {
-          console.log(`Module ${idx} first file:`, module.files[0]);
-          console.log(`Module ${idx} first file type:`, typeof module.files[0]);
-        }
-      });
-      console.log('=== END INITIAL STATE DEBUG ===');
+      const courseId = course?.id ?? course?._id;
 
-      const lessons = courseData.modules.flatMap((module, moduleIndex) => {
-        // Ensure module.files is an array (for module-level resources)
-        let moduleFiles = [];
-        if (module && module.files) {
-          if (Array.isArray(module.files)) {
-            moduleFiles = module.files;
-          } else if (typeof module.files === 'string') {
-            try {
-              const parsed = JSON.parse(module.files);
-              moduleFiles = Array.isArray(parsed) ? parsed : [];
-            } catch (e) {
-              console.warn('Failed to parse module.files string:', e);
-              moduleFiles = [];
-            }
-          }
-        }
-        
-        // Ensure module.videos is an array
-        const moduleVideos = Array.isArray(module.videos) ? module.videos : [];
-        const moduleId = String(`module-${moduleIndex}`);
-        const moduleName = String(module.title || `Module ${moduleIndex + 1}`);
-        
-        const lessonList = [];
-        
-        // Create lessons for videos (without module files attached)
-        moduleVideos.forEach((video, videoIndex) => {
-          // Videos should have empty resources - module files are separate
-          const lesson = {
-            title: String(video.title || ''),
-            description: String(video.description || ''),
-            videoUrl: String(video.url || ''),
-            duration: String(video.duration || ''),
-            order: Number(moduleIndex * 1000 + videoIndex * 10), // Use larger multiplier for ordering
-            moduleId: moduleId,
-            moduleName: moduleName,
-            resources: [] // Videos have no resources - module files are separate
-          };
-          
-          lessonList.push(lesson);
-        });
-        
-        // Create a special lesson entry for module-level resources (placed after all videos)
-        if (Array.isArray(moduleFiles) && moduleFiles.length > 0) {
-          // Build module resources array
-          const moduleResources = [];
-          
-          moduleFiles.forEach((file, fileIndex) => {
-            try {
-              // Skip invalid entries
-              if (!file || typeof file !== 'object' || Array.isArray(file)) {
-                return;
-              }
-              
-              // Extract values directly
-              const fileTitle = file.title;
-              const fileUrl = file.url;
-              const fileType = file.type;
-              
-              // Validate that title and url are strings
-              if (!fileTitle || !fileUrl || typeof fileTitle !== 'string' || typeof fileUrl !== 'string') {
-                console.warn(`Module ${moduleIndex}, File ${fileIndex}: Invalid file data`);
-                return;
-              }
-              
-              // Create a completely new object with only the required fields
-              const newResource = {
-                title: fileTitle.trim(),
-                url: fileUrl.trim(),
-                type: (fileType && typeof fileType === 'string') ? fileType.trim() : 'pdf'
-              };
-              
-              // Final validation before pushing
-              if (typeof newResource.title === 'string' && typeof newResource.url === 'string' && typeof newResource.type === 'string') {
-                moduleResources.push(newResource);
-              }
-            } catch (error) {
-              console.error(`Module ${moduleIndex}, File ${fileIndex}: Error processing file`, error);
-            }
-          });
-          
-          // Create a special lesson entry for module resources (no videoUrl, just resources)
-          // This will be identified as module-level resources when grouping lessons
-          if (moduleResources.length > 0) {
-            const moduleResourceLesson = {
-              title: String(`${moduleName} - Resources`), // Special title to identify as module resources
-              description: String('Module Resources'), // Special description
-              videoUrl: String(''), // No video URL - this is a resource-only entry
-              duration: String(''),
-              order: Number(moduleIndex * 1000 + moduleVideos.length * 10 + 1), // Place after all videos
-              moduleId: moduleId,
-              moduleName: moduleName,
-              resources: moduleResources, // Module-level resources
-              isModuleResource: true // Flag to identify this as module resources
-            };
-            
-            lessonList.push(moduleResourceLesson);
-          }
-        }
-        
-        return lessonList;
-      });
-
-      // Single pass validation - ensure all lessons have properly formatted resources
-      const validatedLessons = lessons.map(lesson => {
-        // Process resources - ensure it's always an array of objects
-        let safeResources = [];
-        
-        if (lesson.resources) {
-          // Handle if resources is accidentally a string
-          if (typeof lesson.resources === 'string') {
-            try {
-              const parsed = JSON.parse(lesson.resources);
-              lesson.resources = Array.isArray(parsed) ? parsed : [];
-            } catch (e) {
-              lesson.resources = [];
-            }
-          }
-          
-          // Process as array
-          if (Array.isArray(lesson.resources)) {
-            safeResources = lesson.resources
-              .filter(r => {
-                // Skip anything that's not a plain object
-                if (!r || typeof r !== 'object' || Array.isArray(r) || typeof r === 'string') {
-                  return false;
-                }
-                // Only include objects with required fields
-                return r.title && r.url;
-              })
-              .map(r => ({
-                title: String(r.title || '').trim(),
-                url: String(r.url || '').trim(),
-                type: String(r.type || 'pdf').trim()
-              }));
-          }
-        }
-        
-        // Return clean lesson object
-        return {
-          title: String(lesson.title || ''),
-          description: String(lesson.description || ''),
-          videoUrl: String(lesson.videoUrl || ''),
-          duration: String(lesson.duration || ''),
-          order: Number(lesson.order || 0),
-          moduleId: String(lesson.moduleId || ''),
-          moduleName: String(lesson.moduleName || ''),
-          resources: safeResources
+      // EDIT FLOW: update base course fields + persist any NEW modules/lessons
+      if (isEditMode && courseId) {
+        const updatePayload = {
+          title: courseData.title,
+          description: courseData.description,
+          category: courseData.category,
+          level: courseData.level,
+          duration: courseData.duration,
+          image: courseData.image,
+          is_published: courseData.isPublished
         };
-      });
 
-      const finalPayload = {
+        await adminAPI.updateCourse(courseId, updatePayload);
+
+        // Persist new modules and new lessons using admin APIs; then set lesson order via reorder API
+        const modules = courseData.modules || [];
+        for (let i = 0; i < modules.length; i++) {
+          const mod = modules[i];
+          let backendModuleId = mod.id;
+
+          // If this is a brand new module in UI, create it via POST /api/admin/modules
+          if (mod.isNew) {
+            const modRes = await adminAPI.createModule({
+              courseId,
+              title: mod.title,
+              description: mod.description || '',
+              order: i + 1
+            });
+            const createdModule = modRes.module || modRes.data?.module || modRes;
+            backendModuleId = createdModule.id || createdModule._id;
+          }
+
+          const videosArray = Array.isArray(mod.videos) ? mod.videos : [];
+          const orderedLessonIds = [];
+
+          // Video lessons in UI order: existing keep id, new ones create and collect id
+          for (let j = 0; j < videosArray.length; j++) {
+            const video = videosArray[j];
+            if (!video || !video.title || !video.url) continue;
+            if (video.isNew) {
+              const createRes = await adminAPI.createLesson({
+                moduleId: backendModuleId,
+                title: video.title,
+                description: video.description || '',
+                videoUrl: video.url,
+                duration: video.duration || '',
+                order: j + 1,
+                resources: []
+              });
+              const createdId = createRes.lesson?.id ?? createRes.lesson?._id ?? createRes.id;
+              if (createdId != null) orderedLessonIds.push(Number(createdId));
+            } else {
+              const bid = video.id ?? video._id;
+              if (bid != null) orderedLessonIds.push(Number(bid));
+            }
+          }
+
+          // Resources: update existing or create; add to ordered list
+          const moduleFiles = Array.isArray(mod.files) ? mod.files : [];
+          const resourcesPayload = moduleFiles
+            .filter((f) => f && f.title && f.url)
+            .map((f) => ({ title: f.title, url: f.url }));
+
+          if (mod.resourceLessonId && resourcesPayload.length >= 0) {
+            await adminAPI.updateLesson(mod.resourceLessonId, {
+              title: "Resources",
+              description: "Downloadable resources for this module",
+              videoUrl: "",
+              duration: "",
+              resources: resourcesPayload
+            });
+            orderedLessonIds.push(Number(mod.resourceLessonId));
+          } else if (resourcesPayload.length > 0) {
+            const createRes = await adminAPI.createLesson({
+              moduleId: backendModuleId,
+              title: "Resources",
+              description: "Downloadable resources for this module",
+              videoUrl: "",
+              duration: "",
+              order: Math.max(videosArray.length, 1) + 1,
+              resources: resourcesPayload
+            });
+            const createdId = createRes.lesson?.id ?? createRes.lesson?._id ?? createRes.id;
+            if (createdId != null) orderedLessonIds.push(Number(createdId));
+          }
+
+          // Sync backend order with UI order: PUT /api/admin/lessons/reorder/:moduleId
+          if (orderedLessonIds.length > 0) {
+            await adminAPI.reorderLessons(
+              backendModuleId,
+              orderedLessonIds.map((id, idx) => ({ id, order: idx + 1 }))
+            );
+          }
+        }
+
+        // Process deletions for existing lessons and modules
+        // These are tracked when the user clicks "Remove" in the UI.
+        if (deletedLessonIds.length > 0) {
+          for (const lessonId of deletedLessonIds) {
+            try {
+              await adminAPI.deleteLesson(lessonId);
+            } catch (err) {
+              console.error('Failed to delete lesson', lessonId, err);
+            }
+          }
+        }
+
+        if (deletedModuleIds.length > 0) {
+          for (const moduleId of deletedModuleIds) {
+            try {
+              await adminAPI.deleteModule(moduleId);
+            } catch (err) {
+              console.error('Failed to delete module', moduleId, err);
+            }
+          }
+        }
+
+        alert("Course updated successfully!");
+        onSuccess && onSuccess();
+        return;
+      }
+
+      // CREATE FLOW (admin) – exactly as per API docs:
+      // 1) Create course via POST /api/admin/courses
+      // 2) For each module in UI → POST /api/admin/modules
+      // 3) For each video (lesson) inside module → POST /api/admin/lessons
+
+      // 1) Resolve instructor (backend still requires instructorId + instructorName)
+      let instructorId = null;
+      let instructorName = "";
+      try {
+        const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+        if (storedUser?.id) {
+          const roles = storedUser.roles || [];
+          const isAdmin =
+            Array.isArray(roles) && roles.includes("ROLE_ADMIN");
+          const isTeacher =
+            Array.isArray(roles) && roles.includes("ROLE_TEACHER");
+          if (isAdmin || isTeacher) {
+            instructorId = storedUser.id;
+            instructorName = storedUser.name || "Instructor";
+          }
+        }
+
+        // Fallback: first available instructor from /api/admin/instructors
+        if (!instructorId) {
+          const instrRes = await adminAPI.getInstructors();
+          const first = (instrRes.instructors || [])[0];
+          if (first) {
+            instructorId = first.id;
+            instructorName = first.name || first.fullname || "Instructor";
+          }
+        }
+      } catch (err) {
+        console.error("Error resolving instructor:", err);
+      }
+
+      if (!instructorId) {
+        alert(
+          "No instructor found. Please ensure at least one teacher/admin exists."
+        );
+        setLoading(false);
+        return;
+      }
+
+      // 2) Create base course (shape aligned with /api/admin/courses docs)
+      const baseCoursePayload = {
+        instructorId,
+        instructorName,
         title: courseData.title,
         description: courseData.description,
         category: courseData.category,
         level: courseData.level,
         duration: courseData.duration,
+        price: 0,
         image: courseData.image,
-        isPublished: courseData.isPublished,
-        lessons: validatedLessons
-      };
-      
-      // Final validation - ensure resources is always an array of plain objects
-      const finalValidatedPayload = {
-        ...finalPayload,
-        lessons: finalPayload.lessons.map((lesson, idx) => {
-          // Start with empty array
-          let finalResources = [];
-          
-          // Only process if resources exists and is truthy
-          if (lesson.resources) {
-            // If resources is a string, try to parse it once
-            let resourcesArray = lesson.resources;
-            if (typeof resourcesArray === 'string') {
-              try {
-                resourcesArray = JSON.parse(resourcesArray);
-              } catch (e) {
-                console.error(`Lesson ${idx}: Failed to parse resources string`, e);
-                resourcesArray = [];
-              }
-            }
-            
-            // Ensure it's an array
-            if (Array.isArray(resourcesArray)) {
-              // Process each element
-              finalResources = resourcesArray
-                .map((r, rIdx) => {
-                  // If element is a string, try to parse it
-                  if (typeof r === 'string') {
-                    try {
-                      const parsed = JSON.parse(r);
-                      // If parsed is an array, take first object or return null
-                      if (Array.isArray(parsed) && parsed.length > 0) {
-                        r = parsed[0]; // Take first object from array
-                      } else if (parsed && typeof parsed === 'object') {
-                        r = parsed;
-                      } else {
-                        return null;
-                      }
-                    } catch (e) {
-                      console.error(`Lesson ${idx}, Resource ${rIdx}: Failed to parse string resource`, e);
-                      return null;
-                    }
-                  }
-                  
-                  // Must be a plain object (not array, not null, not string)
-                  if (r && typeof r === 'object' && !Array.isArray(r)) {
-                    // Create fresh object with only required fields
-                    return {
-                      title: String(r.title || '').trim(),
-                      url: String(r.url || '').trim(),
-                      type: String(r.type || 'pdf').trim()
-                    };
-                  }
-                  
-                  return null;
-                })
-                .filter(r => r !== null && r.title && r.url); // Remove nulls and invalid objects
-            }
-          }
-          
-          // Return lesson with validated resources
-          return {
-            title: String(lesson.title || ''),
-            description: String(lesson.description || ''),
-            videoUrl: String(lesson.videoUrl || ''),
-            duration: String(lesson.duration || ''),
-            order: Number(lesson.order || 0),
-            moduleId: String(lesson.moduleId || ''),
-            moduleName: String(lesson.moduleName || ''),
-            resources: finalResources // Always an array of objects
-          };
-        })
+        thumbnail: "",
+        learningOutcomes: [],
+        prerequisites: []
       };
 
-      // Final safety check - ensure all resources are arrays of objects
-      // This is critical - we must ensure resources is NEVER a string
-      const safePayload = {
-        ...finalValidatedPayload,
-        lessons: finalValidatedPayload.lessons.map((lesson, lessonIdx) => {
-          // Start with empty array
-          let safeResources = [];
-          
-          // If resources exists, process it
-          if (lesson.resources) {
-            // If resources is a string, this is a critical error - log it
-            if (typeof lesson.resources === 'string') {
-              console.error(`CRITICAL: Lesson ${lessonIdx} resources is a STRING!`, lesson.resources.substring(0, 200));
-              // Try to parse it
-              try {
-                const parsed = JSON.parse(lesson.resources);
-                if (Array.isArray(parsed)) {
-                  lesson.resources = parsed;
-                } else {
-                  lesson.resources = [];
-                }
-              } catch (e) {
-                console.error(`Failed to parse resources string for lesson ${lessonIdx}`, e);
-                lesson.resources = [];
-              }
-            }
-            
-            // Now process as array
-            if (Array.isArray(lesson.resources)) {
-              safeResources = lesson.resources
-                .map((r, rIdx) => {
-                  // If element is a string, this is an error
-                  if (typeof r === 'string') {
-                    console.error(`CRITICAL: Lesson ${lessonIdx}, Resource ${rIdx} is a STRING!`, r.substring(0, 200));
-                    // Try to parse it
-                    try {
-                      const parsed = JSON.parse(r);
-                      if (Array.isArray(parsed) && parsed.length > 0) {
-                        r = parsed[0];
-                      } else if (parsed && typeof parsed === 'object') {
-                        r = parsed;
-                      } else {
-                        return null;
-                      }
-                    } catch (e) {
-                      console.error(`Failed to parse resource string`, e);
-                      return null;
-                    }
-                  }
-                  
-                  // Must be a plain object
-                  if (r && typeof r === 'object' && !Array.isArray(r)) {
-                    return {
-                      title: String(r.title || '').trim(),
-                      url: String(r.url || '').trim(),
-                      type: String(r.type || 'pdf').trim()
-                    };
-                  }
-                  
-                  return null;
-                })
-                .filter(r => r !== null && r.title && r.url);
-            }
-          }
-          
-          // Final validation - ensure resources is an array
-          if (!Array.isArray(safeResources)) {
-            console.error(`CRITICAL: Lesson ${lessonIdx} safeResources is not an array!`, typeof safeResources);
-            safeResources = [];
-          }
-          
-          return {
-            title: String(lesson.title || ''),
-            description: String(lesson.description || ''),
-            videoUrl: String(lesson.videoUrl || ''),
-            duration: String(lesson.duration || ''),
-            order: Number(lesson.order || 0),
-            moduleId: String(lesson.moduleId || ''),
-            moduleName: String(lesson.moduleName || ''),
-            resources: safeResources // Always an array
-          };
-        })
-      };
+      const created = await adminAPI.createCourse(baseCoursePayload);
+      const createdCourse = created.course || created.data?.course || created;
+      const createdCourseId = createdCourse.id || createdCourse._id;
 
-      // CRITICAL: Completely rebuild resources array from scratch
-      // This ensures NO strings can get through
-      const readyToSendPayload = {
-        title: safePayload.title,
-        description: safePayload.description,
-        category: safePayload.category,
-        level: safePayload.level,
-        duration: safePayload.duration,
-        image: safePayload.image,
-        isPublished: safePayload.isPublished,
-        lessons: safePayload.lessons.map((lesson, idx) => {
-          // Start with completely fresh resources array
-          const finalResources = [];
-          
-          // Only process if resources exists
-          if (lesson.resources) {
-            // If resources is a string, this is a critical error
-            if (typeof lesson.resources === 'string') {
-              console.error(`CRITICAL ERROR: Lesson ${idx} resources is a STRING!`, lesson.resources.substring(0, 200));
-              // Don't try to parse - just skip it
-            } 
-            // If it's an array, process each element
-            else if (Array.isArray(lesson.resources)) {
-              lesson.resources.forEach((r, rIdx) => {
-                // CRITICAL: If element is a string, log and skip completely
-                if (typeof r === 'string') {
-                  console.error(`CRITICAL ERROR: Lesson ${idx}, Resource ${rIdx} element is STRING!`, r.substring(0, 200));
-                  return; // Skip this element
-                }
-                
-                // Must be a plain object (not array, not null, not string)
-                if (r && typeof r === 'object' && !Array.isArray(r)) {
-                  // Extract values and create fresh object
-                  const title = r.title;
-                  const url = r.url;
-                  const type = r.type;
-                  
-                  // Only add if title and url are valid strings
-                  if (title && url && typeof title === 'string' && typeof url === 'string') {
-                    finalResources.push({
-                      title: title.trim(),
-                      url: url.trim(),
-                      type: (type && typeof type === 'string') ? type.trim() : 'pdf'
-                    });
-                  }
-                }
-              });
-            }
-          }
-          
-          // Return lesson with ONLY the validated resources
-          return {
-            title: String(lesson.title || ''),
-            description: String(lesson.description || ''),
-            videoUrl: String(lesson.videoUrl || ''),
-            duration: String(lesson.duration || ''),
-            order: Number(lesson.order || 0),
-            moduleId: String(lesson.moduleId || ''),
-            moduleName: String(lesson.moduleName || ''),
-            resources: finalResources // Always an array of objects, never strings
-          };
-        })
-      };
+      // 3) For each module in UI → POST /api/admin/modules
+      //    Body: { courseId, title, description, order }
+        const createdModuleIds = [];
+        for (let i = 0; i < courseData.modules.length; i++) {
+          const module = courseData.modules[i];
+          if (!module.title) continue;
 
-      // Debug: Log final payload structure
-      console.log('=== FINAL PAYLOAD DEBUG ===');
-      console.log('First lesson resources:', readyToSendPayload.lessons[0]?.resources);
-      console.log('Resources is array:', Array.isArray(readyToSendPayload.lessons[0]?.resources));
-      if (readyToSendPayload.lessons[0]?.resources?.length > 0) {
-        console.log('First resource element:', readyToSendPayload.lessons[0].resources[0]);
-        console.log('First resource element type:', typeof readyToSendPayload.lessons[0].resources[0]);
-        console.log('First resource element keys:', Object.keys(readyToSendPayload.lessons[0].resources[0]));
-        console.log('First resource element JSON:', JSON.stringify(readyToSendPayload.lessons[0].resources[0]));
-      }
-      
-      // Test JSON serialization
-      try {
-        const testString = JSON.stringify(readyToSendPayload.lessons[0]?.resources);
-        console.log('Resources JSON stringified:', testString);
-        const testParsed = JSON.parse(testString);
-        console.log('Resources parsed back:', testParsed);
-        console.log('Parsed is array:', Array.isArray(testParsed));
-        if (testParsed.length > 0) {
-          console.log('Parsed first element type:', typeof testParsed[0]);
-        }
-      } catch (e) {
-        console.error('JSON serialization test failed:', e);
-      }
-      
-      // FINAL CRITICAL CHECK: Verify NO strings in resources arrays
-      readyToSendPayload.lessons.forEach((lesson, idx) => {
-        if (lesson.resources && Array.isArray(lesson.resources)) {
-          lesson.resources.forEach((r, rIdx) => {
-            if (typeof r === 'string') {
-              console.error(`CRITICAL: Lesson ${idx}, Resource ${rIdx} is STRING before sending!`, r.substring(0, 200));
-              throw new Error(`Resource ${rIdx} in lesson ${idx} is a string! This should never happen.`);
-            }
-            if (!r || typeof r !== 'object' || Array.isArray(r)) {
-              console.error(`CRITICAL: Lesson ${idx}, Resource ${rIdx} is invalid!`, typeof r, r);
-              throw new Error(`Resource ${rIdx} in lesson ${idx} is invalid!`);
-            }
+          const modRes = await adminAPI.createModule({
+            courseId: createdCourseId,
+            title: module.title,
+            description: module.description || "",
+            order: i + 1
           });
-        }
-      });
-      
-      // Test the actual JSON that will be sent
-      try {
-        const jsonString = JSON.stringify(readyToSendPayload);
-        const parsedBack = JSON.parse(jsonString);
-        console.log('JSON round-trip test passed');
-        
-        // Check parsed version
-        if (parsedBack.lessons && parsedBack.lessons[0]?.resources) {
-          const firstResource = parsedBack.lessons[0].resources[0];
-          console.log('After JSON round-trip, first resource type:', typeof firstResource);
-          if (typeof firstResource === 'string') {
-            console.error('CRITICAL: After JSON round-trip, first resource is a STRING!', firstResource.substring(0, 200));
-            throw new Error('JSON serialization is corrupting the data!');
+
+          const createdModule = modRes.module || modRes.data?.module || modRes;
+          const createdModuleId = createdModule.id || createdModule._id;
+
+          createdModuleIds.push({
+            localIndex: i,
+            id: createdModuleId
+          });
+
+          const videosArray = Array.isArray(module.videos) ? module.videos : [];
+          const orderedLessonIds = [];
+
+          // 4) Video lessons → POST /api/admin/lessons; collect ids in UI order
+          for (let j = 0; j < videosArray.length; j++) {
+            const video = videosArray[j];
+            if (!video.title || !video.url) continue;
+
+            const createRes = await adminAPI.createLesson({
+              moduleId: createdModuleId,
+              title: video.title,
+              description: video.description || "",
+              videoUrl: video.url,
+              duration: video.duration || "",
+              order: j + 1,
+              resources: []
+            });
+            const createdId = createRes.lesson?.id ?? createRes.lesson?._id ?? createRes.id;
+            if (createdId != null) orderedLessonIds.push(Number(createdId));
+          }
+
+          // 5) One "Resources" lesson per module; add its id to ordered list
+          const moduleFiles = Array.isArray(module.files) ? module.files : [];
+          if (moduleFiles.length > 0) {
+            const resourcesPayload = moduleFiles
+              .filter((f) => f && f.title && f.url)
+              .map((f) => ({ title: f.title, url: f.url }));
+            if (resourcesPayload.length > 0) {
+              const createRes = await adminAPI.createLesson({
+                moduleId: createdModuleId,
+                title: "Resources",
+                description: "Downloadable resources for this module",
+                videoUrl: "",
+                duration: "",
+                order: videosArray.length + 1,
+                resources: resourcesPayload
+              });
+              const createdId = createRes.lesson?.id ?? createRes.lesson?._id ?? createRes.id;
+              if (createdId != null) orderedLessonIds.push(Number(createdId));
+            }
+          }
+
+          // Sync backend order with UI: PUT /api/admin/lessons/reorder/:moduleId
+          if (orderedLessonIds.length > 0) {
+            await adminAPI.reorderLessons(
+              createdModuleId,
+              orderedLessonIds.map((id, idx) => ({ id, order: idx + 1 }))
+            );
           }
         }
-      } catch (e) {
-        console.error('JSON round-trip test failed:', e);
-        throw e;
-      }
-      
-      console.log('=== END DEBUG ===');
 
-      if (isEditMode) {
-        await adminAPI.updateCourse(course._id, readyToSendPayload);
-        alert('Course updated successfully!');
-      } else {
-        await courseAPI.create(readyToSendPayload);
-        alert('Course created successfully!');
+      // 5) Optionally publish course if toggle is on
+      if (courseData.isPublished) {
+        await adminAPI.updateCoursePublishStatus(createdCourseId, true);
       }
 
+      alert("Course created successfully!");
       onSuccess && onSuccess();
     } catch (error) {
-      console.error('Error saving course:', error);
-      alert('Failed to save course: ' + (error.message || 'Unknown error'));
+      console.error("Error saving course:", error);
+      alert("Failed to save course: " + (error.message || "Unknown error"));
     } finally {
       setLoading(false);
     }

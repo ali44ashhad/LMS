@@ -710,10 +710,11 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
         const storedUser = JSON.parse(localStorage.getItem("user") || "null");
         if (storedUser?.id) {
           const roles = storedUser.roles || [];
+          // Support both normalized (admin/teacher) and ROLE_* format from backend/Nesta
           const isAdmin =
-            Array.isArray(roles) && roles.includes("ROLE_ADMIN");
+            Array.isArray(roles) && (roles.includes("admin") || roles.includes("ROLE_ADMIN"));
           const isTeacher =
-            Array.isArray(roles) && roles.includes("ROLE_TEACHER");
+            Array.isArray(roles) && (roles.includes("teacher") || roles.includes("ROLE_TEACHER"));
           if (isAdmin || isTeacher) {
             instructorId = storedUser.id;
             instructorName = storedUser.name || "Instructor";

@@ -1,4 +1,5 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const NESTA_API_URL = import.meta.env.VITE_NESTA_API_URL || 'http://localhost:3000/api';
 // Optional SSO API base (Nesta auth cookie may be issued by a different API origin)
 const SSO_API_URL = import.meta.env.VITE_SSO_API_URL || '';
 
@@ -61,7 +62,7 @@ export const authAPI = {
     const buildValidateUrl = (base) => {
       const baseClean = base.replace(/\/$/, '');
       // If we're validating against Nesta SSO API (commonly :3000), the endpoint is often /auth/check.
-      const isNestaLocal = baseClean === 'http://localhost:3000/api';
+      const isNestaLocal = baseClean === NESTA_API_URL;
       const path = isNestaLocal ? '/auth/check' : '/auth/validate';
 
       const url = new URL(`${baseClean}${path}`);
@@ -97,7 +98,7 @@ export const authAPI = {
         window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
       if (isLocalhost) {
         try {
-          return await tryValidate('http://localhost:3000/api');
+          return await tryValidate(NESTA_API_URL);
         } catch (_) {
           // keep original error
         }

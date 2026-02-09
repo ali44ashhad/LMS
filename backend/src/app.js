@@ -69,7 +69,7 @@ try {
         .map(origin => origin.replace(/\/$/, '')); // Remove trailing slashes
 } catch (error) {
     console.error('Error setting up CORS origins:', error);
-    allowedOrigins = ['https://courses.cyfi.nestatoys.com'];
+    allowedOrigins = ['https://courses.cyfi.nestatoys.com','https://server.nestatoys.com', 'https://platform.nestatoys.com'];
 }
 
 // CORS configuration function

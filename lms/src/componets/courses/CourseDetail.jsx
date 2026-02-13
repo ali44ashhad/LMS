@@ -1049,7 +1049,7 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
               href={NESTA_SIGNIN_URL}
               className="w-full py-4 text-base font-semibold justify-center rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-[1.02] transition-all duration-200 flex items-center gap-2"
             >
-              Sign in to enroll (Nesta)
+              Sign in to enroll
             </a>
           ) : (
             <button

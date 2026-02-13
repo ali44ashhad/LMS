@@ -10,12 +10,11 @@ const Courses = ({ onCourseSelect, isPublic = false }) => {
 
   const categories = [
     "All",
-    "Development",
-    "Data Science",
-    "Design",
-    "Marketing",
-    "Business",
-    "Other",
+    "Robotics",
+    "Coding",
+    "AI/ ML",
+    "Others"
+
   ];
 
   useEffect(() => {

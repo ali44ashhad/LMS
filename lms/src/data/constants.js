@@ -1,13 +1,10 @@
 // src/data/constants.js
 export const COURSE_CATEGORIES = [
   'All',
-  'Development',
-  'Data Science',
-  'Design',
-  'Marketing',
-  'Business',
-  'Photography',
-  'Music'
+  'Robotics',
+  'Coding',
+  'AI/ ML',
+  'Others',
 ];
 
 export const COURSE_LEVELS = {

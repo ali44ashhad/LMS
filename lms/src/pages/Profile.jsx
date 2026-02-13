@@ -179,8 +179,8 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
                 <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {[
-                    { label: "Full Name", key: "name", type: "text" },
-                    { label: "Email", key: "email", type: "email" },
+                    { label: "Full Name", key: "name", type: "text", readOnly: true },
+                    { label: "Email", key: "email", type: "email", readOnly: true },
                   ].map((field) => (
                   <div key={field.key}>
                     <label className="block text-sm font-medium text-slate-600 mb-1">
@@ -189,10 +189,15 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
                     <input
                       type={field.type}
                       value={user[field.key] || ""}
+                      readOnly={field.readOnly}
                       onChange={(e) =>
-                        setUser({ ...user, [field.key]: e.target.value })
+                        !field.readOnly && setUser({ ...user, [field.key]: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-[#1EAAFF] rounded-lg focus:ring-2 focus:ring-[#99DBFF] outline-none"
+                      className={`w-full px-3 py-2 border border-[#1EAAFF] rounded-lg outline-none ${
+                        field.readOnly
+                          ? "bg-slate-100 cursor-not-allowed text-slate-600"
+                          : "focus:ring-2 focus:ring-[#99DBFF]"
+                      }`}
                     />
                   </div>
                 ))}

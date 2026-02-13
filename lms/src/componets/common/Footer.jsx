@@ -24,11 +24,30 @@ const Footer = () => {
       />
 
       {/* FOOTER TEXT */}
-      <div className="relative z-10 h-full flex items-center justify-center font-bold text-slate-800 ">
-        <span className="text-[10px] tracking-[0.35em] uppercase">
-          Console Ready
-        </span>
-      </div>
+      <div className="relative z-10 h-full flex flex-col items-center justify-center font-bold text-slate-800 text-center space-y-2">
+  
+  <span className=" ">
+    Customer Support
+  </span>
+<div className="flex flex-row text-sm font-normal items-center justify-center">
+Email - 
+  <a
+    href="mailto:robotics@nestatoys.com"
+    className="mx-2 text-[#1EAAFF] hover:underline focus:outline-none focus:underline"
+  >
+   robotics@nestatoys.com
+  </a>
+  WhatsApp -
+  <a
+    href="https://wa.me/919701987812"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="mx-2 text-[#1EAAFF] hover:underline focus:outline-none focus:underline"
+  >
+ +91 9701987812
+  </a>
+</div>
+</div>
 
     </footer>
   );

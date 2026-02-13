@@ -8,7 +8,7 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
   const [courseData, setCourseData] = useState({
     title: '',
     description: '',
-    category: 'Development',
+    category: 'Robotics',
     level: 'Beginner',
     duration: '',
     image: '📚',
@@ -1347,12 +1347,10 @@ const AdminCourseCreate = ({ course, onBack, onSuccess }) => {
                 onChange={(e) => setCourseData({ ...courseData, category: e.target.value })}
                 className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-gray-900"
               >
-                <option value="Development">Development</option>
-                <option value="Data Science">Data Science</option>
-                <option value="Design">Design</option>
-                <option value="Marketing">Marketing</option>
-                <option value="Business">Business</option>
-                <option value="Other">Other</option>
+                <option value="Robotics">Robotics</option>
+                <option value="Coding">Coding</option>
+                <option value="AI/ ML">AI/ ML</option>
+                <option value="Others">Others</option>
               </select>
             </div>
 

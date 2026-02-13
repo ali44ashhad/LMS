@@ -47,14 +47,35 @@ function App() {
 
         if (userPayload) {
           const roles = Array.isArray(userPayload.roles) ? userPayload.roles : [];
+          const name = userPayload.name ?? userPayload.username ?? userPayload.displayName ?? userPayload.fullName ?? '';
           const userData = {
             ...userPayload,
+            name: name || userPayload.name,
             roles,
             _id: userPayload._id ?? userPayload.id,
             id: userPayload.id ?? userPayload._id,
           };
           localStorage.setItem('user', JSON.stringify(userData));
           setUser(userData);
+
+          // Enrich with profile from DB so header shows correct name/avatar from first load (no backend change)
+          try {
+            const profileRes = await authAPI.getCurrentUser();
+            const dbUser = profileRes?.user || profileRes;
+            if (dbUser && (dbUser.name || dbUser.email || dbUser.avatar)) {
+              const merged = {
+                ...userData,
+                name: dbUser.name ?? userData.name,
+                email: dbUser.email ?? userData.email,
+                avatar: dbUser.avatar ?? userData.avatar,
+                bio: dbUser.bio ?? userData.bio,
+              };
+              localStorage.setItem('user', JSON.stringify(merged));
+              setUser(merged);
+            }
+          } catch (_) {
+            // keep validateToken user if profile fetch fails
+          }
 
           // Clean token from URL after successful validation (avoid leaking via copy/paste/history)
           if (tokenFromQuery) url.searchParams.delete('token');

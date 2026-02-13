@@ -6,15 +6,20 @@ const NESTA_SIGNIN_URL = import.meta.env.VITE_NESTA_SIGNIN_URL || '/';
 const Header = ({ user, onLogout, isPublic = false }) => {
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const getInitials = (name) => {
-    if (!name) return "U";
-    return name
-      .split(" ")
-      .filter(Boolean)
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
+  const getInitials = (user) => {
+    const name = user?.name?.trim();
+    if (name) {
+      return name
+        .split(" ")
+        .filter(Boolean)
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2);
+    }
+    const email = (user?.email || "").trim();
+    if (email) return email[0].toUpperCase();
+    return "U";
   };
 
   const roles = Array.isArray(user?.roles) ? user.roles : [];
@@ -71,7 +76,7 @@ const Header = ({ user, onLogout, isPublic = false }) => {
                   href={NESTA_SIGNIN_URL}
                   className="flex items-center gap-2 bg-white/90 hover:bg-white px-3 py-2 rounded-lg border border-[#1EAAFF] text-slate-700 text-xs md:text-sm font-medium transition"
                 >
-                  Sign in (Nesta)
+                  Sign in
                 </a>
               ) : (
                 <>
@@ -85,7 +90,7 @@ const Header = ({ user, onLogout, isPublic = false }) => {
                         <img src={user.avatar} alt={user?.name || "Avatar"} className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-cyan-200 font-semibold text-xs md:text-sm">
-                          {getInitials(user?.name)}
+                          {getInitials(user)}
                         </span>
                       )}
                     </div>

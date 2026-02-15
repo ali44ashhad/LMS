@@ -16,71 +16,29 @@ import lessonRoutes from './routes/lesson.routes.js';
 
 const app = express();
 
-// CRITICAL: Handle OPTIONS requests at the absolute top level
-// This must be before ANY other middleware
-app.use((req, res, next) => {
-    if (req.method === 'OPTIONS') {
-        try {
-            const origin = req.headers.origin;
-            const allowedOrigins = [
-                'https://courses.cyfi.nestatoys.com',
-                'https://platform.nestatoys.com',
-                'https://nestatoys.com',
-                'http://localhost:5173',
-                'http://localhost:5174',
-                'http://localhost:3000',
-                'https://nestatoys.com',
-                process.env.FRONTEND_URL,
-            ].filter(Boolean).map(o => o && o.replace(/\/$/, ''));
+// CORS Configuration
+const allowedOrigins = [
+    'https://courses.cyfi.nestatoys.com',
+    'https://platform.nestatoys.com',
+    'https://nestatoys.com',
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:3000',
+    process.env.FRONTEND_URL
+].filter(Boolean).map(origin => origin.replace(/\/$/, ''));
 
-            const normalizedOrigin = origin ? origin.replace(/\/$/, '') : null;
-            const isAllowed = normalizedOrigin && allowedOrigins.includes(normalizedOrigin);
+console.log('Allowed Origins:', allowedOrigins);
 
-            if (isAllowed) {
-                res.setHeader('Access-Control-Allow-Origin', origin);
-                res.setHeader('Access-Control-Allow-Credentials', 'true');
-                res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-                res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
-                res.setHeader('Access-Control-Max-Age', '86400');
-            }
-
-            return res.status(204).end();
-        } catch (error) {
-            console.error('OPTIONS handler error:', error);
-            return res.status(204).end();
-        }
-    }
-    next();
-});
-
-// CORS Configuration - wrapped in try-catch to prevent initialization errors
-let allowedOrigins = [];
-try {
-    allowedOrigins = [
-        'https://courses.cyfi.nestatoys.com',
-        'https://platform.nestatoys.com',
-        'https://nestatoys.com',
-        'http://localhost:5173',
-        'http://localhost:5174',
-        'http://localhost:3000',
-        process.env.FRONTEND_URL
-    ]
-        .filter(Boolean)
-        .map(origin => origin.replace(/\/$/, '')); // Remove trailing slashes
-} catch (error) {
-    console.error('Error setting up CORS origins:', error);
-    allowedOrigins = ['https://courses.cyfi.nestatoys.com','https://server.nestatoys.com', 'https://platform.nestatoys.com'];
-}
-
-// CORS configuration function
 const corsOptions = {
     origin: function (origin, callback) {
         // Allow requests with no origin (like mobile apps or Postman)
         if (!origin) return callback(null, true);
 
+        // Check if origin is allowed
         if (allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
+            console.log('Blocked by CORS:', origin);
             callback(new Error('CORS not allowed for this origin'));
         }
     },
@@ -101,30 +59,9 @@ const corsOptions = {
     optionsSuccessStatus: 204
 };
 
-// Set CORS headers for non-OPTIONS requests (OPTIONS already handled above)
-app.use((req, res, next) => {
-    if (req.method !== 'OPTIONS') {
-        try {
-            const origin = req.headers.origin;
-            const normalizedOrigin = origin ? origin.replace(/\/$/, '') : null;
-            const isAllowed = normalizedOrigin && allowedOrigins.includes(normalizedOrigin);
-
-            if (isAllowed) {
-                res.setHeader('Access-Control-Allow-Origin', origin);
-                res.setHeader('Access-Control-Allow-Credentials', 'true');
-                res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-                res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
-                res.setHeader('Access-Control-Expose-Headers', 'Authorization');
-            }
-        } catch (error) {
-            console.error('CORS headers error:', error);
-        }
-    }
-    next();
-});
-
-// Apply CORS middleware (as backup)
+// Apply CORS middleware
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Enable pre-flight for all routes
 
 // Middleware
 // Increase body parser limits to handle large course data (videos, modules, etc.)

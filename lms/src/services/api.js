@@ -118,8 +118,8 @@ export const authAPI = {
 
   updateProfile: async (userData) => {
     // Profile updates are handled by the LMS at /users/profile.
-    // The backend only expects LMS-specific fields (bio, phone, address, avatar).
-    const { bio, phone, address, avatar } = userData;
+    // Backend expects LMS-specific fields (bio, phone, address, avatar, name_on_certificate).
+    const { bio, phone, address, avatar, name_on_certificate } = userData;
 
     // DB columns are varchar-limited; clamp text fields.
     const clamp = (val, max) =>
@@ -134,6 +134,7 @@ export const authAPI = {
         bio: clamp(bio, 500),
         phone: clamp(phone, 50),
         address: clamp(address, 500),
+        name_on_certificate: clamp(name_on_certificate, 255),
         // Avatar can be a full base64 data URL; backend will upload to Cloudinary
         avatar: avatar || ''
       })
@@ -150,7 +151,8 @@ export const authAPI = {
       bio: profile.bio ?? existingUser.bio ?? '',
       phone: profile.phone ?? existingUser.phone ?? '',
       address: profile.address ?? existingUser.address ?? '',
-      avatar: profile.avatar ?? existingUser.avatar ?? ''
+      name_on_certificate: profile.name_on_certificate ?? existingUser.name_on_certificate ?? '',
+      avatar: profile.avatar ?? existingUser.avatar ?? '',
     };
 
     localStorage.setItem('user', JSON.stringify(updatedUser));

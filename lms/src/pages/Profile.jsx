@@ -60,8 +60,8 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
         email: user.email,
         bio: user.bio || "",
         address: user.address || "",
-        phone: user.phone || "",
         avatar: user.avatar || "",
+        name_on_certificate: user.name_on_certificate || "",
       });
 
       if (response && response.user) {
@@ -73,8 +73,8 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
           email: response.user.email || user.email,
           bio: response.user.bio !== undefined ? response.user.bio : (user.bio || ""),
           address: response.user.address !== undefined ? response.user.address : (user.address || ""),
-          phone: response.user.phone !== undefined ? response.user.phone : (user.phone || ""),
           avatar: response.user.avatar || user.avatar || "",
+          name_on_certificate: response.user.name_on_certificate || user.name_on_certificate || "",
           createdAt: response.user.createdAt || user.createdAt,
         };
         // Update localStorage with complete user data
@@ -173,7 +173,7 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
           {activeTab === "profile" && (
             <div className="bg-white border border-[#8AD5FF] rounded-xl p-6 shadow-sm space-y-6">
               <h3 className="text-xl font-semibold text-[#545454]">
-                Profile Information
+                Profile Informations
               </h3>
 
                 <div className="space-y-6">
@@ -218,7 +218,7 @@ const Profile = ({ user: propUser, onUserUpdate, onCourseSelect }) => {
 
                 {[
                   { label: "Location", key: "address" },
-                  { label: "Phone", key: "phone" },
+                  { label: "Name on Certificate", key: "name_on_certificate" }, 
                 ].map((field) => (
                   <div key={field.key}>
                     <label className="block text-sm font-medium text-slate-600 mb-1">

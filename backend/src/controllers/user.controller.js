@@ -16,8 +16,8 @@ export const getProfile = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
     try {
-        const { avatar, bio, phone, address } = req.body;
-        const profile = await User.updateLMSProfile(req.userId, { avatar, bio, phone, address });
+        const { avatar, bio, phone, address, name_on_certificate } = req.body;
+        const profile = await User.updateLMSProfile(req.userId, { avatar, bio, phone, address, name_on_certificate });
 
         res.json({ success: true, profile });
     } catch (error) {

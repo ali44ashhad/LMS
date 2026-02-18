@@ -21,8 +21,18 @@ export const getCourseById = async (req, res) => {
     }
 };
 
+const ALLOWED_CATEGORIES = ['Robotics', 'Coding', 'AI/ML', 'Others'];
+
 export const createCourse = async (req, res) => {
     try {
+        const { category } = req.body;
+        if (!category || !ALLOWED_CATEGORIES.includes(category)) {
+            return res.status(400).json({
+                success: false,
+                message: `Category must be one of: ${ALLOWED_CATEGORIES.join(', ')}`
+            });
+        }
+
         const courseData = {
             ...req.body,
             instructor_id: req.userId,
@@ -38,6 +48,13 @@ export const createCourse = async (req, res) => {
 
 export const updateCourse = async (req, res) => {
     try {
+        if (req.body.category && !ALLOWED_CATEGORIES.includes(req.body.category)) {
+            return res.status(400).json({
+                success: false,
+                message: `Category must be one of: ${ALLOWED_CATEGORIES.join(', ')}`
+            });
+        }
+
         const course = await Course.findByIdWithModules(req.params.id);
 
         if (!course) {

@@ -2,7 +2,7 @@ import Course from '../models/Course.model.js';
 
 export const getAllCourses = async (req, res) => {
     try {
-        const courses = await Course.findPublished();
+        const courses = await Course.findPublishedWithLessonCount();
         res.json({ success: true, courses });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });

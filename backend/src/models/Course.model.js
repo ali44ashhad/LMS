@@ -43,10 +43,43 @@ class Course {
     return result.rows;
   }
 
+  // Get all published courses with lesson count (for public catalog)
+  static async findPublishedWithLessonCount() {
+    const result = await pool.query(
+      `SELECT c.*, COALESCE(lc.lesson_count, 0)::int AS lesson_count
+       FROM ${COURSES_TABLE} c
+       LEFT JOIN (
+         SELECT m.course_id, COUNT(l.id)::int AS lesson_count
+         FROM ${MODULES_TABLE} m
+         LEFT JOIN ${LESSONS_TABLE} l ON l.module_id = m.id
+         GROUP BY m.course_id
+       ) lc ON lc.course_id = c.id
+       WHERE c.is_published = true
+       ORDER BY c.created_at DESC`
+    );
+    return result.rows;
+  }
+
   // Get all courses (for admin)
   static async findAll() {
     const result = await pool.query(
       `SELECT * FROM ${COURSES_TABLE} ORDER BY created_at DESC`
+    );
+    return result.rows;
+  }
+
+  // Get all courses with lesson count (for admin list)
+  static async findAllWithLessonCount() {
+    const result = await pool.query(
+      `SELECT c.*, COALESCE(lc.lesson_count, 0)::int AS lesson_count
+       FROM ${COURSES_TABLE} c
+       LEFT JOIN (
+         SELECT m.course_id, COUNT(l.id)::int AS lesson_count
+         FROM ${MODULES_TABLE} m
+         LEFT JOIN ${LESSONS_TABLE} l ON l.module_id = m.id
+         GROUP BY m.course_id
+       ) lc ON lc.course_id = c.id
+       ORDER BY c.created_at DESC`
     );
     return result.rows;
   }

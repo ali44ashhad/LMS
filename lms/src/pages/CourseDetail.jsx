@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import CourseDetail from "../componets/courses/CourseDetail";
 import CoursePlayer from "../componets/courses/CoursePlayer";
-import { enrollmentAPI, courseAPI } from "../services/api";
+import { enrollmentAPI, courseAPI, authAPI } from "../services/api";
 
 const CourseDetailPage = ({ course, onBack, onEnrollSuccess, isPublic = false }) => {
   const [currentLesson, setCurrentLesson] = useState(null);
@@ -13,6 +13,7 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess, isPublic = false })
   const [currentCourse, setCurrentCourse] = useState(null);
   const [loadingCourse, setLoadingCourse] = useState(false);
   const [lastFetchTime, setLastFetchTime] = useState(null);
+  const [subscriptionProfile, setSubscriptionProfile] = useState(null);
 
   const courseId = course?._id || course?.id || currentCourse?._id || currentCourse?.id;
   
@@ -133,6 +134,52 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess, isPublic = false })
     [allLessons]
   );
 
+  // Subscription: full access if Creator/Master and subscription not expired
+  const hasFullAccess = useMemo(() => {
+    if (!subscriptionProfile) return false;
+    const plan = subscriptionProfile.planType || "starter_lab";
+    if (plan !== "creator_lab" && plan !== "master_lab") return false;
+    const endsAt = subscriptionProfile.subscriptionEndsAt;
+    if (!endsAt) return false;
+    return new Date(endsAt) > new Date();
+  }, [subscriptionProfile]);
+
+  // First video of first module — the only free lesson for Starter Lab
+  const firstFreeLessonId = useMemo(() => {
+    const courseData = currentCourse || course;
+    if (!courseData?.modules?.length) {
+      const flat = courseData?.lessons || [];
+      const first = flat.find((l) => !!(l.video_url ?? l.videoUrl));
+      return first ? String(first._id ?? first.id) : null;
+    }
+    for (const mod of courseData.modules) {
+      const lessons = mod.lessons ?? [];
+      for (const l of lessons) {
+        if (l.video_url || l.videoUrl) return String(l._id ?? l.id);
+      }
+    }
+    return null;
+  }, [currentCourse, course]);
+
+  const isLessonUnlocked = useCallback(
+    (lesson) => {
+      if (hasFullAccess) return true;
+      const id = lesson?._id ?? lesson?.id;
+      if (!id || !firstFreeLessonId) return false;
+      return String(id) === String(firstFreeLessonId);
+    },
+    [hasFullAccess, firstFreeLessonId]
+  );
+
+  // Fetch Nesta subscription/plan for access control (Starter = first video only; Creator/Master = full access)
+  useEffect(() => {
+    if (isPublic) {
+      setSubscriptionProfile(null);
+      return;
+    }
+    authAPI.getNestaProfile().then(setSubscriptionProfile).catch(() => setSubscriptionProfile(null));
+  }, [isPublic]);
+
   // Fetch enrollment data when course loads (skip when public view)
   useEffect(() => {
     if (isPublic) {
@@ -187,6 +234,10 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess, isPublic = false })
   };
 
   const handleLessonSelect = (lesson) => {
+    if (!isLessonUnlocked(lesson)) {
+      alert("Upgrade to Creator Lab or Master Lab to unlock all videos. Only the first video of each course is free on Starter Lab.");
+      return;
+    }
     const index = allLessons.findIndex(
       l => (l._id && lesson._id && l._id.toString() === lesson._id.toString()) ||
            (l.id && lesson.id && l.id.toString() === lesson.id.toString())
@@ -345,6 +396,10 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess, isPublic = false })
     );
     if (videoIndex >= 0 && videoIndex < videoOnlyLessons.length - 1) {
       const nextVideo = videoOnlyLessons[videoIndex + 1];
+      if (!isLessonUnlocked(nextVideo)) {
+        alert("Upgrade to Creator Lab or Master Lab to unlock the next video.");
+        return;
+      }
       const indexInAll = allLessons.findIndex(
         (l) => String(l._id ?? l.id) === String(nextVideo._id ?? nextVideo.id)
       );
@@ -386,6 +441,24 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess, isPublic = false })
   }
 
   if (isPlaying && currentLesson) {
+    if (!isLessonUnlocked(currentLesson)) {
+      return (
+        <div className="max-w-2xl mx-auto p-6 bg-amber-50 border border-amber-200 rounded-xl text-center">
+          <div className="text-4xl mb-4">🔒</div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Lesson locked</h2>
+          <p className="text-gray-600 mb-4">
+            Upgrade to Creator Lab or Master Lab to unlock all videos. Only the first video of each course is free on Starter Lab.
+          </p>
+          <button
+            type="button"
+            onClick={handleExitPlayer}
+            className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700"
+          >
+            Back to course
+          </button>
+        </div>
+      );
+    }
     // Check if current lesson is already completed
     const currentLessonId = currentLesson._id || currentLesson.id;
     const isCurrentLessonCompleted = completedLessons.some(
@@ -402,6 +475,7 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess, isPublic = false })
         onPrevious={handlePreviousLesson}
         onExit={handleExitPlayer}
         canMarkComplete={!!enrollment}
+        onEnroll={handleEnroll}
       />
     );
   }
@@ -417,6 +491,7 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess, isPublic = false })
       completedLessons={completedLessons}
       allLessons={allLessons}
       isPublic={isPublic}
+      isLessonUnlocked={isLessonUnlocked}
     />
   );
 };

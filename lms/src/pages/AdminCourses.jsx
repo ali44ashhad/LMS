@@ -220,7 +220,7 @@ const AdminCourses = ({ onCreateNew, onEdit }) => {
                     Lessons
                   </p>
                   <p className="font-semibold text-slate-700">
-                    {(course.modules ?? []).reduce((sum, m) => sum + (m.lessons?.length ?? 0), 0) || course.lessons?.length || 0}
+                    {(course.lesson_count ?? ((course.modules ?? []).reduce((sum, m) => sum + (m.lessons?.length ?? 0), 0) || course.lessons?.length || 0))}
                   </p>
                 </div>
                 <div>

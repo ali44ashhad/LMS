@@ -24,6 +24,7 @@ const CoursePlayer = ({
   onPrevious,
   onExit,
   canMarkComplete = true,
+  onEnroll,
 }) => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -403,12 +404,16 @@ const CoursePlayer = ({
               </div>
             </div>
           )}
- {/* Mark as Complete – sirf enrolled users ke liye */}
+      {/* Mark as Complete – sirf enrolled users ke liye */}
             <div className="p-6 border-t">
               {!canMarkComplete ? (
-                <p className="text-sm text-slate-500 text-center py-2">
-                  Enroll in this course to mark lessons as complete.
-                </p>
+                <button
+                  type="button"
+                  onClick={() => onEnroll && onEnroll(courseId)}
+                  className="w-full px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-semibold transition-colors"
+                >
+                  Enroll Now
+                </button>
               ) : lessonCompleted ? (
                 <div className="flex items-center gap-2 text-green-600 font-semibold">
                   <span>✓</span>

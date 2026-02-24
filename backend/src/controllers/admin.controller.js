@@ -117,8 +117,7 @@ export const getStats = async (req, res) => {
 
 export const getAllCourses = async (req, res) => {
     try {
-        // Course.findAll() returns all courses
-        const courses = await Course.findAll();
+        const courses = await Course.findAllWithLessonCount();
 
         res.json({
             success: true,

@@ -12,6 +12,7 @@ const Sidebar = ({ activeTab, setActiveTab, userRole = 'student', isPublic = fal
 
   const publicMenuItems = [
     { id: 'courses', label: 'Courses', icon: '📚' },
+    { id: 'pricing', label: 'Pricing', icon: '📚' },
   ];
   const adminMenuItems = [ 
     { id: 'admin-courses', label: 'Manage Courses', icon: '🎓' },
@@ -19,6 +20,7 @@ const Sidebar = ({ activeTab, setActiveTab, userRole = 'student', isPublic = fal
   const studentMenuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
     { id: 'courses', label: 'My Courses', icon: '📚' },
+    { id: 'pricing', label: 'Pricing', icon: '📚' },
     { id: 'profile', label: 'Profile', icon: '👤' },
   ];
 
@@ -38,10 +40,17 @@ const Sidebar = ({ activeTab, setActiveTab, userRole = 'student', isPublic = fal
         <ul className="space-y-2 px-3 grid grid-cols-2 md:grid-cols-1 gap-2">
           {menuItems.map((item) => {
             const isActive = activeTab === item.id || (isPublic && item.id === 'courses' && activeTab === 'course-detail');
+            const handleClick = () => {
+              if (item.id === 'pricing') {
+                window.location.href = 'http://localhost:5173/pricing';
+                return;
+              }
+              setActiveTab(item.id);
+            };
             return (
               <li key={item.id}>
                <button
-  onClick={() => setActiveTab(item.id)}
+  onClick={handleClick}
   className={`w-full flex items-center justify-center md:justify-between gap-2 
     px-3 py-2 rounded-md text-xs md:text-sm font-semibold uppercase tracking-wide 
     transition border

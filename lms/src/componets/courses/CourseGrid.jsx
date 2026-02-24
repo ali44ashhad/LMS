@@ -44,8 +44,12 @@ const CourseGrid = ({ courses, onCourseSelect, isPublic = false }) => {
             <div className="flex justify-between">
               <span>Lessons:</span>
               <span className="font-medium">
-                {(course.modules ?? []).reduce((sum, m) => sum + (m.lessons?.length ?? 0), 0) ||
-                  (Array.isArray(course.lessons) ? course.lessons.length : 0)}
+                {course.lesson_count ??
+                  ((course.modules ?? []).reduce(
+                    (sum, m) => sum + (m.lessons?.length ?? 0),
+                    0
+                  ) ||
+                    (Array.isArray(course.lessons) ? course.lessons.length : 0))}
               </span>
             </div>
 

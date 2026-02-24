@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 
 const NESTA_SIGNIN_URL = import.meta.env.VITE_NESTA_SIGNIN_URL || '/';
+const NESTA_PRICING_URL = import.meta.env.VITE_NESTA_PRICING_URL || 'https://platform.nestatoys.com/pricing';
 
-const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enrollment, completedLessons = [], allLessons = [], isPublic = false }) => {
+const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enrollment, completedLessons = [], allLessons = [], isPublic = false, isLessonUnlocked = () => true }) => {
   const [activeTab, setActiveTab] = useState('curriculum');
   const [expandedModules, setExpandedModules] = useState(new Set());
   const courseId = course?._id || course?.id;
@@ -36,7 +37,6 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
   const courseImage = course?.image || '📚';
   const courseRating = course?.rating || 4.5;
   const courseCategory = course?.category || 'General';
-  const courseStudents = course?.enrolled_students ?? course?.enrolledStudents ?? course?.students ?? 0;
 
   // Last updated: prefer updated_at, fallback to created_at; format for display
   const rawDate = course?.updated_at ?? course?.updatedAt ?? course?.created_at ?? course?.createdAt;
@@ -497,35 +497,41 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
                       {isExpanded && (
                         <div className="px-5 pb-5 bg-gray-50/50">
                           <div className="space-y-2 pt-2">
-                            {module.lessons.map((lesson, lessonIndex) => (
+                            {module.lessons.map((lesson, lessonIndex) => {
+                              const unlocked = isLessonUnlocked(lesson);
+                              return (
                               <div key={lesson.id}>
                                 <div
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    if (isPublic) {
-                                      alert('Sign in to enroll to access lessons.');
+                                    if (isPublic || !unlocked) {
+                                      window.location.href = NESTA_PRICING_URL;
                                       return;
                                     }
                                     onLessonSelect && onLessonSelect(lesson);
                                   }}
-                                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 hover:bg-white border ${
-                                    lesson.completed
-                                      ? 'border-lime-300 bg-lime-50/50'
-                                      : 'border-gray-200 bg-white hover:shadow-sm'
+                                  className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-200 border ${
+                                    !unlocked
+                                      ? 'cursor-not-allowed border-amber-200 bg-amber-50/50 opacity-90'
+                                      : lesson.completed
+                                        ? 'cursor-pointer hover:bg-white border-lime-300 bg-lime-50/50'
+                                        : 'cursor-pointer hover:bg-white border-gray-200 bg-white hover:shadow-sm'
                                   }`}
                                 >
                                   <div
                                     className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 ${
-                                      lesson.completed
-                                        ? 'bg-gradient-to-r from-lime-500 to-lime-400 text-white shadow-md shadow-lime-500/30'
-                                        : 'bg-gray-200 text-gray-700'
+                                      !unlocked
+                                        ? 'bg-amber-200 text-amber-800'
+                                        : lesson.completed
+                                          ? 'bg-gradient-to-r from-lime-500 to-lime-400 text-white shadow-md shadow-lime-500/30'
+                                          : 'bg-gray-200 text-gray-700'
                                     }`}
                                   >
-                                    {lesson.completed ? '✓' : lessonIndex + 1}
+                                    {!unlocked ? '🔒' : lesson.completed ? '✓' : lessonIndex + 1}
                                   </div>
 
                                   <div className="flex-1 min-w-0">
-                                    <h4 className="text-sm font-medium text-gray-900 truncate">
+                                    <h4 className={`text-sm font-medium truncate ${!unlocked ? 'text-gray-600' : 'text-gray-900'}`}>
                                       {lesson.title}
                                     </h4>
                                     <div className="flex flex-wrap items-center gap-2 mt-1 text-[11px] text-gray-600">
@@ -545,25 +551,30 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
                                       </span>
                                       <span>•</span>
                                       <span>{lesson.duration}</span>
+                                      {!unlocked && <span className="text-amber-600 font-medium">Locked</span>}
                                     </div>
                                   </div>
 
                                   <button
+                                    type="button"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      if (isPublic) {
-                                        alert('Sign in to enroll to access lessons.');
+                                      if (isPublic || !unlocked) {
+                                        window.location.href = NESTA_PRICING_URL;
                                         return;
                                       }
                                       onLessonSelect && onLessonSelect(lesson);
                                     }}
+                                    disabled={!unlocked}
                                     className={`px-3 py-1 text-[10px] rounded-lg transition-all duration-200 flex-shrink-0 ${
-                                      lesson.completed
-                                        ? 'bg-white hover:bg-gray-100 text-gray-700 hover:text-gray-900 border border-gray-300'
-                                        : 'bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/40'
+                                      !unlocked
+                                        ? 'bg-amber-200 text-amber-800 cursor-not-allowed'
+                                        : lesson.completed
+                                          ? 'bg-white hover:bg-gray-100 text-gray-700 hover:text-gray-900 border border-gray-300'
+                                          : 'bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/40'
                                     }`}
                                   >
-                                    {lesson.completed ? 'Review' : 'Start'}
+                                    {!unlocked ? 'Locked' : lesson.completed ? 'Review' : 'Start'}
                                   </button>
                                 </div>
                                 
@@ -603,7 +614,8 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
                                   </div>
                                 )}
                               </div>
-                            ))}
+                            );
+                            })}
                           </div>
                           
                           {/* Module-level resources (if any) */}

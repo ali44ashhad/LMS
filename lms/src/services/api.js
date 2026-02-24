@@ -116,6 +116,29 @@ export const authAPI = {
     return handleResponse(response);
   },
 
+  /**
+   * Fetch subscription/plan from Nesta backend (same cookie auth).
+   * Returns { planType, planMonths, subscriptionEndsAt } or null if not available.
+   */
+  getNestaProfile: async () => {
+    const base = (NESTA_API_URL || '').replace(/\/$/, '');
+    if (!base) return null;
+    try {
+      const response = await fetchWithCreds(`${base}/user/profile`, {
+        headers: getAuthHeaders()
+      });
+      const data = await handleResponse(response);
+      return {
+        planType: data.planType ?? 'starter_lab',
+        planMonths: data.planMonths ?? null,
+        subscriptionEndsAt: data.subscriptionEndsAt ?? null
+      };
+    } catch (err) {
+      console.warn('LMS: Could not fetch Nesta profile (subscription)', err);
+      return null;
+    }
+  },
+
   updateProfile: async (userData) => {
     // Profile updates are handled by the LMS at /users/profile.
     // Backend expects LMS-specific fields (bio, phone, address, avatar, name_on_certificate).

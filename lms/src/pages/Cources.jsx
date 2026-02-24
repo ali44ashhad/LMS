@@ -154,7 +154,6 @@ const Courses = ({ onCourseSelect, isPublic = false }) => {
           <h2 className="text-xl md:text-2xl font-semibold text-slate-800 mb-4">
             {isPublic ? "Courses" : "My Courses"} ({filteredCourses.length})
           </h2>
-
           <CourseGrid
             courses={filteredCourses}
             onCourseSelect={onCourseSelect}

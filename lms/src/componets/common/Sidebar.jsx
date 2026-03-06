@@ -2,6 +2,8 @@ import React from 'react';
 import robot from '../../assets/robot.png';
 import { useRealTimeProgress } from '../../hooks/useRealTimeProgress';
 
+const NESTA_PRICING_URL = import.meta.env.VITE_NESTA_PRICING_URL || 'https://platform.nestatoys.com/pricing';
+
 const Sidebar = ({ activeTab, setActiveTab, userRole = 'student', isPublic = false }) => {
   const { overallProgress, completedCourses, totalCourses } = useRealTimeProgress(
     !isPublic && userRole === 'student',
@@ -42,7 +44,7 @@ const Sidebar = ({ activeTab, setActiveTab, userRole = 'student', isPublic = fal
             const isActive = activeTab === item.id || (isPublic && item.id === 'courses' && activeTab === 'course-detail');
             const handleClick = () => {
               if (item.id === 'pricing') {
-                window.location.href = 'http://localhost:5173/pricing';
+                window.location.href = NESTA_PRICING_URL;
                 return;
               }
               setActiveTab(item.id);

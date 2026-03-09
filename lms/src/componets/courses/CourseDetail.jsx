@@ -586,13 +586,17 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
                                         <div
                                           key={resIndex}
                                           onClick={(e) => e.stopPropagation()}
-                                          className="flex items-center gap-2 p-2 rounded-lg bg-white border border-gray-200 hover:border-cyan-300 hover:shadow-sm transition-all duration-200"
+                                          className={`flex items-center gap-2 p-2 rounded-lg border transition-all duration-200 ${
+                                            (isPublic || !unlocked)
+                                              ? 'bg-amber-50/50 border-amber-200 opacity-90'
+                                              : 'bg-white border-gray-200 hover:border-cyan-300 hover:shadow-sm'
+                                          }`}
                                         >
                                           <div className="text-lg flex-shrink-0">
-                                            {resource.type === 'pdf' ? '📄' : '📎'}
+                                            {(isPublic || !unlocked) ? '🔒' : (resource.type === 'pdf' ? '📄' : '📎')}
                                           </div>
                                           <div className="flex-1 min-w-0">
-                                            <h5 className="text-xs font-medium text-gray-900 truncate">
+                                            <h5 className={`text-xs font-medium truncate ${(isPublic || !unlocked) ? 'text-gray-600' : 'text-gray-900'}`}>
                                               {resource.title}
                                             </h5>
                                             <p className="text-[10px] text-gray-500">
@@ -600,13 +604,24 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
                                             </p>
                                           </div>
                                           <a
-                                            href={resource.url}
+                                            href={(isPublic || !unlocked) ? NESTA_PRICING_URL : resource.url}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            onClick={(e) => e.stopPropagation()}
-                                            className="px-2 py-1 text-[10px] rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-sm hover:shadow-md transition-all duration-200 flex-shrink-0"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              if (isPublic || !unlocked) {
+                                                e.preventDefault();
+                                                window.location.href = NESTA_PRICING_URL;
+                                              }
+                                            }}
+                                            className={`px-2 py-1 text-[10px] rounded-lg transition-all duration-200 flex-shrink-0 ${
+                                              (isPublic || !unlocked)
+                                                ? 'bg-amber-200 text-amber-800 cursor-not-allowed'
+                                                : 'bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-sm hover:shadow-md'
+                                            }`}
+                                            aria-disabled={isPublic || !unlocked}
                                           >
-                                            {resource.type === 'pdf' ? 'View' : 'Open'}
+                                            {(isPublic || !unlocked) ? 'Locked' : (resource.type === 'pdf' ? 'View' : 'Open')}
                                           </a>
                                         </div>
                                       )
@@ -625,36 +640,54 @@ const CourseDetail = ({ course, onBack, onLessonSelect, onEnroll, enrolling, enr
                                 Module Resources
                               </h4>
                               <div className="space-y-2">
-                                {module.moduleResources.map((resource, resIndex) => (
-                                  resource && resource.title && resource.url && (
-                                    <div
-                                      key={resIndex}
-                                      onClick={(e) => e.stopPropagation()}
-                                      className="flex items-center gap-2 p-2 rounded-lg bg-white border border-gray-200 hover:border-cyan-300 hover:shadow-sm transition-all duration-200"
-                                    >
-                                      <div className="text-lg flex-shrink-0">
-                                        {resource.type === 'pdf' ? '📄' : '📎'}
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                        <h5 className="text-xs font-medium text-gray-900 truncate">
-                                          {resource.title}
-                                        </h5>
-                                        <p className="text-[10px] text-gray-500">
-                                          {resource.type?.toUpperCase() || 'FILE'}
-                                        </p>
-                                      </div>
-                                      <a
-                                        href={resource.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
+                                {(() => {
+                                  const moduleUnlocked = !isPublic && module.lessons.some((l) => isLessonUnlocked(l));
+                                  return module.moduleResources.map((resource, resIndex) => (
+                                    resource && resource.title && resource.url && (
+                                      <div
+                                        key={resIndex}
                                         onClick={(e) => e.stopPropagation()}
-                                        className="px-2 py-1 text-[10px] rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-sm hover:shadow-md transition-all duration-200 flex-shrink-0"
+                                        className={`flex items-center gap-2 p-2 rounded-lg border transition-all duration-200 ${
+                                          moduleUnlocked
+                                            ? 'bg-white border-gray-200 hover:border-cyan-300 hover:shadow-sm'
+                                            : 'bg-amber-50/50 border-amber-200 opacity-90'
+                                        }`}
                                       >
-                                        {resource.type === 'pdf' ? 'View' : 'Open'}
-                                      </a>
-                                    </div>
-                                  )
-                                ))}
+                                        <div className="text-lg flex-shrink-0">
+                                          {moduleUnlocked ? (resource.type === 'pdf' ? '📄' : '📎') : '🔒'}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <h5 className={`text-xs font-medium truncate ${moduleUnlocked ? 'text-gray-900' : 'text-gray-600'}`}>
+                                            {resource.title}
+                                          </h5>
+                                          <p className="text-[10px] text-gray-500">
+                                            {resource.type?.toUpperCase() || 'FILE'}
+                                          </p>
+                                        </div>
+                                        <a
+                                          href={moduleUnlocked ? resource.url : NESTA_PRICING_URL}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (!moduleUnlocked) {
+                                              e.preventDefault();
+                                              window.location.href = NESTA_PRICING_URL;
+                                            }
+                                          }}
+                                          className={`px-2 py-1 text-[10px] rounded-lg transition-all duration-200 flex-shrink-0 ${
+                                            moduleUnlocked
+                                              ? 'bg-gradient-to-r from-cyan-600 to-cyan-600 text-white shadow-sm hover:shadow-md'
+                                              : 'bg-amber-200 text-amber-800 cursor-not-allowed'
+                                          }`}
+                                          aria-disabled={!moduleUnlocked}
+                                        >
+                                          {moduleUnlocked ? (resource.type === 'pdf' ? 'View' : 'Open') : 'Locked'}
+                                        </a>
+                                      </div>
+                                    )
+                                  ));
+                                })()}
                               </div>
                             </div>
                           )}

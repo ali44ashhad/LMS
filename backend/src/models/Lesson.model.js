@@ -6,7 +6,19 @@ const LESSONS_TABLE = `${DB_SCHEMA}.lessons`;
 class Lesson {
     // Create new lesson
     static async create(lessonData) {
-        const { module_id, title, description, video_url, duration, order_num, resources } = lessonData;
+        const { module_id, title, description, video_url, duration, resources } = lessonData;
+
+        // Ensure unique, sequential order_num within a module. We intentionally
+        // do not trust the client-provided order, because it can collide with
+        // existing lessons and violate the unique (module_id, order_num)
+        // constraint.
+        const nextOrderResult = await pool.query(
+            `SELECT COALESCE(MAX(order_num), 0) + 1 AS next_order
+             FROM ${LESSONS_TABLE}
+             WHERE module_id = $1`,
+            [module_id]
+        );
+        const safeOrderNum = nextOrderResult.rows[0]?.next_order || 1;
 
         const result = await pool.query(
             `INSERT INTO ${LESSONS_TABLE} 
@@ -19,7 +31,7 @@ class Lesson {
                 description || '',
                 video_url || '',
                 duration || '',
-                order_num,
+                safeOrderNum,
                 JSON.stringify(resources || [])
             ]
         );

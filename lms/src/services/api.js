@@ -124,10 +124,35 @@ export const authAPI = {
     const base = (NESTA_API_URL || '').replace(/\/$/, '');
     if (!base) return null;
     try {
-      const response = await fetchWithCreds(`${base}/user/profile`, {
-        headers: getAuthHeaders()
-      });
-      const data = await handleResponse(response);
+      const buildUrls = () => {
+        // NESTA_API_URL is sometimes configured as:
+        // - https://platform.nestatoys.com/api   (preferred)
+        // - https://platform.nestatoys.com       (missing /api; common in prod env misconfig)
+        // Normalize by trying both.
+        const hasApiSuffix = /\/api$/i.test(base);
+        const urls = [];
+        if (hasApiSuffix) {
+          urls.push(`${base}/user/profile`);
+        } else {
+          urls.push(`${base}/api/user/profile`);
+          urls.push(`${base}/user/profile`); // backward compat if server mounts /user/profile at root
+        }
+        return urls;
+      };
+
+      let lastErr = null;
+      let data = null;
+      for (const url of buildUrls()) {
+        try {
+          const response = await fetchWithCreds(url, { headers: getAuthHeaders() });
+          data = await handleResponse(response);
+          break;
+        } catch (err) {
+          lastErr = err;
+        }
+      }
+
+      if (!data) throw lastErr || new Error('Could not fetch Nesta profile');
       return {
         planType: data.planType ?? 'starter_lab',
         planMonths: data.planMonths ?? null,

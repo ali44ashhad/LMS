@@ -144,6 +144,11 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess, isPublic = false })
     return new Date(endsAt) > new Date();
   }, [subscriptionProfile]);
 
+  // If user is enrolled (admin grant / paid access), unlock the full course regardless of plan fetch issues.
+  const hasCourseAccess = useMemo(() => {
+    return !!enrollment || hasFullAccess;
+  }, [enrollment, hasFullAccess]);
+
   // First video of first module — the only free lesson for Starter Lab
   const firstFreeLessonId = useMemo(() => {
     const courseData = currentCourse || course;
@@ -163,12 +168,12 @@ const CourseDetailPage = ({ course, onBack, onEnrollSuccess, isPublic = false })
 
   const isLessonUnlocked = useCallback(
     (lesson) => {
-      if (hasFullAccess) return true;
+      if (hasCourseAccess) return true;
       const id = lesson?._id ?? lesson?.id;
       if (!id || !firstFreeLessonId) return false;
       return String(id) === String(firstFreeLessonId);
     },
-    [hasFullAccess, firstFreeLessonId]
+    [hasCourseAccess, firstFreeLessonId]
   );
 
   // Fetch Nesta subscription/plan for access control (Starter = first video only; Creator/Master = full access)

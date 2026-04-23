@@ -27,9 +27,9 @@ const CourseGrid = ({ courses, onCourseSelect, isPublic = false }) => {
               {course.title}
             </h3>
 
-            <p className="text-gray-600 text-xs md:text-sm mt-1">
+            {/* <p className="text-gray-600 text-xs md:text-sm mt-1">
               {course.instructor_name ?? course.instructorName ?? course.instructor}
-            </p>
+            </p> */}
           </div>
 
           {/* META INFO */}

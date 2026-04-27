@@ -2,8 +2,18 @@ import React from "react";
 import CourseCard from "./CourseCard";
 
 const CourseGrid = ({ courses, onCourseSelect, isPublic = false }) => {
+  const getTextExcerpt = (html, maxLen = 140) => {
+    const text = (html || "")
+      .toString()
+      .replace(/<[^>]*>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!text) return "";
+    return text.length > maxLen ? `${text.slice(0, maxLen - 1)}…` : text;
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
       {courses.map((course) => (
         <div
           key={course._id || course.id}
@@ -15,15 +25,16 @@ const CourseGrid = ({ courses, onCourseSelect, isPublic = false }) => {
             shadow-sm
             hover:shadow-md
             transition-shadow
+            flex flex-col
           "
         >
           {/* TOP */}
           <div className="text-center mb-4">
-            <div className="text-3xl md:text-4xl mb-2">
+            <div className="text-3xl md:text-4xl mb-2 leading-none">
               {course.image}
             </div>
 
-            <h3 className="text-base md:text-lg font-semibold text-gray-900 line-clamp-2">
+            <h3 className="text-base md:text-lg font-semibold text-gray-900 leading-snug break-words line-clamp-2 min-h-[2.75rem]">
               {course.title}
             </h3>
 
@@ -34,16 +45,16 @@ const CourseGrid = ({ courses, onCourseSelect, isPublic = false }) => {
 
           {/* META INFO */}
           <div className="space-y-2 md:space-y-3 text-xs md:text-sm text-gray-600">
-            <div className="flex justify-between">
-              <span>Duration:</span>
-              <span className="font-medium">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="shrink-0">Duration:</span>
+              <span className="font-medium text-right break-words">
                 {course.duration || "N/A"}
               </span>
             </div>
 
-            <div className="flex justify-between">
-              <span>Lessons:</span>
-              <span className="font-medium">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="shrink-0">Lessons:</span>
+              <span className="font-medium text-right">
                 {course.lesson_count ??
                   ((course.modules ?? []).reduce(
                     (sum, m) => sum + (m.lessons?.length ?? 0),
@@ -53,8 +64,8 @@ const CourseGrid = ({ courses, onCourseSelect, isPublic = false }) => {
               </span>
             </div>
 
-            <div className="flex justify-between items-center">
-              <span>Level:</span>
+            <div className="flex justify-between items-center gap-3">
+              <span className="shrink-0">Level:</span>
               <span
                 className={`px-2 py-1 rounded-full text-xs font-medium ${
                   course.level === "Beginner"
@@ -64,7 +75,7 @@ const CourseGrid = ({ courses, onCourseSelect, isPublic = false }) => {
                     : "bg-[#C0EAFF] text-purple-800"
                 }`}
               >
-                {course.level}
+                {course.level || "Mixed"}
               </span>
             </div>
 
@@ -84,11 +95,10 @@ const CourseGrid = ({ courses, onCourseSelect, isPublic = false }) => {
           </div>
 
           {/* DESCRIPTION + ACTION */}
-          <div className="mt-4 md:mt-6">
-            <div 
-              className="text-gray-700 text-xs md:text-sm mb-3 md:mb-4 line-clamp-2 prose prose-sm max-w-none"
-              dangerouslySetInnerHTML={{ __html: course.description || '' }}
-            />
+          <div className="mt-4 md:mt-6 flex-1 flex flex-col">
+            <p className="text-gray-700 text-xs md:text-sm mb-3 md:mb-4 line-clamp-3">
+              {getTextExcerpt(course.description, 160)}
+            </p>
 
             <button
               onClick={() => onCourseSelect(course)}

@@ -19,7 +19,7 @@ const Dashboard = ({ onCourseSelect }) => {
     completedCourses,
     totalCourses,
     loading,
-  } = useRealTimeProgress(true, 2000);
+  } = useRealTimeProgress(true);
 
   const recentCourses = enrolledCourses.slice(0, 3);
 

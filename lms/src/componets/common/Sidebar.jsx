@@ -6,8 +6,8 @@ const NESTA_PRICING_URL = import.meta.env.VITE_NESTA_PRICING_URL || 'https://pla
 
 const Sidebar = ({ activeTab, setActiveTab, userRole = 'student', isPublic = false }) => {
   const { overallProgress, completedCourses, totalCourses } = useRealTimeProgress(
-    !isPublic && userRole === 'student',
-    2000
+    !isPublic && userRole === 'student' && activeTab === 'dashboard',
+    undefined
   );
 
   const progressData = { overallProgress, completedCourses, totalCourses };

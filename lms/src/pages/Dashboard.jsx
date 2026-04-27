@@ -90,9 +90,7 @@ const Dashboard = ({ onCourseSelect }) => {
             <span className="w-2 h-2 rounded-full bg-lime-400 animate-pulse" />
             Sync: {stats.averageProgress}% Complete
           </span>
-          <span className="px-3 py-1 rounded-full border border-[#1EAAFF] text-slate-500 uppercase tracking-[0.16em] hidden sm:inline">
-            🎯 XP: {stats.completedCourses * 120}
-          </span>
+         
         </div>
       </div>
 

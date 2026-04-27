@@ -40,7 +40,7 @@ const ProgressChart = ({ courses = [] }) => {
                   {course.title}
                 </p>
                 <p className="text-[10px] text-slate-400 mt-0.5 uppercase tracking-[0.16em]">
-                  Sync {pct}% • XP Boost
+                  Sync {pct}% 
                 </p>
               </div>
             </div>

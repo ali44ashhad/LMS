@@ -77,10 +77,9 @@ const _fetchOnce = async () => {
   return _inFlight;
 };
 
-// In production we default to *no polling* to avoid constant background API traffic.
+// Default to *no polling* to avoid constant background API traffic (both local + prod).
 // If you want polling on a specific page, pass an explicit pollInterval (e.g. 15000).
-const DEFAULT_POLL_MS =
-  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.PROD) ? 0 : 2000;
+const DEFAULT_POLL_MS = 0;
 
 const _ensurePolling = (interval) => {
   const nextInterval = Number(interval) > 0 ? Number(interval) : DEFAULT_POLL_MS;

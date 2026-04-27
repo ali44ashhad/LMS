@@ -77,14 +77,24 @@ const _fetchOnce = async () => {
   return _inFlight;
 };
 
+// In production we default to *no polling* to avoid constant background API traffic.
+// If you want polling on a specific page, pass an explicit pollInterval (e.g. 15000).
 const DEFAULT_POLL_MS =
-  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.PROD) ? 15000 : 2000;
+  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.PROD) ? 0 : 2000;
 
 const _ensurePolling = (interval) => {
   const nextInterval = Number(interval) > 0 ? Number(interval) : DEFAULT_POLL_MS;
 
   // If there are no active users, ensure timer is stopped.
   if (_activeUsers <= 0) {
+    if (_timerId) clearInterval(_timerId);
+    _timerId = null;
+    _currentInterval = nextInterval;
+    return;
+  }
+
+  // If polling is disabled, ensure timer is stopped.
+  if (nextInterval <= 0) {
     if (_timerId) clearInterval(_timerId);
     _timerId = null;
     _currentInterval = nextInterval;
